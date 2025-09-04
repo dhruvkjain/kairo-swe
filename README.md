@@ -1,1 +1,1 @@
-# KAIRO---Internship-Exploration-Application
+# KAIRO-Internship-Exploration-Application
