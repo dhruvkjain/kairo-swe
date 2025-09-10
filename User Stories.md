@@ -1,8 +1,11 @@
-###USER STORY - 1
-*Front of card
-  * User: Student
-  * Story: As a student, I want to create a digital profile so recruiters can review my qualifications.
-  * Acceptance Criteria:
-    *Profile includes personal info, education, skills, and resume.
-    
+### User Story 1: Student Profile Creation
 
+**User:** Student
+
+**Story:**  As a student, I want to create a digital profile so recruiters can review my qualifications.
+
+**Acceptance Criteria:**
+- Profile includes personal information.
+- Profile includes education details.
+- Profile includes skills.
+- Profile allows uploading a resume.
