@@ -13,7 +13,7 @@
 - Profile allows uploading a resume.
 - System validate unique email address and password strength.
 
-#### Bak of the card:
+#### Back of the card:
 
 **Success**
 - All fields filled correctly, Profile is successfully created with all the necessary details.
@@ -27,6 +27,34 @@
 
 ### This user story fully satisfies the INVEST criteria.
 
+***
+### User Story 2: Student - Search and Filter Internships
+
+#### Front of the card:
+
+**User:** Student
+
+**Story:** As a student, I want to search and filter internship listings so I can quickly find opportunities that match my skills and preferences.
+
+**Acceptance Criteria:**
+- I can search for internships using keywords (e.g., "Frontend Developer", "Google").
+- I can filter internships by location (e.g., "Surat", "Remote").
+- I can filter internships based on required skills (e.g., "JavaScript", "Python").
+- I can filter by compensation type (e.g., "Paid", "Unpaid", "Stipend").
+- The search results update automatically as I apply filters.
+- The system displays a clear "No results found" message if no internships match the criteria.
+
+#### Back of the card:
+
+**Success**
+- The student applies filters and is presented with a relevant list of internship opportunities matching their criteria.
+
+**Failures**
+- **Invalid filter combination:** "Your filters did not return any results. Try removing a filter to broaden your search."
+- **Search timeout:** "Search is taking too long to respond. Please try again."
+- **System error:** "We couldn't load the internship listings. Please check your connection and try again."
+
+### This user story fully satisfies the INVEST criteria.
 ***
 
 ### User Story - 2:  Recruiter - Post an Internship Opening
@@ -59,34 +87,6 @@
 
 ### This user story fully satisfies the INVEST criteria
 
-***
-### User Story 3: Student - Search and Filter Internships
-
-#### Front of the card:
-
-**User:** Student
-
-**Story:** As a student, I want to search and filter internship listings so I can quickly find opportunities that match my skills and preferences.
-
-**Acceptance Criteria:**
-- I can search for internships using keywords (e.g., "Frontend Developer", "Google").
-- I can filter internships by location (e.g., "Surat", "Remote").
-- I can filter internships based on required skills (e.g., "JavaScript", "Python").
-- I can filter by compensation type (e.g., "Paid", "Unpaid", "Stipend").
-- The search results update automatically as I apply filters.
-- The system displays a clear "No results found" message if no internships match the criteria.
-
-#### Back of the card:
-
-**Success**
-- The student applies filters and is presented with a relevant list of internship opportunities matching their criteria.
-
-**Failures**
-- **Invalid filter combination:** "Your filters did not return any results. Try removing a filter to broaden your search."
-- **Search timeout:** "Search is taking too long to respond. Please try again."
-- **System error:** "We couldn't load the internship listings. Please check your connection and try again."
-
-### This user story fully satisfies the INVEST criteria.
 
 ***
 
@@ -119,31 +119,3 @@
 
 ### This user story fully satisfies the INVEST criteria.
 
-***
-
-### User Story 5: Student - Track Application Status
-
-#### Front of the card:
-
-**User:** Student
-
-**Story:** As a student, I want to track the status of my applications so I know where I stand in the hiring process for each company.
-
-**Acceptance Criteria:**
-- There is a dedicated "My Applications" page in my profile.
-- This page lists every internship I have applied for.
-- For each application, it shows the company name, internship title, and date of application.
-- The current status of the application is clearly displayed (e.g., "Applied", "Under Review", "Shortlisted", "Rejected").
-- I have an option to withdraw my application if it is still in the "Applied" or "Under Review" stage.
-
-#### Back of the card:
-
-**Success**
-- The student navigates to the "My Applications" page and sees that the status of their application to "Company X" has changed to "Shortlisted".
-
-**Failures**
-- **Status not syncing:** "Unable to load the latest application statuses. Please try again in a few moments."
-- **Withdrawal failure:** "We could not process your request to withdraw the application. Please contact support."
-- **System error:** "There was a problem loading your application history. Please try again later."
-
-### This user story fully satisfies the INVEST criteria.
