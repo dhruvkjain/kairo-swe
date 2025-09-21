@@ -1,0 +1,290 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Updated to darker color palette with pastel accents */
+  --background: oklch(0.15 0.01 240); /* Dark blue-gray background */
+  --foreground: oklch(0.92 0.005 180); /* Light text */
+  --card: oklch(0.18 0.01 260); /* Dark card background */
+  --card-foreground: oklch(0.92 0.005 180); /* Light card text */
+  --popover: oklch(0.18 0.01 260 / 0.95); /* Dark popover with transparency */
+  --popover-foreground: oklch(0.92 0.005 180);
+  --primary: oklch(0.75 0.08 280); /* Soft pastel purple */
+  --primary-foreground: oklch(0.95 0.005 180); /* Light text on primary */
+  --secondary: oklch(0.7 0.06 200); /* Soft pastel cyan */
+  --secondary-foreground: oklch(0.95 0.005 180); /* Light text on secondary */
+  --muted: oklch(0.22 0.01 240); /* Dark muted background */
+  --muted-foreground: oklch(0.7 0.01 240); /* Muted text */
+  --accent: oklch(0.75 0.05 60); /* Soft pastel yellow */
+  --accent-foreground: oklch(0.15 0.02 240); /* Dark text on light accent */
+  --destructive: oklch(0.65 0.08 15); /* Soft pastel red */
+  --destructive-foreground: oklch(0.95 0.005 180);
+  --border: oklch(0.25 0.01 240); /* Dark border */
+  --input: oklch(0.2 0.01 240); /* Dark input background */
+  --ring: oklch(0.75 0.08 280 / 0.4); /* Primary color with transparency for focus */
+  --chart-1: oklch(0.75 0.08 280); /* Pastel purple */
+  --chart-2: oklch(0.7 0.06 200); /* Pastel cyan */
+  --chart-3: oklch(0.7 0.06 320); /* Pastel pink */
+  --chart-4: oklch(0.75 0.05 60); /* Pastel yellow */
+  --chart-5: oklch(0.7 0.06 140); /* Pastel green */
+  --radius: 0.5rem;
+  --sidebar: oklch(0.18 0.01 260);
+  --sidebar-foreground: oklch(0.92 0.005 180);
+  --sidebar-primary: oklch(0.75 0.08 280);
+  --sidebar-primary-foreground: oklch(0.95 0.005 180);
+  --sidebar-accent: oklch(0.7 0.06 200);
+  --sidebar-accent-foreground: oklch(0.95 0.005 180);
+  --sidebar-border: oklch(0.25 0.01 240);
+  --sidebar-ring: oklch(0.75 0.08 280 / 0.4);
+}
+
+.dark {
+  /* Even darker theme for explicit dark mode */
+  --background: oklch(0.08 0.01 240); /* Very dark background */
+  --foreground: oklch(0.95 0.005 180); /* Very light text */
+  --card: oklch(0.12 0.01 260); /* Very dark card */
+  --card-foreground: oklch(0.95 0.005 180);
+  --popover: oklch(0.12 0.01 260);
+  --popover-foreground: oklch(0.95 0.005 180);
+  --primary: oklch(0.8 0.12 280); /* Brighter pastel purple for contrast */
+  --primary-foreground: oklch(0.08 0.01 240);
+  --secondary: oklch(0.75 0.08 200); /* Brighter pastel cyan */
+  --secondary-foreground: oklch(0.08 0.01 240);
+  --muted: oklch(0.15 0.01 240);
+  --muted-foreground: oklch(0.65 0.01 240);
+  --accent: oklch(0.8 0.06 60); /* Brighter pastel yellow */
+  --accent-foreground: oklch(0.08 0.01 240);
+  --destructive: oklch(0.7 0.12 15); /* Brighter pastel red */
+  --destructive-foreground: oklch(0.95 0.005 180);
+  --border: oklch(0.2 0.01 240);
+  --input: oklch(0.15 0.01 240);
+  --ring: oklch(0.8 0.12 280 / 0.5);
+  --chart-1: oklch(0.8 0.12 280);
+  --chart-2: oklch(0.75 0.1 200);
+  --chart-3: oklch(0.75 0.1 320);
+  --chart-4: oklch(0.8 0.08 60);
+  --chart-5: oklch(0.75 0.1 140);
+  --sidebar: oklch(0.1 0.01 260);
+  --sidebar-foreground: oklch(0.95 0.005 180);
+  --sidebar-primary: oklch(0.8 0.12 280);
+  --sidebar-primary-foreground: oklch(0.08 0.01 240);
+  --sidebar-accent: oklch(0.75 0.08 200);
+  --sidebar-accent-foreground: oklch(0.08 0.01 240);
+  --sidebar-border: oklch(0.2 0.01 240);
+  --sidebar-ring: oklch(0.8 0.12 280 / 0.5);
+}
+
+@theme inline {
+  /* Updated font variables to use new fonts */
+  --font-sans: var(--font-dm-sans);
+  --font-heading: var(--font-space-grotesk);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Updated grainy gradient backgrounds for dark theme */
+.grainy-gradient-hero {
+  background: linear-gradient(
+    135deg,
+    oklch(0.15 0.01 240) 0%,
+    oklch(0.18 0.01 260) 30%,
+    oklch(0.16 0.01 200) 70%,
+    oklch(0.17 0.01 280) 100%
+  );
+  background-size: 400% 400%;
+  animation: gradient-shift 8s ease-in-out infinite;
+  position: relative;
+}
+
+.grainy-gradient-hero::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: radial-gradient(circle at 25% 25%, rgba(183, 148, 246, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(157, 236, 249, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(254, 243, 199, 0.04) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.grainy-gradient-card {
+  background: linear-gradient(145deg, oklch(0.18 0.01 260) 0%, oklch(0.16 0.01 240) 50%, oklch(0.17 0.01 200) 100%);
+  position: relative;
+}
+
+.grainy-gradient-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: radial-gradient(circle at 20% 80%, rgba(183, 148, 246, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(157, 236, 249, 0.04) 0%, transparent 50%);
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+@keyframes gradient-shift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Added new animation keyframes for enhanced UI */
+@keyframes float-slow {
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-20px) rotate(180deg);
+  }
+}
+
+@keyframes float-medium {
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-15px) rotate(90deg);
+  }
+}
+
+@keyframes float-fast {
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(270deg);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Updated animation colors to use pastels */
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(183, 148, 246, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(183, 148, 246, 0.8);
+  }
+}
+
+.animate-float-slow {
+  animation: float-slow 6s ease-in-out infinite;
+}
+
+.animate-float-medium {
+  animation: float-medium 4s ease-in-out infinite;
+}
+
+.animate-float-fast {
+  animation: float-fast 3s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+/* Enhanced card hover effects for dark theme */
+.enhanced-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center;
+}
+
+.enhanced-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Updated scrollbar for dark theme */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--muted);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--secondary);
+}
