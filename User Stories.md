@@ -2,40 +2,47 @@
 
 ---
 
-## User Story 1: Student – Profile Creation
+## User Story 1: Student – Multimedia Profile Creation
 
 ### Front of the card
 
 **User:** Student  
 
-**Story:** As a student, I want to create a digital profile so recruiters can review my qualifications.  
+**Story:** As a student, I want to create a multimedia digital profile so recruiters can review my qualifications, resume, and portfolio links in one place.  
 
 **Acceptance Criteria:**
-- Profile includes personal information.  
-- Profile includes education details.  
-- Profile includes skills.  
-- Profile allows uploading a resume.  
-- System validates unique email address and password strength.  
+- Profile captures **personal information, education details, and skills**.  
+- Profile allows **uploading a resume**.  
+- Profile includes a **portfolio section** for links or media (e.g., GitHub, personal website, Behance, project images).  
+- System validates **unique email** and **strong password**.  
+- Field validation for uploads/links to prevent format errors.  
 
 ### Back of the card
 
 **Success**
-- All fields filled correctly → Profile is successfully created with all the necessary details.  
+- All required fields are filled and validated.  
+- Profile is saved successfully with resume and portfolio content accessible to recruiters.  
 
 **Failures**
 - **Duplicate Email:** *"Email already exists in the system. Try to log in."*  
 - **Weak Password:** *"Password must be at least 8 characters with a mix of letters and numbers."*  
 - **Invalid Email:** *"Invalid email format. Please enter a valid email address."*  
+- **Upload/Format Error:** *"Invalid file or link format. Please try again."*  
 - **System Failure:** *"Oops! We couldn’t create your profile. Please try again later."*  
 
 ### INVEST Justification
-- **Independent:** Can be implemented without dependency on other features.  
-- **Negotiable:** Fields and validation rules can be refined.  
-- **Valuable:** Provides recruiters access to student qualifications.  
-- **Estimable:** Scope is clear and effort can be estimated.  
-- **Small:** Focused on one function: profile creation.  
-- **Testable:** Acceptance criteria clearly define test cases.  
+- **Independent:** Can be implemented without dependency on other features like dashboard or recommendation system.  
+- **Negotiable:** Optional vs. required fields (e.g., portfolio) can be refined in later versions.  
+- **Valuable:** Provides recruiters with a rich view of student qualifications beyond a plain resume.  
+- **Estimable:** Scope is clear—profile creation with fields, validations, and media support.  
+- **Small:** Focused on creation flow only (not profile editing or advanced settings).  
+- **Testable:** Clear validation and upload rules enable straightforward unit and UI testing.  
 
+### Traceability
+- Maps to **FR-01** (student profile creation) and **FR-03** (support for multimedia portfolios).  
+- **Survey findings:** Students consistently requested an “online profile with pre-filled details” and portfolio uploads to reduce repetitive data entry.  
+- **Interviews:** Aarav, Aditya, Kunal, and Krish emphasized the importance of showcasing projects, GitHub links, and creative portfolios for recruiter evaluation.  
+- **Pain points addressed:** Eliminates repetitive resume uploads, improves recruiter evaluation by showcasing complete qualifications, and provides a professional online identity for students.  
 ---
 
 ## User Story 2: Student – Search and Filter Internships
@@ -72,7 +79,13 @@
 - **Valuable:** Helps students efficiently find matching internships.  
 - **Estimable:** Requirements are specific enough to size development effort.  
 - **Small:** Limited to search and filter functionality.  
-- **Testable:** Filters, search results, and error states can be tested.  
+- **Testable:** Filters, search results, and error states can be tested.
+
+### Traceability
+- Reflected strongly in interviews where students asked for domain-specific filters (e.g., legal area, design type, tech stack, project type), location, and compensation filters.
+- Survey data identified key filters including stipend range, company reputation, duration, and remote options as essential for narrowing down relevant internships from many offers.
+- Students frequently reported frustrations with vague listings and ineffective search tools in interviews and surveys, underscoring the value of responsive and accurate filtering.
+- Corresponds to FR-06 mandating robust, combinable filters supporting keyword search and multiple attribute filters to enhance discoverability.
 
 ---
 ## User Story 3: Student – Apply for an Internship
@@ -390,4 +403,125 @@
 - **Valuable:** Provides data-driven insights for improving recruitment decisions.  
 - **Estimable:** Clear scope with reporting, filtering, and access controls.  
 - **Small:** Narrow in focus, can be implemented within one sprint.  
-- **Testable:** Can be validated by running reports, filtering ranges, simulating errors, and checking access control.  
+- **Testable:** Can be validated by running reports, filtering ranges, simulating errors, and checking access control.
+
+---
+## User Story 11: Student – Application Status Dashboard
+
+### Front of the card
+
+**User:** Student  
+
+**Story:** As a student, I want to track the real-time status of my internship applications in a dashboard, so I know exactly where I am in the process.  
+
+**Acceptance Criteria:**
+- Dashboard shows clear status labels: *Submitted, Viewed, In Review, Interview Scheduled, Offer, Not Selected.*  
+- Each status update includes a **timestamp/log entry**.  
+- Updates appear within **24 hour** of recruiter action.  
+- Students receive **notifications** for interviews, offers, and deadlines.  
+
+### Back of the card
+
+**Success**
+- Statuses update correctly and on time.  
+- Notifications reach students for key events.  
+
+**Failures**
+- **Outdated/Missing Status:** *"Unable to retrieve current status."*  
+- **Slow Loading:** *"Dashboard failed to load in time."*  
+- **Missed Notifications:** *"Reminder not delivered for interview/offer update."*  
+
+### INVEST Justification
+- **Independent:** Works as a separate module.  
+- **Negotiable:** Status labels and reminders can be refined.  
+- **Valuable:** Reduces anxiety and improves transparency.  
+- **Estimable:** Scope limited to tracking and alerts.  
+- **Small:** One dashboard with statuses and notifications.  
+- **Testable:** Clear tests for accuracy, update timing, and reminders.  
+
+### Traceability
+- **Functional Requirements:** Directly maps to **FR-08** (real-time application tracking) and **FR-09** (reminders for interviews and deadlines).  
+- **Survey Findings:** Students highlighted lack of feedback and delays as top frustrations; “real-time tracking” was rated as a high-priority feature.  
+- **Interview Insights:** Aarav, Aditya, and Krish emphasized transparency in application status as critical for reducing stress.  
+- **Pain Points Addressed:** Removes uncertainty, avoids repeated follow-ups with recruiters, and ensures timely preparation for interviews/offers.
+
+---
+## User Story 12: Student – Advanced Search Filtering
+
+### Front of the card
+
+**User:** Student  
+
+**Story:** As a student, I want to use advanced filters while searching for internships, so I can quickly find roles that match my preferences such as stipend, skills, location, and work mode.  
+
+**Acceptance Criteria:**
+- Search includes filters for **stipend, duration, skill, location, company type, and work mode (remote/on-site/hybrid)**.  
+- System supports **reusing last-used or saved filters**.  
+- Filtered results update within **3 seconds**.  
+
+### Back of the card
+
+**Success**
+- Search results update instantly and match all selected filters.  
+- Saved/last-used filters are correctly applied.  
+
+**Failures**
+- **Filter Combination Error:** *"Selected filters cannot be applied together. Try again."*  
+- **Missing Filter Option:** *"Requested filter not available (e.g., skill/domain)."*  
+- **Slow Results:** *"Search taking longer than expected. Please refine filters."*  
+
+### INVEST Justification
+- **Independent:** Filter engine is modular and can function separately from posting or profile systems.  
+- **Negotiable:** Filter fields and priority can be refined based on student demand.  
+- **Valuable:** Saves time and improves relevance of search results, especially across many postings.  
+- **Estimable:** Scope is clear with a defined set of filters and logic.  
+- **Small:** Start with 3–5 core filters, expand later.  
+- **Testable:** Search accuracy, filter combinations, and result load times are measurable.  
+
+### Traceability
+- Maps to **FR-06** (filtering internships by stipend, location, skills, and work mode).  
+- **Survey findings:** Students highlighted the need for precise filters to avoid irrelevant or overwhelming search results.  
+- **Interviews:** Rakesh, Riya, and Ananya emphasized filtering by skills and domain as critical for finding the right opportunities.  
+- **Pain points addressed:** Reduces wasted time scrolling, improves discoverability of relevant roles, and enhances user satisfaction with tailored searches.
+
+ ---
+ ## User Story 13: Student – Notification System
+
+### Front of the card
+
+**User:** Student  
+
+**Story:** As a student, I want to receive real-time notifications for new internships or application status changes so I never miss important opportunities.  
+
+**Acceptance Criteria:**
+- Students get **email or in-app alerts** for: new postings, interview calls, offers, and deadlines.  
+- Users can **toggle notifications** by event type.  
+- All alerts must be delivered within **30 minutes** of the event.  
+
+### Back of the card
+
+**Success**
+- Students receive only relevant and timely alerts.  
+
+**Failures**
+- **Spam Alerts:** *"Too many irrelevant notifications sent."*  
+- **Preference Mismatch:** *"User received alerts for disabled categories."*  
+- **Late/Missed Alerts:** *"Notification delivered after event or not at all."*  
+
+### INVEST Justification
+- **Independent:** Notification service can be built and updated separately.  
+- **Negotiable:** Channels (email, in-app, SMS) and event types can evolve.  
+- **Valuable:** Keeps students engaged and reduces fear of missing opportunities.  
+- **Estimable:** Scope is bounded to key triggers and preferences.  
+- **Small:** Launch with top 3 triggers, expand gradually.  
+- **Testable:** Event simulations can confirm delivery speed and preference matching.  
+
+### Traceability
+- Maps to **FR-14** and **FR-15** (real-time alerts for postings and application updates) and **NFR-02** (usability through timely communication).  
+- **Survey findings:** Students requested instant updates to avoid missing application deadlines or interview calls.  
+- **Interviews:** Multiple students highlighted alerts as essential for staying informed and reducing missed opportunities.  
+- **Pain points addressed:** Prevents lost chances due to missed updates, strengthens engagement, and builds trust by ensuring transparency.  
+
+
+
+
