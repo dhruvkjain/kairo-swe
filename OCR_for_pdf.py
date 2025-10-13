@@ -2,7 +2,7 @@ import PyPDF2
 import os
 
 # PDF file name
-pdf_file = 'IE415_M2-2.pdf'
+pdf_file = 'resume.pdf'
 
 # Output text file
 txt_file = 'result.txt'
@@ -22,3 +22,4 @@ with open(txt_file, 'w', encoding='utf-8') as f:
         f.write("\n\n")
 
 print(f"Extraction complete! Text saved in '{os.path.abspath(txt_file)}'")
+
