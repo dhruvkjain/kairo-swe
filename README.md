@@ -9,3 +9,54 @@ On the recruiter side, the system will allow companies to post internship openin
 The platform will focus on secure data handling, transparent communication, and efficient matching between students and recruiters.
 
 This project will deliver a scalable and interactive solution that streamlines internship exploration, supports better decision-making for both students and recruiters, and enhances the overall internship experience.
+
+## Frontend (Next.js)
+
+To run frontend
+- move to frontend
+```shell
+cd ./frontend
+``` 
+
+- install dependencies
+```shell
+npm i
+```
+
+- start a local server at 3000 port
+```shell
+npm run dev
+```
+
+## Backend
+
+To run backend
+- move to backend
+```shell
+cd ./backend
+```
+
+- create a venv
+```shell
+python3 -m venv .venv
+```
+
+- activate venv
+```shell
+source .venv/bin/activate
+```
+
+- install dependecies
+```shell
+pip install -r requirements.txt
+```
+
+- start a local server at 8000 port
+```shell
+pyhton run.py
+```
+
+- after development to close the venv
+```shell
+deactivate
+```
