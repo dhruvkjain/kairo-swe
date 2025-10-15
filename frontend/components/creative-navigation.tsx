@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Building2, Menu, X, User, LogOut } from "lucide-react"
+import { Menu, X, User, LogOut } from "lucide-react"
 import { MagneticButton } from "./magnetic-button"
 import Link from "next/link"
 import { useSession, signOut } from "next-auth/react"
@@ -33,14 +33,8 @@ export function CreativeNavigation() {
         <div className="flex justify-between items-center h-20">
           {/* Logo with creative animation */}
           <Link href="/" className="flex items-center space-x-3 group cursor-pointer">
-            <div className="relative">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center transform group-hover:rotate-12 transition-all duration-500 shadow-lg">
-                <Building2 className="w-6 h-6 text-white" />
-              </div>
-              <div className="absolute -inset-1 bg-gradient-to-br from-primary to-secondary rounded-2xl blur opacity-30 group-hover:opacity-60 transition-opacity duration-500"></div>
-            </div>
             <span className="font-heading font-bold text-2xl bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
-              InternExplore
+              Kairo
             </span>
           </Link>
 
@@ -65,6 +59,7 @@ export function CreativeNavigation() {
               <div className="w-8 h-8 rounded-full bg-muted animate-pulse"></div>
             ) : session ? (
               <div className="flex items-center space-x-3">
+                <Link href="/profile">
                 <div className="flex items-center space-x-2 px-3 py-2 bg-muted/50 rounded-full">
                   <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center">
                     <User className="w-4 h-4 text-white" />
@@ -73,6 +68,7 @@ export function CreativeNavigation() {
                     {session.user?.name || session.user?.email?.split("@")[0]}
                   </span>
                 </div>
+                </Link>
                 <MagneticButton onClick={handleSignOut} variant="ghost" className="rounded-full p-2" title="Sign out">
                   <LogOut className="w-4 h-4" />
                 </MagneticButton>

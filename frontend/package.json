@@ -1,5 +1,5 @@
 {
-  "name": "my-v0-project",
+  "name": "kairo",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -72,6 +72,7 @@
     "@types/node": "^22",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "knip": "^5.64.0",
     "postcss": "^8.5",
     "tailwindcss": "^4.1.9",
     "tw-animate-css": "1.3.3",

@@ -19,9 +19,8 @@ const dmSans = DM_Sans({
 })
 
 export const metadata: Metadata = {
-  title: "InternExplore - Discover Your Perfect Internship",
+  title: "Kairo - Discover Your Perfect Internship",
   description: "A minimalist platform to explore and discover internship opportunities that match your career goals.",
-  generator: "v0.app",
 }
 
 export default function RootLayout({

@@ -6,7 +6,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
-import { Eye, EyeOff, Mail, Lock, ArrowRight, Building2, Github } from "lucide-react"
+import { Eye, EyeOff, Mail, Lock, ArrowRight, Building2 } from "lucide-react"
 import { MagneticButton } from "@/components/magnetic-button"
 import { RevealAnimation } from "@/components/reveal-animation"
 
@@ -46,10 +46,6 @@ export default function LoginPage() {
     signIn("google", { callbackUrl: "/" })
   }
 
-  const handleGitHubSignIn = () => {
-    signIn("github", { callbackUrl: "/" })
-  }
-
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Animated background elements */}
@@ -79,7 +75,7 @@ export default function LoginPage() {
                     <Building2 className="w-7 h-7 text-white" />
                   </div>
                   <span className="font-heading font-bold text-3xl bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
-                    InternExplore
+                    Kairo
                   </span>
                 </div>
                 <h1 className="text-4xl font-heading font-bold text-foreground mb-4 leading-tight">
@@ -150,15 +146,6 @@ export default function LoginPage() {
                     />
                   </svg>
                   <span>Continue with Google</span>
-                </MagneticButton>
-
-                <MagneticButton
-                  type="button"
-                  onClick={handleGitHubSignIn}
-                  className="w-full bg-gray-900 hover:bg-gray-800 text-white py-3 rounded-xl font-medium transition-all duration-200 flex items-center justify-center space-x-2"
-                >
-                  <Github className="w-5 h-5" />
-                  <span>Continue with GitHub</span>
                 </MagneticButton>
               </div>
 

@@ -5,7 +5,7 @@ import type React from "react"
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Building2, Check, Github } from "lucide-react"
+import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Building2, Check } from "lucide-react"
 import { MagneticButton } from "@/components/magnetic-button"
 import { RevealAnimation } from "@/components/reveal-animation"
 import { signIn } from "next-auth/react"
@@ -20,6 +20,7 @@ export default function SignupPage() {
     password: "",
     confirmPassword: "",
     agreeToTerms: false,
+    role: "DEVELOPER",
   })
   const router = useRouter()
 
@@ -43,6 +44,7 @@ export default function SignupPage() {
           name: formData.name,
           email: formData.email,
           password: formData.password,
+          role: formData.role
         }),
       })
 
@@ -70,10 +72,6 @@ export default function SignupPage() {
 
   const handleGoogleSignIn = () => {
     signIn("google", { callbackUrl: "/" })
-  }
-
-  const handleGitHubSignIn = () => {
-    signIn("github", { callbackUrl: "/" })
   }
 
   return (
@@ -122,15 +120,6 @@ export default function SignupPage() {
                     />
                   </svg>
                   <span>Continue with Google</span>
-                </MagneticButton>
-
-                <MagneticButton
-                  type="button"
-                  onClick={handleGitHubSignIn}
-                  className="w-full bg-gray-900 hover:bg-gray-800 text-white py-3 rounded-xl font-medium transition-all duration-200 flex items-center justify-center space-x-2"
-                >
-                  <Github className="w-5 h-5" />
-                  <span>Continue with GitHub</span>
                 </MagneticButton>
               </div>
 
@@ -236,6 +225,35 @@ export default function SignupPage() {
                   </div>
                 </div>
 
+                {/* Role Selection */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">Select Role</label>
+                  <div className="flex items-center space-x-6">
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="role"
+                        value="DEVELOPER"
+                        checked={formData.role === "DEVELOPER"}
+                        onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                        className="w-4 h-4 text-primary focus:ring-primary/50 border-border"
+                      />
+                      <span className="text-sm">Developer</span>
+                    </label>
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="role"
+                        value="RECRUITER"
+                        checked={formData.role === "RECRUITER"}
+                        onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                        className="w-4 h-4 text-primary focus:ring-primary/50 border-border"
+                      />
+                      <span className="text-sm">Recruiter</span>
+                    </label>
+                  </div>
+                </div>
+
                 {/* Terms agreement */}
                 <div className="flex items-start space-x-3">
                   <div className="relative">
@@ -321,7 +339,7 @@ export default function SignupPage() {
                     <Building2 className="w-7 h-7 text-white" />
                   </div>
                   <span className="font-heading font-bold text-3xl bg-gradient-to-r from-foreground to-secondary bg-clip-text text-transparent">
-                    InternExplore
+                    Kairo
                   </span>
                 </div>
                 <h1 className="text-4xl font-heading font-bold text-foreground mb-4 leading-tight">
