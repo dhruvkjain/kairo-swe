@@ -1,1 +1,0 @@
-self.__NEXT_FONT_MANIFEST="{\"pages\":{},\"app\":{\"/Users/shobhitchandra/Documents/Projects/IT314_Project/KAIRO-Internship_Exploration_Application/app/layout\":[\"static/media/13971731025ec697-s.p.woff2\",\"static/media/36966cca54120369-s.p.woff2\"]},\"appUsingSizeAdjust\":true,\"pagesUsingSizeAdjust\":false}"
