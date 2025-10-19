@@ -20,8 +20,8 @@ import { Eye, EyeOff, Lock, Mail, User, UserCheck } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-// import { toast } from "sonner";
-// import { signIn } from "next-auth/react";
+import { toast } from "sonner";
+import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 interface RegistrationFormData {
