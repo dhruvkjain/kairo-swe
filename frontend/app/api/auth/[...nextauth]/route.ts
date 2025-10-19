@@ -3,7 +3,6 @@ import CredentialsProvider from "next-auth/providers/credentials"
 import GoogleProvider from "next-auth/providers/google"
 import { PrismaAdapter } from "@next-auth/prisma-adapter"
 import prisma from "@/lib/prisma"
-import { Role } from "@prisma/client"
 
 const handler = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -29,14 +28,13 @@ const handler = NextAuth({
           user = await prisma.user.create({
             data: {
               email: credentials.email,
-              role: credentials.role as Role,
+              role: credentials.role as any,
             },
           });
         } else {
-          // If user exists, just validate password
+          // If user exists, validate password (TODO: implement password check)
           return null;
         }
-
         // TODO: check hashed password instead of plain-text
         return user;
       },
@@ -62,20 +60,21 @@ const handler = NextAuth({
     },
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
-        token.role = user.role;
+        (token as any).id = (user as any).id;
+        (token as any).role = (user as any).role;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        const dbUser = await prisma.user.findUnique({
+        const dbUser = (await prisma.user.findUnique({
           where: { email: session.user.email! },
           select: { id: true, role: true },
-        })
+        })) as { id?: string | null; role?: string | null } | null;
 
-        session.user.id = dbUser?.id;
-        session.user.role = dbUser?.role;
+        const userAny = session.user as any;
+        userAny.id = dbUser?.id;
+        userAny.role = dbUser?.role;
       }
       return session;
     },
