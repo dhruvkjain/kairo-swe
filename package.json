@@ -1,6 +1,8 @@
 {
   "dependencies": {
+    "@next-auth/prisma-adapter": "^1.0.7",
     "dotenv": "^17.2.3",
+    "next-auth": "^4.24.11",
     "node-fetch": "^3.3.2"
   },
   "devDependencies": {
