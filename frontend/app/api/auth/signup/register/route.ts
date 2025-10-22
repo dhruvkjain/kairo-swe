@@ -45,18 +45,17 @@ export async function POST(req: NextRequest) {
 
     // Send verification email
     const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT),
+      service:'gmail',
       auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASSWORD,
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASSWORD
       },
     });
 
     const verificationUrl = `${process.env.NEXT_PUBLIC_URL}/api/verify?token=${token}`;
 
     await transporter.sendMail({
-      from: `"DreamIntern" <${process.env.SMTP_USER}>`,
+      from: process.env.EMAIL_USER,
       to: user.email!,
       subject: "Verify your email",
       html: `<p>Hi ${user.name},</p>
