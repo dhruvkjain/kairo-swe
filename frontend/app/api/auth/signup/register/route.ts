@@ -6,10 +6,18 @@ import nodemailer from "nodemailer";
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, password } = await req.json();
+    const { name, email, password, role } = await req.json();
 
     if (!email || !password) {
       return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
+    }
+
+    // validate Role
+    const validRoles = ["APPLICANT", "RECRUITER"];
+    const normalizedRole = role?.toUpperCase();
+
+    if (!validRoles.includes(normalizedRole)) {
+      return NextResponse.json({ error: "Invalid role" }, { status: 400 });
     }
 
     // Check if user exists
@@ -27,13 +35,13 @@ export async function POST(req: NextRequest) {
         name,
         email,
         password: hashedPassword,
-        role: "DEVELOPER",
+        role: normalizedRole,
       },
     });
 
     //Generate verification token
     const token = crypto.randomBytes(32).toString("hex");
-    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    const expires = new Date(Date.now() + 10 * 60 * 1000); // 10 min
 
     await prisma.verificationToken.create({
       data: {
