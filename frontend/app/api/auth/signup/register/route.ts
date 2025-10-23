@@ -6,10 +6,18 @@ import nodemailer from "nodemailer";
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, password } = await req.json();
+    const { name, email, password, role } = await req.json();
 
     if (!email || !password) {
       return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
+    }
+
+    // validate Role
+    const validRoles = ["APPLICANT", "RECRUITER"];
+    const normalizedRole = role?.toUpperCase();
+
+    if (!validRoles.includes(normalizedRole)) {
+      return NextResponse.json({ error: "Invalid role" }, { status: 400 });
     }
 
     // Check if user exists
@@ -27,13 +35,13 @@ export async function POST(req: NextRequest) {
         name,
         email,
         password: hashedPassword,
-        role: "DEVELOPER",
+        role: normalizedRole,
       },
     });
 
     //Generate verification token
     const token = crypto.randomBytes(32).toString("hex");
-    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    const expires = new Date(Date.now() + 10 * 60 * 1000); // 10 min
 
     await prisma.verificationToken.create({
       data: {
@@ -45,18 +53,17 @@ export async function POST(req: NextRequest) {
 
     // Send verification email
     const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT),
+      service:'gmail',
       auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASSWORD,
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASSWORD
       },
     });
 
     const verificationUrl = `${process.env.NEXT_PUBLIC_URL}/api/verify?token=${token}`;
 
     await transporter.sendMail({
-      from: `"DreamIntern" <${process.env.SMTP_USER}>`,
+      from: process.env.EMAIL_USER,
       to: user.email!,
       subject: "Verify your email",
       html: `<p>Hi ${user.name},</p>
