@@ -1,4 +1,4 @@
-
+// go to http://localhost:3000/email-test to see if the eamil is working or not
 import { NextRequest, NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 
@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
 
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
-      to: process.env.EMAIL_USER,
+      to: process.env.EMAIL_USER, // here write your email.
       subject: "Test Email from Next.js App Router",
       text: "Hello! This is a test email from Nodemailer + SendGrid.",
     });

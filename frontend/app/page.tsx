@@ -145,8 +145,8 @@ export default function HomePage() {
                 <MagneticButton
                   size="lg"
                   variant="outline"
-                  className="border-background/30 text-background hover:bg-background/10 px-8 py-4 text-lg rounded-2xl"
-                >
+                  className="border-foreground/30 text-foreground hover:bg-foreground/10 px-8 py-4 text-lg rounded-2xl"
+>
                   Browse Internships
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </MagneticButton>
