@@ -245,7 +245,7 @@ const Registration: React.FC = () => {
               <Label htmlFor="terms" className="text-sm text-muted-foreground">
                 I agree to the{" "}
                 <Link
-                  href="/terms"
+                  href="/Terms&Services"
                   className="text-primary hover:underline font-medium"
                 >
                   Terms and Conditions
@@ -253,7 +253,7 @@ const Registration: React.FC = () => {
               </Label>
             </div>
 
-            {/* Submit */}
+            {/* Submit button */}
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Creating Account..." : "Create Account"}
             </Button>
