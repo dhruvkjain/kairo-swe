@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
-import crypto from "crypto";
+import crypto from "node:crypto";
 import nodemailer from "nodemailer";
 
 export async function POST(req: NextRequest) {
+  console.log("runnig");
   try {
     const { name, email, password, role } = await req.json();
 
@@ -38,6 +39,8 @@ export async function POST(req: NextRequest) {
         role: normalizedRole,
       },
     });
+
+    console.log("User created:", user);
 
     //Generate verification token
     const token = crypto.randomBytes(32).toString("hex");
@@ -84,7 +87,7 @@ export async function POST(req: NextRequest) {
 //   try {
 //     const { email, password, name } = await request.json()
 
-//     // Basic validation
+//      Basic validation
 //     if (!email || !password || !name) {
 //       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
 //     }
@@ -94,7 +97,7 @@ export async function POST(req: NextRequest) {
 //     // 2. Save to database
 //     // 3. Send verification email
 
-//     // For demo purposes, we'll just return success
+//     For demo purposes, we'll just return success
 //     const user = {
 //       id: Date.now().toString(),
 //       email,
