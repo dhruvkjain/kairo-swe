@@ -1,160 +1,129 @@
-import { Search, MapPin, ArrowRight, Users } from "lucide-react"
-import { Input } from "@/components/ui/input"
-import { FloatingElements } from "@/components/floating-elements"
-import { MagneticButton } from "@/components/magnetic-button"
-import { RevealAnimation } from "@/components/reveal-animation"
-import { CreativeNavigation } from "@/components/creative-navigation"
+"use client";
 
-export default function HomePage() {
+import React from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import Link from "next/link";
+import { ArrowRight, Briefcase, Users, Zap } from "lucide-react";
+
+const LandingPage: React.FC = () => {
   return (
-    <div className="min-h-screen">
-      {/* Creative Navigation */}
-      <CreativeNavigation />
-
-      {/* Hero Section with Asymmetric Layout */}
-      <section className="min-h-screen flex items-center justify-center relative overflow-hidden pt-20">
-        <FloatingElements />
-
-        {/* Background with creative shapes */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5"></div>
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-gradient-to-tl from-accent/10 to-primary/10 rounded-full blur-2xl animate-pulse delay-1000"></div>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            {/* Left side - Content */}
-            <div className="space-y-8">
-              <RevealAnimation delay={200}>
-                <div className="space-y-6">
-                  <h1 className="font-heading font-bold text-5xl sm:text-6xl lg:text-7xl text-foreground text-balance leading-tight">
-                    Find Your
-                    <span className="text-primary transform -rotate-2 inline-block">Dream</span>
-                    Internship
-                  </h1>
-
-                  <p className="text-xl text-muted-foreground max-w-lg text-pretty leading-relaxed">
-                    Connect with top companies and discover opportunities that match your passion, skills, and career
-                    goals.
-                  </p>
-                </div>
-              </RevealAnimation>
-
-              {/* Creative Search Bar */}
-              <RevealAnimation delay={400}>
-                <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-6 border border-border/50 shadow-xl">
-                  <div className="space-y-4">
-                    <div className="relative">
-                      <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-                      <Input
-                        placeholder="Search internships, companies, or roles..."
-                        className="pl-12 h-14 text-lg border-0 bg-background/50 focus-visible:ring-2 focus-visible:ring-primary/20 rounded-xl"
-                      />
-                    </div>
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      <div className="flex-1 relative">
-                        <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-                        <Input
-                          placeholder="Location"
-                          className="pl-12 h-12 border-0 bg-background/50 focus-visible:ring-2 focus-visible:ring-primary/20 rounded-xl"
-                        />
-                      </div>
-                      <MagneticButton
-                        size="lg"
-                        className="h-12 px-8 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 rounded-xl"
-                      >
-                        Search
-                        <ArrowRight className="ml-2 w-5 h-5" />
-                      </MagneticButton>
-                    </div>
-                  </div>
-                </div>
-              </RevealAnimation>
-            </div>
-
-            {/* Right side - Visual Element */}
-            {/* <RevealAnimation delay={800}>
-              <div className="relative">
-                <div className="relative transform rotate-6 hover:rotate-3 transition-transform duration-500">
-                  <div className="bg-gradient-to-br from-primary/20 to-secondary/20 rounded-3xl p-8 backdrop-blur-sm border border-border/50 shadow-2xl">
-                    <div className="space-y-6">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center text-white text-xl">
-                          🚀
-                        </div>
-                        <div>
-                          <h3 className="font-heading font-semibold text-lg">Software Engineering</h3>
-                          <p className="text-muted-foreground">TechCorp • Remote</p>
-                        </div>
-                      </div>
-                      <div className="space-y-3">
-                        <div className="h-2 bg-muted rounded-full overflow-hidden">
-                          <div className="h-full bg-gradient-to-r from-primary to-secondary rounded-full w-4/5 animate-pulse"></div>
-                        </div>
-                        <p className="text-sm text-muted-foreground">Match Score: 95%</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="absolute -top-4 -right-4 transform -rotate-12 hover:-rotate-6 transition-transform duration-500">
-                  <div className="bg-gradient-to-br from-accent/20 to-primary/20 rounded-2xl p-6 backdrop-blur-sm border border-border/50 shadow-xl">
-                    <div className="text-center">
-                      <div className="text-2xl mb-2">🎨</div>
-                      <p className="text-sm font-medium">UX Design</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="absolute -bottom-4 -left-4 transform rotate-12 hover:rotate-6 transition-transform duration-500">
-                  <div className="bg-gradient-to-br from-secondary/20 to-accent/20 rounded-2xl p-6 backdrop-blur-sm border border-border/50 shadow-xl">
-                    <div className="text-center">
-                      <div className="text-2xl mb-2">📊</div>
-                      <p className="text-sm font-medium">Data Science</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </RevealAnimation> */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 flex flex-col items-center justify-center text-center px-4 overflow-hidden">
+      
+      {/* Hero Section */}
+      <div className="max-w-3xl space-y-6 animate-fadeInUp">
+        {/* Logo */}
+        <div className="flex justify-center mb-6 animate-bounce-slow">
+          <div className="w-20 h-20 bg-gray-900 rounded-full flex items-center justify-center shadow-xl">
+            <Zap className="w-10 h-10 text-white" />
           </div>
         </div>
-      </section>
 
-      {/* Creative CTA Section */}
-      <section className="py-32 bg-gradient-to-br from-foreground via-muted-foreground to-foreground text-background relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1),transparent_70%)]"></div>
-        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-primary/10 via-transparent to-secondary/10"></div>
+        {/* Heading */}
+        <h1 className="text-4xl md:text-5xl font-extrabold text-gray-800 leading-tight">
+          Welcome to <span className="text-gray-900">Kairo</span>
+        </h1>
 
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <RevealAnimation>
-            <div className="space-y-8">
-              <h2 className="font-heading font-bold text-4xl lg:text-5xl text-balance">
-                Ready to Launch Your
-                <span className="text-primary transform -rotate-1 inline-block">Career?</span>
-              </h2>
-              <p className="text-xl text-background/80 max-w-2xl mx-auto text-pretty">
-                Join thousands of ambitious students who have found their dream internships and kickstarted their
-                careers.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-                <MagneticButton
-                  size="lg"
-                  className="bg-background text-foreground hover:bg-background/90 px-8 py-4 text-lg rounded-2xl"
-                >
-                  Create Your Profile
-                  <Users className="ml-2 w-5 h-5" />
-                </MagneticButton>
-                <MagneticButton
-                  size="lg"
-                  variant="outline"
-                  className="border-foreground/30 text-foreground hover:bg-foreground/10 px-8 py-4 text-lg rounded-2xl"
->
-                  Browse Internships
-                  <ArrowRight className="ml-2 w-5 h-5" />
-                </MagneticButton>
-              </div>
-            </div>
-          </RevealAnimation>
+        <p className="text-gray-600 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+          The smart platform connecting <strong>Applicants</strong> and <strong>Recruiters</strong> seamlessly.
+        </p>
+
+        {/* Buttons */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8">
+          <Link href="/login">
+            <Button className="px-8 py-5 text-lg shadow-md hover:scale-110 transition-all duration-300">
+              Sign In
+            </Button>
+          </Link>
+          <Link href="/register">
+            <Button
+              variant="outline"
+              className="px-8 py-5 text-lg border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white hover:scale-110 transition-all duration-300"
+            >
+              Sign Up
+            </Button>
+          </Link>
         </div>
-      </section>
+      </div>
+
+      {/* Features Section */}
+      <div className="mt-24 grid grid-cols-1 sm:grid-cols-3 gap-8 w-full max-w-6xl px-4 animate-fadeInUp delay-200">
+        {[
+          {
+            icon: <Users className="w-10 h-10 text-gray-900 mb-3" />,
+            title: "For Applicants",
+            text: "Build your professional profile and get matched with recruiters who value your skills.",
+          },
+          {
+            icon: <Briefcase className="w-10 h-10 text-gray-900 mb-3" />,
+            title: "For Recruiters",
+            text: "Discover top talent effortlessly with AI-powered insights into projects and skills to hire smarter.",
+          },
+          {
+            icon: <ArrowRight className="w-10 h-10 text-gray-900 mb-3" />,
+            title: "Get Started",
+            text: "Join Kairo today and experience the next generation of hiring and career growth.",
+          },
+        ].map((feature, index) => (
+          <Card
+            key={index}
+            className="border border-gray-200 shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 rounded-2xl bg-white/80 backdrop-blur-sm"
+            style={{ animationDelay: `${index * 150}ms` }}
+          >
+            <CardContent className="p-8 flex flex-col items-center text-center space-y-3">
+              <div className="animate-fadeIn">{feature.icon}</div>
+              <h3 className="text-lg font-semibold text-gray-900">{feature.title}</h3>
+              <p className="text-sm text-gray-600 leading-relaxed">{feature.text}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Footer */}
+      <footer className="mt-24 text-gray-500 text-sm pb-8 animate-fadeInUp delay-300">
+        © {new Date().getFullYear()} <span className="font-semibold text-gray-700">Kairo</span> — All rights reserved.
+      </footer>
+
+      {/* Animations */}
+      <style jsx>{`
+        @keyframes fadeInUp {
+          0% {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes bounceSlow {
+          0%, 100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-8px);
+          }
+        }
+
+        .animate-fadeInUp {
+          animation: fadeInUp 0.8s ease-out both;
+        }
+
+        .animate-bounce-slow {
+          animation: bounceSlow 2.5s infinite ease-in-out;
+        }
+
+        .delay-200 {
+          animation-delay: 0.2s;
+        }
+
+        .delay-300 {
+          animation-delay: 0.3s;
+        }
+      `}</style>
     </div>
-  )
-}
+  );
+};
+
+export default LandingPage;
