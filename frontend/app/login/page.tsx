@@ -53,16 +53,10 @@ const Login: React.FC = () => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    // if (!formData.termsAccepted)
-    //   return toast.error("Please accept the Terms and Conditions.");
-
-    // if (formData.password !== formData.confirmPassword)
-    //   return toast.error("Passwords do not match.");
-
     try {
       setIsLoading(true);
 
-      const res = await fetch("/api/auth/signup", {
+      const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -70,6 +64,7 @@ const Login: React.FC = () => {
           password: formData.password,
           role: formData.role,
         }),
+        credentials: "include",
       });
 
       const data = await res.json();
@@ -78,15 +73,7 @@ const Login: React.FC = () => {
 
       toast.success("Sign in successful! Redirecting...");
 
-      // Auto-login after signup
-      const result = await signIn("credentials", {
-        redirect: false,
-        email: formData.email,
-        password: formData.password,
-      });
-
-      if (result?.error) toast.error(result.error);
-      else router.push("/");
+      router.push(`/profile/${data.user.id}`);
 
     } catch (err: any) {
       toast.error(err.message || "Something went wrong.");
