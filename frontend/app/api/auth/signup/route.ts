@@ -56,14 +56,14 @@ export async function POST(req: NextRequest) {
 
     // Send verification email
     const transporter = nodemailer.createTransport({
-      service:'gmail',
+      service: 'gmail',
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASSWORD
       },
     });
 
-    const verificationUrl = `${process.env.NEXT_PUBLIC_URL}/api/verify?token=${token}`;
+    const verificationUrl = `${process.env.NEXTAUTH_URL}/api/auth/verify?token=${token}`;
 
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
@@ -81,31 +81,3 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// import { type NextRequest, NextResponse } from "next/server"
-
-// export async function POST(request: NextRequest) {
-//   try {
-//     const { email, password, name } = await request.json()
-
-//      Basic validation
-//     if (!email || !password || !name) {
-//       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
-//     }
-
-//     // In a real app, we would:
-//     // 1. Hash the password
-//     // 2. Save to database
-//     // 3. Send verification email
-
-//     For demo purposes, we'll just return success
-//     const user = {
-//       id: Date.now().toString(),
-//       email,
-//       name,
-//     }
-
-//     return NextResponse.json({ message: "User created successfully", user }, { status: 201 })
-//   } catch (error) {
-//     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
-//   }
-// }

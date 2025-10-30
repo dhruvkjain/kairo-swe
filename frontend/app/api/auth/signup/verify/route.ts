@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
     // Delete token after verification
     await prisma.verificationToken.delete({ where: { token } });
 
-    return NextResponse.json({ message: "Email verified successfully!" });
+    return NextResponse.redirect(new URL("/", req.url));
   } catch (error: any) {
     console.error(error);
     return NextResponse.json({ error: error.message || "Something went wrong" }, { status: 500 });

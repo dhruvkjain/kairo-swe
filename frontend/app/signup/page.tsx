@@ -83,17 +83,9 @@ const Registration: React.FC = () => {
 
       if (!res.ok) throw new Error(data.message || "Signup failed.");
 
-      toast.success("Signup successful! Redirecting...");
-
-      // Auto-login after signup
-      const result = await signIn("credentials", {
-        redirect: false,
-        email: formData.email,
-        password: formData.password,
-      });
-
-      if (result?.error) toast.error(result.error);
-      else router.push("/");
+      toast.success("Signup successful! Please verify your email before logging in.");
+      
+      router.push("/verify-email");
 
     } catch (err: any) {
       toast.error(err.message || "Something went wrong.");
