@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import prisma from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import UploadProfileForm from '@/components/UploadProfileForm'
 
 export default async function ProfilePage({ params }: { params: { id: string } }) {
   const sessionToken = cookies().get("sessionToken")?.value;
@@ -35,6 +36,7 @@ export default async function ProfilePage({ params }: { params: { id: string } }
         <h1 className="text-2xl font-bold mb-2">Welcome, {user.name}!</h1>
         <p className="text-gray-600 mb-4">{user.email}</p>
         <p className="text-sm text-green-600">Your email has been verified ✅</p>
+        <UploadProfileForm></UploadProfileForm>
       </div>
     </div>
   );
