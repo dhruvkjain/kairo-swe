@@ -26,13 +26,24 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Session not found" }, { status: 401 });
     }
 
-    // Extract public_id from Cloudinary image URL
-    const parts = imageUrl.split("/");
-    const publicIdWithExtension = parts[parts.length - 1];
-    const publicId = publicIdWithExtension.split(".")[0];
+    if (!imageUrl) {
+      return NextResponse.json({ error: "Image URL missing" }, { status: 400 });
+    }
+
+    const match = imageUrl.match(/upload\/(?:v\d+\/)?(.+)\.[a-zA-Z]+$/);
+    const publicId = match ? match[1] : null;
+
+    if (!publicId) {
+      return NextResponse.json({ error: "Invalid image URL format" }, { status: 400 });
+    }
 
     // Delete image from Cloudinary
-    await cloudinary.uploader.destroy(publicId);
+    const result = await cloudinary.uploader.destroy(publicId);
+
+    console.log(result);
+    if (result.result !== "ok" && result.result !== "not found") {
+      return NextResponse.json({ error: "Cloudinary delete failed", result }, { status: 500 });
+    }
 
     // Remove image URL from DB
     await prisma.user.update({

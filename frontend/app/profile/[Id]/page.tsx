@@ -1,8 +1,8 @@
 import { cookies } from "next/headers";
 import prisma from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import UploadProfileForm from '@/components/UploadProfileForm'
-import DeleteImageButton from "@/components/DeleteImageButton";
+import ImageManager from "@/components/ImageManager";
+import UploadProfileForm from "@/components/UploadProfileForm";
 
 export default async function ProfilePage({ params }: { params: { id: string } }) {
   const sessionToken = cookies().get("sessionToken")?.value;
@@ -11,7 +11,7 @@ export default async function ProfilePage({ params }: { params: { id: string } }
   if (!sessionToken) {
     redirect("/login");
   }
-
+  
   // Verify session and user
   const session = await prisma.session.findUnique({
     where: { sessionToken },
@@ -40,18 +40,14 @@ export default async function ProfilePage({ params }: { params: { id: string } }
 
         {user.image ? (
           <div className="mb-6">
-            <img
-              src={user.image}
-              alt="Profile"
-              className="w-32 h-32 mx-auto rounded-full object-cover border"
-            /> 
-            <DeleteImageButton imageUrl={user.image} />
+            <ImageManager imageUrl={user.image} />
           </div>
         ) : (
-          <p className="text-gray-500 mb-4">No profile image uploaded.</p>
+          <>
+            <p className="text-gray-500 mb-4">No profile image uploaded.</p>
+            <UploadProfileForm />
+          </>
         )}
-        
-        <UploadProfileForm></UploadProfileForm>
       </div>
     </div>
   );
