@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import ImageManager from "@/components/ImageManager";
 import UploadProfileForm from "@/components/UploadProfileForm";
+import FileUpload from "@/components/FileUpload";
 
 export default async function ProfilePage({ params }: { params: { id: string } }) {
   const sessionToken = cookies().get("sessionToken")?.value;
@@ -48,6 +49,7 @@ export default async function ProfilePage({ params }: { params: { id: string } }
             <UploadProfileForm />
           </>
         )}
+        <FileUpload userId={user.id}/>
       </div>
     </div>
   );

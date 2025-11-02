@@ -26,10 +26,40 @@ model User {
   password      String?
   emailVerified DateTime?
   image         String?
-  role          Role      @default(DEVELOPER)
+  role          Role      @default(APPLICANT)
 
   accounts      Account[]
   sessions      Session[]
+
+  applicant     Applicant?
+  recruiter     Recruiter?
+}
+
+model Applicant {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  linkedInLink String?
+  resumeLink   String?
+  githubLink   String?
+  portfolioLink String?
+  about        String?  @db.Text
+  skills       String[]
+  experience   String?  
+  phoneNumber  String?
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Recruiter {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  companyName  String?
+  position     String?
+  website      String?
+  contactEmail String?
+  about        String?  @db.Text
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Account {
