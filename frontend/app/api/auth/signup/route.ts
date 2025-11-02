@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    //Save user
+    // Create user
     const user = await prisma.user.create({
       data: {
         name,
@@ -41,6 +41,24 @@ export async function POST(req: NextRequest) {
     });
 
     console.log("User created:", user);
+
+    // Create role-specific profile
+    if (normalizedRole === "APPLICANT") {
+      await prisma.applicant.create({
+        data: {
+          userId: user.id,
+        },
+      });
+      console.log("Applicant profile created");
+    } else if (normalizedRole === "RECRUITER") {
+      await prisma.recruiter.create({
+        data: {
+          userId: user.id,
+        },
+      });
+      console.log("Recruiter profile created");
+    }
+
 
     //Generate verification token
     const token = crypto.randomBytes(32).toString("hex");
