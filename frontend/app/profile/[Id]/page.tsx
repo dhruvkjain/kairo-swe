@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import ImageManager from "@/components/ImageManager";
 import UploadProfileForm from "@/components/UploadProfileForm";
 import FileUpload from "@/components/FileUpload";
+import DeleteResumeButton from "@/components/DeleteResumeButton";
 
 export default async function ProfilePage({ params }: { params: { id: string } }) {
   const sessionToken = cookies().get("sessionToken")?.value;
@@ -12,7 +13,7 @@ export default async function ProfilePage({ params }: { params: { id: string } }
   if (!sessionToken) {
     redirect("/login");
   }
-  
+
   // Verify session and user
   const session = await prisma.session.findUnique({
     where: { sessionToken },
@@ -32,6 +33,14 @@ export default async function ProfilePage({ params }: { params: { id: string } }
     redirect("/login");
   }
 
+  const applicant = await prisma.applicant.findUnique({
+    where: { userId: user.id },
+    select: { resumeLink: true },
+  });
+
+  const isApplicant = !!applicant;
+  const hasResume = applicant && applicant.resumeLink !== null;
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="p-8 bg-white shadow-lg rounded-lg w-full max-w-md text-center">
@@ -49,7 +58,29 @@ export default async function ProfilePage({ params }: { params: { id: string } }
             <UploadProfileForm />
           </>
         )}
-        <FileUpload userId={user.id}/>
+
+        {isApplicant ? (
+          <div className="mt-6">
+            {hasResume === false? (
+              <FileUpload userId={user.id} />
+            ) : (
+              <div className="flex flex-col gap-3 items-center">
+                <a
+                  href={applicant!.resumeLink!}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                >
+                  Download / View Resume
+                </a>
+
+                <DeleteResumeButton userId={user.id} fileUrl={applicant!.resumeLink!} />
+              </div>
+            )}
+          </div>
+        ) : (
+          <p className="text-gray-500 mt-4">You are registered as a recruiter. Resume upload is disabled.</p>
+        )}
       </div>
     </div>
   );
