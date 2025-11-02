@@ -1,10 +1,13 @@
 "use client";
+
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function FileUpload({ userId }: { userId: string }) {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [fileUrl, setFileUrl] = useState<string | null>(null);
+  const router = useRouter();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFile(e.target.files?.[0] || null);
@@ -36,6 +39,7 @@ export default function FileUpload({ userId }: { userId: string }) {
       const data = await res.json();
       if (data.fileUrl) {
         setFileUrl(data.fileUrl);
+        router.refresh();
       } else {
         alert(data.error || "Upload failed");
       }
@@ -60,10 +64,7 @@ export default function FileUpload({ userId }: { userId: string }) {
 
       {fileUrl && (
         <p className="mt-3 text-green-600">
-          Uploaded Successfully:{" "}
-          <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="underline">
-            View File
-          </a>
+          File uploaded successfully!
         </p>
       )}
     </div>
