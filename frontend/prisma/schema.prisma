@@ -97,3 +97,72 @@ model VerificationToken {
 
   @@unique([identifier, token])
 }
+
+model Internship {
+  id                  String             @id @default(uuid())
+  category            InternshipCategory?
+  title               String
+  slug                String             @unique
+  description         String
+  location            String
+  type                InternshipType     @default(ONSITE)
+  mode                InternshipMode     @default(FULL_TIME)
+  stipend             Int?
+  currency            String?
+  durationWeeks       Int?
+  openings            Int?
+  skillsRequired      String[]
+  perks               String[]
+  eligibility         String?            //e.g. "Undergraduate students, CS background"
+  userType            UserType?          //restrict by user type
+  startDate           DateTime?
+  applicationDeadline DateTime?
+  isActive            Boolean            @default(true)
+  status              InternshipStatus   @default(DRAFT)
+  viewsCount          Int                @default(0)
+  applicationsCount   Int                @default(0)  // NEW FIELD
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  // Relations
+  companyId           String
+  createdById         String
+
+  company             Company            @relation(fields: [companyId], references: [id])
+  createdBy           User               @relation(fields: [createdById], references: [id])
+  applications        InternshipApplication[]
+
+  @@index([companyId])
+  @@index([status])
+  @@index([title])
+}
+
+enum UserType {
+  STUDENT
+  GRADUATE
+  PROFESSIONAL
+  ANY
+}
+
+model InternshipApplication {
+  id             String       @id @default(uuid())
+  internshipId   String
+  applicantId    String       // professional user ID
+  coverLetter    String?
+  resumeUrl      String?
+  status         ApplicationStatus @default(PENDING)
+  createdAt      DateTime     @default(now())
+
+  internship     Internship   @relation(fields: [internshipId], references: [id])
+  applicant      User         @relation(fields: [applicantId], references: [id])
+
+  @@unique([internshipId, applicantId]) // prevents duplicate applications
+}
+
+enum ApplicationStatus {
+  PENDING
+  REVIEWED
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
