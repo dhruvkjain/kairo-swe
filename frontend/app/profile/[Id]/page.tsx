@@ -5,7 +5,7 @@ import ImageManager from "@/components/ImageManager";
 import UploadProfileForm from "@/components/UploadProfileForm";
 import FileUpload from "@/components/FileUpload";
 import DeleteResumeButton from "@/components/DeleteResumeButton";
-import GithubButton from "@/components/GitHubButton"; 
+import GithubButton from "@/components/GithubButton"; 
 
 
 export default async function ProfilePage({ params }: { params: { id: string } }) {
