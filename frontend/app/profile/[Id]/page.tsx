@@ -9,7 +9,6 @@ import GithubButton from "@/components/GithubButton";
 import LinkedinButton from "@/components/LinkedinButton";
 import { Link } from "lucide-react";
 
-
 export default async function ProfilePage({ params }: { params: { id: string } }) {
   const sessionToken = cookies().get("sessionToken")?.value;
 
