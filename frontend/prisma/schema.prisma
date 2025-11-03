@@ -99,37 +99,37 @@ model VerificationToken {
 }
 
 model Internship {
-  id                  String             @id @default(uuid())
+  id                  String                   @id @default(uuid())
   category            InternshipCategory?
   title               String
-  slug                String             @unique
+  slug                String                   @unique
   description         String
   location            String
-  type                InternshipType     @default(ONSITE)
-  mode                InternshipMode     @default(FULL_TIME)
+  type                InternshipType           @default(ONSITE)
+  mode                InternshipMode           @default(FULL_TIME)
   stipend             Int?
   currency            String?
   durationWeeks       Int?
   openings            Int?
   skillsRequired      String[]
   perks               String[]
-  eligibility         String?            //e.g. "Undergraduate students, CS background"
-  userType            UserType?          //restrict by user type
+  eligibility         String?                  // e.g. "Undergraduate students, CS background"
+  userType            UserType?
   startDate           DateTime?
   applicationDeadline DateTime?
-  isActive            Boolean            @default(true)
-  status              InternshipStatus   @default(DRAFT)
-  viewsCount          Int                @default(0)
-  applicationsCount   Int                @default(0)  // NEW FIELD
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime           @updatedAt
+  isActive            Boolean                  @default(true)
+  status              InternshipStatus         @default(DRAFT)
+  viewsCount          Int                      @default(0)
+  applicationsCount   Int                      @default(0)  // NEW FIELD
+  createdAt           DateTime                 @default(now())
+  updatedAt           DateTime                 @updatedAt
 
   // Relations
   companyId           String
   createdById         String
 
-  company             Company            @relation(fields: [companyId], references: [id])
-  createdBy           User               @relation(fields: [createdById], references: [id])
+  company             Company                  @relation(fields: [companyId], references: [id])
+  createdBy           User                     @relation(fields: [createdById], references: [id])
   applications        InternshipApplication[]
 
   @@index([companyId])
@@ -137,12 +137,46 @@ model Internship {
   @@index([title])
 }
 
+enum InternshipCategory {
+  ENGINEERING
+  DESIGN
+  MARKETING
+  SALES
+  FINANCE
+  HUMAN_RESOURCES
+  OPERATIONS
+  CONTENT_WRITING
+  PRODUCT_MANAGEMENT
+  DATA_SCIENCE
+  OTHER
+}
+
+enum InternshipType {
+  ONSITE
+  REMOTE
+  HYBRID
+}
+
+enum InternshipMode {
+  FULL_TIME
+  PART_TIME
+}
+
 enum UserType {
   STUDENT
   GRADUATE
   PROFESSIONAL
-  ANY
+  COMPANY
+  ADMIN
 }
+
+enum InternshipStatus {
+  DRAFT
+  PUBLISHED
+  CLOSED
+  ARCHIVED
+}
+
 
 model InternshipApplication {
   id             String       @id @default(uuid())
