@@ -7,6 +7,8 @@ import FileUpload from "@/components/FileUpload";
 import DeleteResumeButton from "@/components/DeleteResumeButton";
 import GithubButton from "@/components/GithubButton";
 import { getGitHubUser } from "@/lib/GithubAPI";
+import LinkedinButton from "@/components/LinkedinButton";
+import { Link } from "lucide-react";
 
 export default async function ProfilePage({ params }: { params: { id: string } }) {
   const sessionToken = cookies().get("sessionToken")?.value;
@@ -78,7 +80,7 @@ export default async function ProfilePage({ params }: { params: { id: string } }
           </>
         )}
 
-        {/* ✅ Applicant Resume Section */}
+        {/* Applicant Resume Section */}
         {isApplicant ? (
           <div className="mt-6">
             {hasResume === false ? (
@@ -137,6 +139,8 @@ export default async function ProfilePage({ params }: { params: { id: string } }
         </div>
 
       </div>
+      <GithubButton />
+      <LinkedinButton />
     </div>
   );
 }
