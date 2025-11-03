@@ -5,10 +5,9 @@ import ImageManager from "@/components/ImageManager";
 import UploadProfileForm from "@/components/UploadProfileForm";
 import FileUpload from "@/components/FileUpload";
 import DeleteResumeButton from "@/components/DeleteResumeButton";
-import GithubButton from "@/components/GithubButton"; 
+import GithubButton from "@/components/GithubButton";
 import LinkedinButton from "@/components/LinkedinButton";
 import { Link } from "lucide-react";
-
 
 export default async function ProfilePage({ params }: { params: { id: string } }) {
   const sessionToken = cookies().get("sessionToken")?.value;
