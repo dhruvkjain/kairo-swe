@@ -5,6 +5,8 @@ import ImageManager from "@/components/ImageManager";
 import UploadProfileForm from "@/components/UploadProfileForm";
 import FileUpload from "@/components/FileUpload";
 import DeleteResumeButton from "@/components/DeleteResumeButton";
+import GithubButton from "@/components/GitHubButton"; 
+
 
 export default async function ProfilePage({ params }: { params: { id: string } }) {
   const sessionToken = cookies().get("sessionToken")?.value;
@@ -82,6 +84,7 @@ export default async function ProfilePage({ params }: { params: { id: string } }
           <p className="text-gray-500 mt-4">You are registered as a recruiter. Resume upload is disabled.</p>
         )}
       </div>
+      <GithubButton />
     </div>
   );
 }

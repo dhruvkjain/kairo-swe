@@ -35,7 +35,7 @@ const LandingPage: React.FC = () => {
               Sign In
             </Button>
           </Link>
-          <Link href="/register">
+          <Link href="/signup">
             <Button
               variant="outline"
               className="px-8 py-5 text-lg border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white hover:scale-110 transition-all duration-300"
