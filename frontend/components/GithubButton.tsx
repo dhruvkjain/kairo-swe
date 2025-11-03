@@ -1,0 +1,80 @@
+"use client";
+
+import { useState } from "react";
+
+export default function GithubButton() {
+  const [username, setUsername] = useState("");
+  const [userData, setUserData] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleFetch = async () => {
+    setError("");
+    setUserData(null);
+
+    if (!username.trim()) {
+      setError("Please enter a GitHub username or link");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const res = await fetch("/api/auth/profile/GitHubAttach", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to fetch user");
+
+      setUserData(data);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="p-4 border rounded-2xl shadow-md max-w-md mx-auto space-y-3">
+      <h2 className="text-xl font-semibold">GitHub User Lookup</h2>
+
+      <div className="flex gap-2">
+        <input
+          type="text"
+          placeholder="Enter GitHub username or link..."
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          className="flex-1 border px-3 py-2 rounded-lg"
+        />
+        <button
+          onClick={handleFetch}
+          disabled={loading}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-60"
+        >
+          {loading ? "Loading..." : "Fetch"}
+        </button>
+      </div>
+
+      {error && <p className="text-red-600 text-sm">{error}</p>}
+
+      {userData && (
+        <div className="mt-4 flex items-center gap-4 border-t pt-4">
+          <img
+            src={userData.avatar_url}
+            alt={userData.login}
+            className="w-16 h-16 rounded-full"
+          />
+          <div>
+            <p className="font-bold text-lg">{userData.name || userData.login}</p>
+            <p className="text-sm text-gray-500">{userData.location || "—"}</p>
+            <p className="text-sm">
+              Followers: {userData.followers} | Repos: {userData.public_repos}
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
