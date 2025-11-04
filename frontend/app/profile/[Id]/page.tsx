@@ -9,6 +9,8 @@ import GithubButton from "@/components/GithubButton";
 import LinkedinButton from "@/components/LinkedinButton";
 import { getGitHubUser } from "@/lib/GithubAPI";
 import AddAboutButton from "@/components/AddAboutButton";
+import AddSkillButton from "@/components/AddSkillButton";
+import DeleteSkill from "@/components/DeleteSkill";
 
 export default async function ProfilePage({ params }: { params: { Id: string } }) {
   const sessionToken = cookies().get("sessionToken")?.value;
@@ -176,6 +178,23 @@ export default async function ProfilePage({ params }: { params: { Id: string } }
               initialAbout={isApplicant ? applicant?.about : user.recruiter?.about}
               role={user.role}
             />
+          )}
+        </div>
+        {/* Skills Section */}
+        <div className="mt-8 border-t pt-6">
+          <h2 className="text-lg font-semibold mb-2">Skills</h2>
+          {isApplicant && applicant ? (
+            <>
+              <DeleteSkill userId={user.id} initialSkills={applicant.skills || []} />
+              {isOwner && (
+                <AddSkillButton
+                  userId={user.id}
+                  initialSkills={applicant.skills || []}
+                />
+              )}
+            </>
+          ) : (
+            <p className="text-gray-500 italic">Skills section is only available for applicants.</p>
           )}
         </div>
       </div>

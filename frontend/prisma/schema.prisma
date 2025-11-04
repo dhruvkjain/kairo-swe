@@ -97,7 +97,8 @@ model Applicant {
   portfolioLink String?
   about         String?  @db.Text
   skills        String[]
-  experience    String?
+  experience    String[]
+  projects      String[]
   phoneNumber   String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
