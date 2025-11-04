@@ -1,5 +1,3 @@
-import { cookies } from "next/headers";
-import prisma from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import ImageManager from "@/components/ImageManager";
 import UploadProfileForm from "@/components/UploadProfileForm";
