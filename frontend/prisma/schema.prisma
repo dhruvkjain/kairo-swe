@@ -1,8 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// =====================================================
+// PRISMA SCHEMA — FINAL FIXED VERSION
+// =====================================================
 
 generator client {
   provider = "prisma-client-js"
@@ -14,127 +12,12 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+// -----------------------------------------------------
+// ENUMS
+// -----------------------------------------------------
 enum Role {
   APPLICANT
   RECRUITER
-}
-
-model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  password      String?
-  emailVerified DateTime?
-  image         String?
-  role          Role      @default(APPLICANT)
-
-  accounts      Account[]
-  sessions      Session[]
-
-  applicant     Applicant?
-  recruiter     Recruiter?
-}
-
-model Applicant {
-  id           String   @id @default(cuid())
-  userId       String   @unique
-  linkedInLink String?
-  resumeLink   String?
-  githubLink   String?
-  portfolioLink String?
-  about        String?  @db.Text
-  skills       String[]
-  experience   String?  
-  phoneNumber  String?
-
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model Recruiter {
-  id           String   @id @default(cuid())
-  userId       String   @unique
-  companyName  String?
-  position     String?
-  website      String?
-  contactEmail String?
-  about        String?  @db.Text
-
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String?  @db.Text
-  access_token      String?  @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String?  @db.Text
-  session_state     String?
-
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-}
-
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([identifier, token])
-}
-
-model Internship {
-  id                  String                   @id @default(uuid())
-  category            InternshipCategory?
-  title               String
-  slug                String                   @unique
-  description         String
-  location            String
-  type                InternshipType           @default(ONSITE)
-  mode                InternshipMode           @default(FULL_TIME)
-  stipend             Int?
-  currency            String?
-  durationWeeks       Int?
-  openings            Int?
-  skillsRequired      String[]
-  perks               String[]
-  eligibility         String?                  // e.g. "Undergraduate students, CS background"
-  userType            UserType?
-  startDate           DateTime?
-  applicationDeadline DateTime?
-  isActive            Boolean                  @default(true)
-  status              InternshipStatus         @default(DRAFT)
-  viewsCount          Int                      @default(0)
-  applicationsCount   Int                      @default(0)  // NEW FIELD
-  createdAt           DateTime                 @default(now())
-  updatedAt           DateTime                 @updatedAt
-
-  // Relations
-  companyId           String
-  createdById         String
-
-  company             Company                  @relation(fields: [companyId], references: [id])
-  createdBy           User                     @relation(fields: [createdById], references: [id])
-  applications        InternshipApplication[]
-
-  @@index([companyId])
-  @@index([status])
-  @@index([title])
 }
 
 enum InternshipCategory {
@@ -177,26 +60,161 @@ enum InternshipStatus {
   ARCHIVED
 }
 
-
-model InternshipApplication {
-  id             String       @id @default(uuid())
-  internshipId   String
-  applicantId    String       // professional user ID
-  coverLetter    String?
-  resumeUrl      String?
-  status         ApplicationStatus @default(PENDING)
-  createdAt      DateTime     @default(now())
-
-  internship     Internship   @relation(fields: [internshipId], references: [id])
-  applicant      User         @relation(fields: [applicantId], references: [id])
-
-  @@unique([internshipId, applicantId]) // prevents duplicate applications
-}
-
 enum ApplicationStatus {
   PENDING
   REVIEWED
   ACCEPTED
   REJECTED
   WITHDRAWN
+}
+
+// -----------------------------------------------------
+// MODELS
+// -----------------------------------------------------
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  password      String?
+  emailVerified DateTime?
+  image         String?
+  role          Role      @default(APPLICANT)
+
+  accounts Account[]
+  sessions Session[]
+
+  applicant    Applicant?
+  recruiter    Recruiter?
+  applications InternshipApplication[] // back relation
+}
+
+model Applicant {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  linkedInLink  String?
+  resumeLink    String?
+  githubLink    String?
+  portfolioLink String?
+  about         String?  @db.Text
+  skills        String[]
+  experience    String[]
+  projects      String[]
+  phoneNumber   String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Recruiter {
+  id           String  @id @default(cuid())
+  userId       String  @unique
+  companyId    String?
+  position     String?
+  website      String?
+  contactEmail String?
+  about        String? @db.Text
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company     Company?     @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  internships Internship[] // one recruiter can post many internships
+}
+
+model Company {
+  id          String       @id @default(cuid())
+  name        String
+  industry    String?
+  website     String?
+  description String?      @db.Text
+  recruiters  Recruiter[] // one company has many recruiters
+  internships Internship[] // one company has many internships
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Internship {
+  id                  String              @id @default(uuid())
+  category            InternshipCategory?
+  title               String
+  slug                String              @unique
+  description         String
+  location            String
+  type                InternshipType      @default(ONSITE)
+  mode                InternshipMode      @default(FULL_TIME)
+  stipend             Int?
+  currency            String?
+  durationWeeks       Int?
+  openings            Int?
+  skillsRequired      String[]
+  perks               String[]
+  eligibility         String?
+  userType            UserType?
+  startDate           DateTime?
+  applicationDeadline DateTime?
+  isActive            Boolean             @default(true)
+  status              InternshipStatus    @default(DRAFT)
+  viewsCount          Int                 @default(0)
+  applicationsCount   Int                 @default(0)
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  companyId   String
+  recruiterId String
+
+  company      Company                 @relation(fields: [companyId], references: [id])
+  recruiter    Recruiter               @relation(fields: [recruiterId], references: [id])
+  applications InternshipApplication[]
+
+  @@index([companyId])
+  @@index([status])
+  @@index([title])
+}
+
+model InternshipApplication {
+  id           String            @id @default(uuid())
+  internshipId String
+  applicantId  String
+  coverLetter  String?
+  resumeUrl    String?
+  status       ApplicationStatus @default(PENDING)
+  createdAt    DateTime          @default(now())
+
+  internship Internship @relation(fields: [internshipId], references: [id])
+  applicant  User       @relation(fields: [applicantId], references: [id])
+
+  @@unique([internshipId, applicantId])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
 }
