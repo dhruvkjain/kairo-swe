@@ -1,7 +1,7 @@
 export default function TermsPage() {
   return (
-    <main className="max-w-3xl mx-auto px-6 py-12 text-gray-800">
-      <h1 className="text-4xl font-bold mb-6">Terms & Conditions</h1>
+    <main className="max-w-3xl mx-auto px-6 py-12 text-yellow-300">
+      <h1 className="text-4xl font-bold mb-6 text-red-600">Terms & Conditions</h1>
 
       <p className="mb-4">
         Welcome to our website. By accessing or using our services, you agree to

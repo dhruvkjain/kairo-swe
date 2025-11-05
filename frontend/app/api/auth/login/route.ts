@@ -3,7 +3,6 @@ import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { randomBytes } from "crypto";
 import { cookies } from "next/headers";
-
 export async function POST(req: NextRequest) {
     try {
         const { email, password } = await req.json();
@@ -24,6 +23,7 @@ export async function POST(req: NextRequest) {
                 role: true,
             },
         });
+    
         if (!user) {
             return NextResponse.json({ error: "Invalid credentials." }, { status: 401 });
         }
