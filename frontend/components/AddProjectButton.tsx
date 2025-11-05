@@ -54,31 +54,31 @@ export default function AddProjectButton({
   };
 
   return (
-    <div className="flex flex-col gap-2 mt-2 border p-3 rounded-md bg-gray-50">
+    <div className="flex flex-col gap-2 mt-2 border p-3 rounded-md bg-white text-slate-800">
       <input
         type="text"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         placeholder="Project Title"
-        className="border p-2 rounded"
+        className="border border-gray-300 p-2 rounded-md"
       />
       <textarea
         value={description}
         onChange={(e) => setDescription(e.target.value)}
         placeholder="Project Description"
-        className="border p-2 rounded resize-none h-24"
+        className="border border-gray-300 p-2 rounded-md resize-none h-24"
       />
       <input
         type="text"
         value={skillsInput}
         onChange={(e) => setSkillsInput(e.target.value)}
         placeholder="Skills Used (comma separated, e.g. React, Next.js, Prisma)"
-        className="border p-2 rounded"
+        className="border border-gray-300 p-2 rounded-md"
       />
       <button
         onClick={handleAddProject}
         disabled={loading}
-        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+        className="bg-slate-800 text-white px-4 py-2 rounded-md hover:bg-slate-900 disabled:opacity-50"
       >
         {loading ? "Adding..." : "Add Project"}
       </button>
