@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 
-export default function ImageManager({ imageUrl }: { imageUrl: string | null }) {
+export default function ImageManager({ imageUrl, isOwner = false }: { imageUrl: string | null; isOwner?: boolean }) {
   const [currentImage, setCurrentImage] = useState(imageUrl);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -73,38 +73,40 @@ export default function ImageManager({ imageUrl }: { imageUrl: string | null }) 
   };
 
   return (
-    <div className="mt-4 flex flex-col items-center">
+    <div className="mt-4 flex flex-col items-center text-slate-800">
       {currentImage ? (
         <>
           <img
             src={currentImage}
             alt="Profile"
-            className="w-32 h-32 object-cover rounded-full shadow-md mb-4"
+            className="w-32 h-32 object-cover rounded-full shadow-sm mb-4 border border-gray-200"
           />
-          <div className="flex gap-3">
-            <button
-              onClick={handleEditClick}
-              disabled={loading}
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
-            >
-              {loading ? "Processing..." : "Edit Image"}
-            </button>
-            <button
-              onClick={handleDelete}
-              disabled={loading}
-              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 disabled:opacity-50"
-            >
-              {loading ? "Deleting..." : "Delete Image"}
-            </button>
-          </div>
+          {isOwner && (
+            <div className="flex gap-3">
+              <button
+                onClick={handleEditClick}
+                disabled={loading}
+                className="px-4 py-2 rounded-md border border-gray-300 bg-white text-slate-800 hover:bg-slate-50 disabled:opacity-50 shadow-sm"
+              >
+                {loading ? "Processing..." : "Edit Image"}
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={loading}
+                className="px-4 py-2 rounded-md border border-gray-300 bg-white text-slate-800 hover:bg-slate-50 disabled:opacity-50 shadow-sm"
+              >
+                {loading ? "Deleting..." : "Delete Image"}
+              </button>
+            </div>
+          )}
         </>
       ) : (
         <>
-          <p className="mb-2 text-gray-600">No profile picture uploaded.</p>
+          <p className="mb-2 text-slate-600">No profile picture uploaded.</p>
           <button
             onClick={handleEditClick}
             disabled={loading}
-            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:opacity-50"
+            className="px-4 py-2 rounded-md border border-gray-300 bg-white text-slate-800 hover:bg-slate-50 disabled:opacity-50 shadow-sm"
           >
             {loading ? "Uploading..." : "Upload Image"}
           </button>
@@ -122,7 +124,7 @@ export default function ImageManager({ imageUrl }: { imageUrl: string | null }) 
         }}
       />
 
-      {message && <p className="mt-3 text-sm text-gray-700">{message}</p>}
+      {message && <p className="mt-3 text-sm text-slate-700">{message}</p>}
     </div>
   );
 }
