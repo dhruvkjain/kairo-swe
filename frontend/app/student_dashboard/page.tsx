@@ -194,7 +194,7 @@ const [fetchError, setFetchError] = useState<string | null>(null);
         </div>
 
         {/* No internships yet */}
-        //loading,error
+        
        {loading && <p className="text-center text-gray-500">Loading internships...</p>}
 
 {fetchError && (
