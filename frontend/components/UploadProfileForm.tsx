@@ -36,14 +36,14 @@ export default function UploadProfileForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col items-center space-y-4 mt-6"
+      className="flex flex-col items-center space-y-4 mt-6 text-slate-800"
     >
       {/* Preview image */}
       {preview && (
         <img
           src={preview}
           alt="Preview"
-          className="w-24 h-24 object-cover rounded-full border"
+          className="w-24 h-24 object-cover rounded-full border border-gray-200 shadow-sm"
         />
       )}
 
@@ -53,14 +53,14 @@ export default function UploadProfileForm() {
         name="image"
         accept="image/*"
         onChange={handleFileChange}
-        className="block w-full text-sm text-gray-700"
+        className="block w-full text-sm text-slate-700"
         required
       />
 
       <button
         type="submit"
         disabled={loading}
-        className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
+        className="px-4 py-2 rounded-md border border-gray-300 bg-white text-slate-800 hover:bg-slate-50 disabled:opacity-50 shadow-sm"
       >
         {loading ? "Uploading..." : "Upload Photo"}
       </button>

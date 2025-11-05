@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 
 export default function DeleteProjectButton({
   userId,
@@ -38,14 +37,12 @@ export default function DeleteProjectButton({
   };
 
   return (
-    <Button
-      variant="outline"
-      size="sm"
-      className="text-red-600 border-red-400 hover:bg-red-50"
+    <button
       onClick={handleDelete}
       disabled={loading}
+      className="px-3 py-1.5 rounded-md border border-gray-300 text-red-700 hover:bg-red-50 disabled:opacity-50"
     >
       {loading ? "Deleting..." : "Delete"}
-    </Button>
+    </button>
   );
 }

@@ -50,12 +50,12 @@ export default function AddSkillButton({
         value={newSkill}
         onChange={(e) => setNewSkill(e.target.value)}
         placeholder="Enter new skill"
-        className="border px-3 py-1 rounded-md flex-1"
+        className="border border-gray-300 px-3 py-1 rounded-md flex-1 text-slate-800"
       />
       <button
         onClick={handleAddSkill}
         disabled={loading}
-        className="bg-blue-600 text-white px-4 py-1 rounded-md disabled:opacity-50"
+        className="px-4 py-1 rounded-md border border-gray-300 bg-slate-800 text-white disabled:opacity-50"
       >
         {loading ? "Saving..." : "Add"}
       </button>

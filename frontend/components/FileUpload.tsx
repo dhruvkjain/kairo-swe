@@ -52,20 +52,18 @@ export default function FileUpload({ userId }: { userId: string }) {
   };
 
   return (
-    <div className="mt-4">
-      <input type="file" accept="application/pdf,image/*" onChange={handleFileChange} />
+    <div className="mt-4 text-slate-800">
+      <input type="file" accept="application/pdf,image/*" onChange={handleFileChange} className="" />
       <button
         onClick={handleUpload}
         disabled={uploading || !file}
-        className="mt-2 bg-blue-600 text-white px-4 py-2 rounded"
+        className="mt-2 px-4 py-2 rounded-md border border-gray-300 bg-white text-slate-800 hover:bg-slate-50 disabled:opacity-50 shadow-sm"
       >
         {uploading ? "Uploading..." : "Upload"}
       </button>
 
       {fileUrl && (
-        <p className="mt-3 text-green-600">
-          File uploaded successfully!
-        </p>
+        <p className="mt-3 text-slate-700">File uploaded successfully!</p>
       )}
     </div>
   );
