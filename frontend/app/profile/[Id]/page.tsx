@@ -350,7 +350,7 @@ export default async function ProfilePage({ params }: { params: { Id: string } }
                       <div className="flex items-start gap-4">
                         <img
                           src={githubData.avatar_url}
-                          alt={${githubData.login}'s avatar}
+                          alt={`${githubData.login}'s avatar`}
                           className="w-16 h-16 rounded-full border border-slate-200"
                         />
                         <div>

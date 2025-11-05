@@ -38,7 +38,7 @@ export default function ContactButton({
         setMessage("✅ Contact numbers updated successfully!");
         setIsEditing(false);
       } else {
-        setMessage(❌ ${data.error || "Failed to update contact info"});
+        setMessage(`❌ ${data.error || "Failed to update contact info"}`);
       }
     } catch (err) {
       console.error(err);

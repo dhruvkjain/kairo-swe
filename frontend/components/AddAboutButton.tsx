@@ -21,7 +21,7 @@ export default function AddAboutButton({
 
   const handleSubmit = async () => {
     if (about.trim().split(/\s+/).length > wordLimit) {
-      alert(About section cannot exceed ${wordLimit} words.);
+      alert(`About section cannot exceed ${wordLimit} words.`);
       return;
     }
 
