@@ -19,6 +19,7 @@ export default async function ProfilePage({ params }: { params: { Id: string } }
   const sessionToken = cookies().get("sessionToken")?.value;
   if (!sessionToken) redirect("/login");
 
+  // Include applicant & recruiter for full user info
   const session = await prisma.session.findUnique({
     where: { sessionToken },
     include: {
@@ -36,14 +37,19 @@ export default async function ProfilePage({ params }: { params: { Id: string } }
   const user = session.user;
   if (!user) redirect("/login");
 
+  // Owner check
   const isOwner = user.id === params.Id;
+
+  // Determine if applicant or recruiter
   const isApplicant = user.role === "APPLICANT";
   const applicant = user.applicant;
 
+  // Resume, GitHub, LinkedIn status
   const hasResume = !!applicant?.resumeLink;
   const hasGitHub = !!applicant?.githubLink;
   const hasLinkedIn = !!applicant?.linkedInLink;
 
+  // Fetch GitHub user data if applicable
   let githubData = null;
   if (hasGitHub && applicant?.githubLink) {
     try {
@@ -176,14 +182,14 @@ export default async function ProfilePage({ params }: { params: { Id: string } }
               <p className="text-gray-700 mb-4 whitespace-pre-line">{applicant.about}</p>
             ) : (
               <p className="text-gray-500 mb-4 italic">
-                No "About" information provided yet.
+                No "About" information provided yet. Tell us something about yourself!
               </p>
             )
           ) : user.recruiter?.about ? (
             <p className="text-gray-700 mb-4 whitespace-pre-line">{user.recruiter.about}</p>
           ) : (
             <p className="text-gray-500 mb-4 italic">
-              No "About" section available.
+              No "About" section available. Add details about your company or role!
             </p>
           )}
 

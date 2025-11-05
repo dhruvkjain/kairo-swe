@@ -1,5 +1,5 @@
 // =====================================================
-// PRISMA SCHEMA — FINAL FIXED VERSION
+// PRISMA SCHEMA — FINAL MERGED VERSION
 // =====================================================
 
 generator client {
@@ -85,7 +85,7 @@ model User {
 
   applicant    Applicant?
   recruiter    Recruiter?
-  applications InternshipApplication[] // back relation
+  applications InternshipApplication[]
 }
 
 model Applicant {
@@ -115,7 +115,7 @@ model Recruiter {
 
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   company     Company?     @relation(fields: [companyId], references: [id], onDelete: SetNull)
-  internships Internship[] // one recruiter can post many internships
+  internships Internship[]
 }
 
 model Company {
@@ -124,8 +124,8 @@ model Company {
   industry    String?
   website     String?
   description String?      @db.Text
-  recruiters  Recruiter[] // one company has many recruiters
-  internships Internship[] // one company has many internships
+  recruiters  Recruiter[]
+  internships Internship[]
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 }
