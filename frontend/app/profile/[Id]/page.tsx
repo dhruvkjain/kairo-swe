@@ -5,10 +5,17 @@ import FileUpload from "@/components/FileUpload";
 import DeleteResumeButton from "@/components/DeleteResumeButton";
 import GithubButton from "@/components/GithubButton";
 import LinkedinButton from "@/components/LinkedinButton";
-import { Link } from "lucide-react";
+import { getGitHubUser } from "@/lib/GithubAPI";
+import AddAboutButton from "@/components/AddAboutButton";
+import AddSkillButton from "@/components/AddSkillButton";
+import DeleteSkill from "@/components/DeleteSkill";
+import { cookies } from "next/headers";
+import prisma from "@/lib/prisma";
+import AddProjectButton from "@/components/AddProjectButton";
+import DeleteProjectButton from "@/components/DeleteProjectButton";
+import EditProjectButton from "@/components/EditProjectButton";
 
-
-export default async function ProfilePage({ params }: { params: { id: string } }) {
+export default async function ProfilePage({ params }: { params: { Id: string } }) {
   const sessionToken = cookies().get("sessionToken")?.value;
   if (!sessionToken) redirect("/login");
 
@@ -52,6 +59,26 @@ export default async function ProfilePage({ params }: { params: { id: string } }
       console.error("Error fetching GitHub data:", error);
     }
   }
+
+  // Parse project data safely
+  const parsedProjects =
+    applicant?.projects?.map((p) => {
+      try {
+        const project = JSON.parse(p);
+        return {
+          id: project.id || crypto.randomUUID(),
+          title: project.title || "Untitled Project",
+          description: project.description || "",
+          skills: Array.isArray(project.skills)
+            ? project.skills
+            : project.skills
+              ? [project.skills]
+              : [],
+        };
+      } catch {
+        return { id: crypto.randomUUID(), title: p, description: "", skills: [] };
+      }
+    }) || [];
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -150,7 +177,6 @@ export default async function ProfilePage({ params }: { params: { id: string } }
         {/* About Section */}
         <div className="mt-8 border-t pt-6">
           <h2 className="text-lg font-semibold mb-2">About</h2>
-
           {isApplicant ? (
             applicant?.about ? (
               <p className="text-gray-700 mb-4 whitespace-pre-line">{applicant.about}</p>
@@ -167,7 +193,6 @@ export default async function ProfilePage({ params }: { params: { id: string } }
             </p>
           )}
 
-          {/* Only owner can add or edit About */}
           {isOwner && (
             <AddAboutButton
               userId={user.id}
@@ -176,6 +201,7 @@ export default async function ProfilePage({ params }: { params: { id: string } }
             />
           )}
         </div>
+
         {/* Skills Section */}
         <div className="mt-8 border-t pt-6">
           <h2 className="text-lg font-semibold mb-2">Skills</h2>
@@ -192,6 +218,66 @@ export default async function ProfilePage({ params }: { params: { id: string } }
           ) : (
             <p className="text-gray-500 italic">Skills section is only available for applicants.</p>
           )}
+
+          {/* Projects Section */}
+          <div className="mt-8 border-t pt-6">
+            <h2 className="text-lg font-semibold mb-3">Projects</h2>
+
+            {isApplicant && applicant ? (
+              <>
+                {parsedProjects.length > 0 ? (
+                  <div className="space-y-4 mb-4">
+                    {parsedProjects.map((project: any) => (
+                      <div
+                        key={project.id}
+                        className="border rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition relative"
+                      >
+                        <div className="flex justify-between items-start">
+                          <h3 className="text-base font-semibold text-gray-800">
+                            {project.title || "Untitled Project"}
+                          </h3>
+
+                          {isOwner && (
+                            <div className="flex items-center gap-2">
+                              <EditProjectButton userId={user.id} project={project} />
+                              <DeleteProjectButton userId={user.id} projectId={project.id} />
+                            </div>
+                          )}
+                        </div>
+
+                        {project.description && (
+                          <p className="text-gray-600 mt-1">{project.description}</p>
+                        )}
+
+                        {project.skills && project.skills.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {project.skills.map((skill: string, i: number) => (
+                              <span
+                                key={i}
+                                className="bg-blue-100 text-blue-700 text-sm px-2 py-1 rounded-full"
+                              >
+                                {skill}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 italic mb-4">No projects added yet.</p>
+                )}
+
+                {isOwner && (
+                  <AddProjectButton userId={user.id} initialProjects={applicant.projects || []} />
+                )}
+              </>
+            ) : (
+              <p className="text-gray-500 italic">
+                Projects section is only available for applicants.
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </div>

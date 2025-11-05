@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Search,
   MapPin,
@@ -29,7 +29,29 @@ const Dashboard = () => {
     role: "applicant",
   };
 
-  const internships: any[] = [];
+  const [internships, setInternships] = useState<any[]>([]);
+const [loading, setLoading] = useState(true);
+const [fetchError, setFetchError] = useState<string | null>(null);
+
+  useEffect(() => {
+  const fetchInternships = async () => {
+    setLoading(true);
+    setFetchError(null);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/api/internships`);
+      if (!res.ok) throw new Error("Failed to fetch");
+      const data = await res.json();
+      setInternships(data);
+    } catch (err) {
+      setFetchError("Error loading internships");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchInternships();
+}, []);
+
 
   const filteredInternships = internships.filter((internship) => {
     const matchesSearch =
@@ -172,17 +194,36 @@ const Dashboard = () => {
         </div>
 
         {/* No internships yet */}
-        {filteredInternships.length === 0 && (
-          <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-12 text-center">
-            <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2 text-gray-900">
-              No internships found
-            </h3>
-            <p className="text-gray-600">
-              Try adjusting your filters or search query
-            </p>
-          </div>
-        )}
+        
+       {loading && <p className="text-center text-gray-500">Loading internships...</p>}
+
+{fetchError && (
+  <p className="text-center text-red-500">{fetchError}</p>
+)}
+
+{!loading && filteredInternships.length > 0 && (
+  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {filteredInternships.map((internship) => (
+      <div
+        key={internship._id}
+        onClick={() => router.push(`/student_dashboard/internship/${internship._id}`)} // ✅ Dynamic route
+        className="bg-white shadow-md rounded-lg p-6 border border-gray-200 hover:shadow-lg transition cursor-pointer"
+      >
+        <h3 className="text-lg font-semibold">{internship.title}</h3>
+        <p className="text-gray-700">{internship.company}</p>
+        <p className="text-sm text-gray-500">{internship.location}</p>
+      </div>
+    ))}
+  </div>
+)}
+
+{!loading && filteredInternships.length === 0 && (
+  <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-12 text-center">
+    <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+    <h3 className="text-xl font-semibold mb-2 text-gray-900">No internships found</h3>
+    <p className="text-gray-600">Try adjusting your filters or search query</p>
+  </div>
+)}
       </main>
 
       {/* Animations */}

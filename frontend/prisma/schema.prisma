@@ -1,5 +1,5 @@
 // =====================================================
-// PRISMA SCHEMA — FINAL FIXED VERSION
+// PRISMA SCHEMA — FINAL MERGED VERSION
 // =====================================================
 
 generator client {
@@ -85,7 +85,7 @@ model User {
 
   applicant    Applicant?
   recruiter    Recruiter?
-  applications InternshipApplication[] // back relation
+  applications InternshipApplication[]
 }
 
 model Applicant {
@@ -115,7 +115,7 @@ model Recruiter {
 
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   company     Company?     @relation(fields: [companyId], references: [id], onDelete: SetNull)
-  internships Internship[] // one recruiter can post many internships
+  internships Internship[]
 }
 
 model Company {
@@ -124,21 +124,21 @@ model Company {
   industry    String?
   website     String?
   description String?      @db.Text
-  recruiters  Recruiter[] // one company has many recruiters
-  internships Internship[] // one company has many internships
+  recruiters  Recruiter[]
+  internships Internship[]
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 }
 
 model Internship {
   id                  String              @id @default(uuid())
-  category            String?
+  category            InternshipCategory?
   title               String
   slug                String              @unique
   description         String
   location            String
-  type                String      
-  mode                String
+  type                InternshipType      @default(ONSITE)
+  mode                InternshipMode      @default(FULL_TIME)
   stipend             Int?
   currency            String?
   durationWeeks       Int?
@@ -146,11 +146,11 @@ model Internship {
   skillsRequired      String[]
   perks               String[]
   eligibility         String?
-  userType            String?
+  userType            UserType?
   startDate           DateTime?
   applicationDeadline DateTime?
   isActive            Boolean             @default(true)
-  status              String    
+  status              InternshipStatus    @default(DRAFT)
   viewsCount          Int                 @default(0)
   applicationsCount   Int                 @default(0)
   createdAt           DateTime            @default(now())
