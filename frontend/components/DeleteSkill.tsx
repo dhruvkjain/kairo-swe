@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-export default function DeleteSkill({ userId, initialSkills = [] }: { userId: string; initialSkills?: string[] }) {
+export default function DeleteSkill({ userId, initialSkills = [], isOwner = false }: { userId: string; initialSkills?: string[]; isOwner?: boolean }) {
   const [skills, setSkills] = useState(initialSkills);
 
   const handleRemoveSkill = async (skill: string) => {
@@ -24,22 +24,21 @@ export default function DeleteSkill({ userId, initialSkills = [] }: { userId: st
   };
 
   return (
-    <div className="p-4 border rounded-2xl shadow-sm max-w-md">
-      <h2 className="text-xl font-semibold mb-3">Skills</h2>
+    <div className="p-4 border rounded-lg shadow-sm max-w-md bg-white text-slate-800">
+      <h2 className="text-xl font-serif font-semibold mb-3">Skills</h2>
 
       <ul className="mb-3 flex flex-wrap gap-2">
-        {skills.map((skill, idx) => (
-          <li
-            key={idx}
-            className="flex items-center gap-2 px-3 py-1 bg-gray-200 text-sm rounded-full"
-          >
-            {skill}
-            <button
-              onClick={() => handleRemoveSkill(skill)}
-              className="text-red-500 hover:text-red-700 font-bold"
-            >
-              ✕
-            </button>
+        {skills.map((skill) => (
+          <li key={skill} className="flex items-center gap-2 px-3 py-1 bg-slate-100 text-sm rounded-full">
+            <span className="text-slate-800">{skill}</span>
+            {isOwner && (
+              <button
+                onClick={() => handleRemoveSkill(skill)}
+                className="text-slate-700 hover:text-slate-900 font-medium"
+              >
+                ✕
+              </button>
+            )}
           </li>
         ))}
       </ul>
