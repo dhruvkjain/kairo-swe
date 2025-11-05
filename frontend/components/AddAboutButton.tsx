@@ -21,7 +21,7 @@ export default function AddAboutButton({
 
   const handleSubmit = async () => {
     if (about.trim().split(/\s+/).length > wordLimit) {
-      alert(`About section cannot exceed ${wordLimit} words.`);
+      alert(About section cannot exceed ${wordLimit} words.);
       return;
     }
 
@@ -53,7 +53,7 @@ export default function AddAboutButton({
     return (
       <button
         onClick={() => setIsEditing(true)}
-        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+        className="mt-4 px-4 py-2 rounded-md border border-gray-300 bg-white text-slate-800 hover:bg-slate-50 transition shadow-sm"
       >
         {about ? "Edit About" : "Add About"}
       </button>
@@ -61,31 +61,28 @@ export default function AddAboutButton({
   }
 
   return (
-    <div className="mt-4 flex flex-col gap-3 items-center w-full">
+    <div className="mt-4 flex flex-col gap-3 items-center w-full text-slate-800">
       <textarea
         value={about}
         onChange={(e) => setAbout(e.target.value)}
         rows={5}
-        className="w-full border rounded-lg p-3 focus:ring-2 focus:ring-blue-500"
+        className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-1 focus:ring-slate-400"
         placeholder="Write about yourself..."
       />
-      <p className="text-sm text-gray-500">
-        {about.trim() === ""
-          ? 0
-          : about.trim().split(/\s+/).length}
-        /{wordLimit} words
+      <p className="text-sm text-slate-500">
+        {about.trim() === "" ? 0 : about.trim().split(/\s+/).length}/{wordLimit} words
       </p>
       <div className="flex gap-3">
         <button
           onClick={handleSubmit}
           disabled={loading}
-          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+          className="px-4 py-2 rounded-md border border-gray-300 bg-slate-800 text-white hover:bg-slate-900 disabled:opacity-50"
         >
           {loading ? "Saving..." : "Save"}
         </button>
         <button
           onClick={() => setIsEditing(false)}
-          className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition"
+          className="px-4 py-2 rounded-md border border-gray-200 bg-white hover:bg-slate-50"
         >
           Cancel
         </button>
