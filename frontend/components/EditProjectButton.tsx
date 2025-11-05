@@ -31,7 +31,6 @@ export default function EditProjectButton({
 
     setLoading(true);
     try {
-      // Convert comma-separated skills string into array
       const skillArray = skills
         .split(",")
         .map((s) => s.trim())
@@ -67,44 +66,44 @@ export default function EditProjectButton({
       {!isEditing ? (
         <button
           onClick={() => setIsEditing(true)}
-          className="text-sm text-blue-600 hover:text-blue-800 ml-2"
+          className="text-sm text-slate-800 hover:text-slate-900 ml-2"
         >
-          ✏️ Edit
+          ✏ Edit
         </button>
       ) : (
-        <div className="border p-3 rounded-md bg-gray-50 mt-2 flex flex-col gap-2">
+        <div className="border p-3 rounded-md bg-white mt-2 flex flex-col gap-2 text-slate-800">
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Project Title"
-            className="border p-2 rounded text-sm"
+            className="border border-gray-300 p-2 rounded text-sm"
           />
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Project Description"
-            className="border p-2 rounded resize-none h-20 text-sm"
+            className="border border-gray-300 p-2 rounded resize-none h-20 text-sm"
           />
           <input
             type="text"
             value={skills}
             onChange={(e) => setSkills(e.target.value)}
             placeholder="Skills Used (comma separated, e.g. React, Next.js, Prisma)"
-            className="border p-2 rounded text-sm"
+            className="border border-gray-300 p-2 rounded text-sm"
           />
 
           <div className="flex gap-2 mt-1">
             <button
               onClick={handleEdit}
               disabled={loading}
-              className="bg-blue-600 text-white text-sm px-3 py-1 rounded hover:bg-blue-700 disabled:opacity-50"
+              className="bg-slate-800 text-white text-sm px-3 py-1 rounded hover:bg-slate-900 disabled:opacity-50"
             >
               {loading ? "Saving..." : "Save"}
             </button>
             <button
               onClick={() => setIsEditing(false)}
-              className="bg-gray-300 text-gray-800 text-sm px-3 py-1 rounded hover:bg-gray-400"
+              className="bg-white text-slate-800 border border-gray-300 text-sm px-3 py-1 rounded hover:bg-slate-50"
             >
               Cancel
             </button>
