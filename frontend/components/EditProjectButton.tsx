@@ -1,115 +1,97 @@
-"use client";
+"use client"
 
-import { useState } from "react";
+import { Button } from "@/components/ui/button"
+import { useState } from "react"
 
-interface EditProjectButtonProps {
-  userId: string;
-  project: {
-    id: string;
-    title: string;
-    description: string;
-    skills: string[];
-  };
-  onProjectEdited?: () => void;
-}
-
-export default function EditProjectButton({
-  userId,
-  project,
-  onProjectEdited,
-}: EditProjectButtonProps) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [title, setTitle] = useState(project.title);
-  const [description, setDescription] = useState(project.description);
-  const [skills, setSkills] = useState(project.skills.join(", "));
-  const [loading, setLoading] = useState(false);
+export default function EditProjectButton({ userId, project }: { userId: string; project: any }) {
+  const [loading, setLoading] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [formData, setFormData] = useState({
+    title: project.title,
+    description: project.description,
+    link: project.link || "",
+    skills: Array.isArray(project.skills) ? project.skills.join(", ") : (project.skills || "")
+  })
+  const [error, setError] = useState("")
 
   const handleEdit = async () => {
-    if (!title.trim() || !description.trim() || !skills.trim()) {
-      return alert("Please fill all fields before saving.");
-    }
-
-    setLoading(true);
+    setLoading(true)
+    setError("")
     try {
-      const skillArray = skills
-        .split(",")
-        .map((s) => s.trim())
-        .filter((s) => s.length > 0);
+      const skillsArray = formData.skills
+        ? formData.skills.split(",").map((s: string) => s.trim()).filter(Boolean)
+        : []
 
-      const res = await fetch("/api/auth/profile/edit-project", {
+      const response = await fetch("/api/auth/profile/update-project", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId,
-          projectId: project.id,
-          title,
-          description,
-          skills: skillArray,
-        }),
-      });
+        body: JSON.stringify({ userId, projectId: project.id, title: formData.title, description: formData.description, skills: skillsArray }),
+      })
 
-      if (!res.ok) throw new Error("Failed to edit project");
+      if (!response.ok) throw new Error("Failed to update project")
 
-      onProjectEdited?.();
-      setIsEditing(false);
-      window.location.reload();
+      setIsEditing(false)
+      window.location.reload()
     } catch (err) {
-      console.error(err);
-      alert("Error editing project");
+      setError(err instanceof Error ? err.message : "Error updating project")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
+
+  if (!isEditing) {
+    return (
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setIsEditing(true)}
+        disabled={loading}
+        className="gap-2 bg-transparent"
+      >
+        <span>✎</span>
+        Edit
+      </Button>
+    )
+  }
 
   return (
-    <div className="inline-block">
-      {!isEditing ? (
-        <button
-          onClick={() => setIsEditing(true)}
-          className="text-sm text-slate-800 hover:text-slate-900 ml-2"
-        >
-          ✏ Edit
-        </button>
-      ) : (
-        <div className="border p-3 rounded-md bg-white mt-2 flex flex-col gap-2 text-slate-800">
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Project Title"
-            className="border border-gray-300 p-2 rounded text-sm"
-          />
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Project Description"
-            className="border border-gray-300 p-2 rounded resize-none h-20 text-sm"
-          />
-          <input
-            type="text"
-            value={skills}
-            onChange={(e) => setSkills(e.target.value)}
-            placeholder="Skills Used (comma separated, e.g. React, Next.js, Prisma)"
-            className="border border-gray-300 p-2 rounded text-sm"
-          />
-
-          <div className="flex gap-2 mt-1">
-            <button
-              onClick={handleEdit}
-              disabled={loading}
-              className="bg-slate-800 text-white text-sm px-3 py-1 rounded hover:bg-slate-900 disabled:opacity-50"
-            >
-              {loading ? "Saving..." : "Save"}
-            </button>
-            <button
-              onClick={() => setIsEditing(false)}
-              className="bg-white text-slate-800 border border-gray-300 text-sm px-3 py-1 rounded hover:bg-slate-50"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
+    <div className="space-y-3 p-4 border rounded-lg bg-muted/50">
+      <input
+        type="text"
+        value={formData.title}
+        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+        placeholder="Project title"
+        className="w-full px-3 py-2 border rounded-md text-sm"
+      />
+      <textarea
+        value={formData.description}
+        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+        placeholder="Project description"
+        className="w-full px-3 py-2 border rounded-md text-sm resize-none h-20"
+      />
+      <input
+        type="url"
+        value={formData.link}
+        onChange={(e) => setFormData({ ...formData, link: e.target.value })}
+        placeholder="Project link (optional)"
+        className="w-full px-3 py-2 border rounded-md text-sm"
+      />
+      <input
+        type="text"
+        value={formData.skills}
+        onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
+        placeholder="Skills (comma separated, optional)"
+        className="w-full px-3 py-2 border rounded-md text-sm"
+      />
+      {error && <p className="text-red-500 text-xs">{error}</p>}
+      <div className="flex gap-2">
+        <Button size="sm" onClick={handleEdit} disabled={loading}>
+          Save
+        </Button>
+        <Button size="sm" variant="outline" onClick={() => setIsEditing(false)}>
+          Cancel
+        </Button>
+      </div>
     </div>
-  );
+  )
 }

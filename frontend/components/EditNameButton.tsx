@@ -3,30 +3,33 @@
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
 
-export default function GithubButton({ userId, currentLink }: { userId: string; currentLink?: string }) {
+interface EditNameButtonProps {
+  userId: string
+  initialName: string
+}
+
+export default function EditNameButton({ userId, initialName }: EditNameButtonProps) {
   const [isEditing, setIsEditing] = useState(false)
-  const [githubLink, setGithubLink] = useState(currentLink || "")
+  const [name, setName] = useState(initialName)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
   const handleSave = async () => {
-    if (!githubLink.trim()) return
-
     setLoading(true)
     setError("")
     try {
-      const response = await fetch("/api/auth/profile/GitHubAttach", {
-        method: "POST",
+      const response = await fetch("/api/auth/profile/update-name", {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, githubLink }),
+        body: JSON.stringify({ userId, name }),
       })
 
-      if (!response.ok) throw new Error("Failed to update GitHub link")
+      if (!response.ok) throw new Error("Failed to update name")
 
       setIsEditing(false)
       window.location.reload()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error updating GitHub link")
+      setError(err instanceof Error ? err.message : "Error updating name")
     } finally {
       setLoading(false)
     }
@@ -34,21 +37,26 @@ export default function GithubButton({ userId, currentLink }: { userId: string; 
 
   if (!isEditing) {
     return (
-      <Button onClick={() => setIsEditing(true)} className="gap-2">
-        <span>G</span>
-        {currentLink ? "Edit GitHub" : "Add GitHub Profile"}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => setIsEditing(true)}
+        className="gap-2"
+        aria-label="Edit profile name"
+      >
+        <span>✎</span>
       </Button>
     )
   }
 
   return (
-    <div className="space-y-3 p-4 border rounded-lg bg-muted/50">
+    <div className="flex gap-2 flex-col">
       <input
-        type="url"
-        value={githubLink}
-        onChange={(e) => setGithubLink(e.target.value)}
-        placeholder="https://github.com/username"
-        className="w-full px-3 py-2 border rounded-md text-sm"
+        type="text"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        className="px-2 py-1 border rounded-md text-sm"
+        placeholder="Enter new name"
       />
       {error && <p className="text-red-500 text-xs">{error}</p>}
       <div className="flex gap-2">
@@ -60,7 +68,7 @@ export default function GithubButton({ userId, currentLink }: { userId: string; 
           variant="outline"
           onClick={() => {
             setIsEditing(false)
-            setGithubLink(currentLink || "")
+            setName(initialName)
           }}
         >
           Cancel

@@ -1,64 +1,65 @@
-"use client";
+"use client"
 
-import { useState } from "react";
+import { Button } from "@/components/ui/button"
+import { useState } from "react"
 
-export default function AddSkillButton({
-  userId,
-  initialSkills = [],
-  onSkillAdded,
-}: {
-  userId: string;
-  initialSkills?: string[];
-  onSkillAdded?: (newSkills: string[]) => void;
-}) {
-  const [newSkill, setNewSkill] = useState("");
-  const [loading, setLoading] = useState(false);
+export default function AddSkillButton({ userId, initialSkills }: { userId: string; initialSkills: string[] }) {
+  const [loading, setLoading] = useState(false)
+  const [isAdding, setIsAdding] = useState(false)
+  const [newSkill, setNewSkill] = useState("")
+  const [error, setError] = useState("")
 
-  const handleAddSkill = async () => {
-    if (!newSkill.trim()) return;
-    setLoading(true);
+  const handleAdd = async () => {
+    if (!newSkill.trim()) return
 
+    setLoading(true)
+    setError("")
     try {
-      const res = await fetch("/api/auth/profile/addskills", {
+      const response = await fetch("/api/auth/profile/addskill", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, skill: newSkill }),
-      });
+      })
 
-      if (!res.ok) throw new Error("Failed to add skill");
+      if (!response.ok) throw new Error("Failed to add skill")
 
-      const data = await res.json();
-
-      // Notify parent
-      onSkillAdded?.(data.skills);
-
-      setNewSkill("");
-
-      window.location.reload();
+      setNewSkill("")
+      setIsAdding(false)
+      window.location.reload()
     } catch (err) {
-      console.error(err);
-      alert("Error adding skill!");
+      setError(err instanceof Error ? err.message : "Error adding skill")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
+
+  if (!isAdding) {
+    return (
+      <Button onClick={() => setIsAdding(true)} className="gap-2">
+        <span>+</span>
+        Add Skill
+      </Button>
+    )
+  }
 
   return (
-    <div className="flex gap-2 mt-2">
+    <div className="flex gap-2 flex-col">
       <input
         type="text"
         value={newSkill}
         onChange={(e) => setNewSkill(e.target.value)}
-        placeholder="Enter new skill"
-        className="border border-gray-300 px-3 py-1 rounded-md flex-1 text-slate-800"
+        placeholder="Enter skill name"
+        className="px-3 py-2 border rounded-md text-sm"
       />
-      <button
-        onClick={handleAddSkill}
-        disabled={loading}
-        className="px-4 py-1 rounded-md border border-gray-300 bg-slate-800 text-white disabled:opacity-50"
-      >
-        {loading ? "Saving..." : "Add"}
-      </button>
+      {error && <p className="text-red-500 text-xs">{error}</p>}
+      <div className="flex gap-2">
+        <Button size="sm" onClick={handleAdd} disabled={loading}>
+          Add
+        </Button>
+        <Button size="sm" variant="outline" onClick={() => setIsAdding(false)}>
+          Cancel
+        </Button>
+      </div>
     </div>
-  );
+  )
 }

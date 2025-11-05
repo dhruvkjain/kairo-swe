@@ -1,70 +1,98 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRef, useState } from "react"
+import type { ChangeEvent } from "react"
+import { Button } from "@/components/ui/button"
 
-export default function FileUpload({ userId }: { userId: string }) {
-  const [file, setFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [fileUrl, setFileUrl] = useState<string | null>(null);
-  const router = useRouter();
+const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB limit
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFile(e.target.files?.[0] || null);
-  };
+interface FileUploadProps {
+  onSuccess?: (fileUrl: string) => void
+  onError?: (error: string) => void
+}
 
-  const handleUpload = async () => {
-    if (!file) return;
-    setUploading(true);
+export default function FileUpload({ onSuccess, onError }: FileUploadProps) {
+  const [loading, setLoading] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const handleClick = () => {
+    inputRef.current?.click()
+  }
+
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (file.size > MAX_FILE_SIZE) {
+      onError?.("File size must be less than 5MB")
+      return
+    }
+
+    setLoading(true)
 
     try {
-      // Convert file to Base64
-      const base64 = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve((reader.result as string).split(",")[1]);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
+      // Convert file to base64
+      // Validate file type
+      if (!file.type.match(/application\/(pdf|msword|vnd\.openxmlformats-officedocument\.wordprocessingml\.document)/)) {
+        onError?.("Please upload a PDF or Word document")
+        return
+      }
 
-      const res = await fetch("/api/auth/uploadFile", {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.readAsDataURL(file)
+        reader.onload = () => {
+          if (!reader.result || typeof reader.result !== 'string') {
+            reject(new Error('Failed to read file'))
+            return
+          }
+          const base64 = reader.result
+          const base64Data = base64.substring(base64.indexOf(',') + 1)
+          if (!base64Data) {
+            reject(new Error('Invalid file data'))
+            return
+          }
+          resolve(base64Data)
+        }
+        reader.onerror = () => reject(new Error('Failed to read file'))
+      })
+
+      const response = await fetch("/api/auth/uploadFile", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           fileBase64: base64,
           fileName: file.name,
-          userId,
         }),
-      });
+      })
 
-      const data = await res.json();
-      if (data.fileUrl) {
-        setFileUrl(data.fileUrl);
-        router.refresh();
-      } else {
-        alert(data.error || "Upload failed");
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Upload error!");
+      const data = await response.json()
+
+      if (!response.ok) throw new Error(data.error || "Upload failed")
+
+      onSuccess?.(data.fileUrl)
+    } catch (error) {
+      onError?.(error instanceof Error ? error.message : "Upload failed")
     } finally {
-      setUploading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
-    <div className="mt-4 text-slate-800">
-      <input type="file" accept="application/pdf,image/*" onChange={handleFileChange} className="" />
-      <button
-        onClick={handleUpload}
-        disabled={uploading || !file}
-        className="mt-2 px-4 py-2 rounded-md border border-gray-300 bg-white text-slate-800 hover:bg-slate-50 disabled:opacity-50 shadow-sm"
-      >
-        {uploading ? "Uploading..." : "Upload"}
-      </button>
-
-      {fileUrl && (
-        <p className="mt-3 text-slate-700">File uploaded successfully!</p>
-      )}
-    </div>
-  );
+    <>
+      <input ref={inputRef} type="file" accept=".pdf" onChange={handleFileChange} className="hidden" />
+      <Button onClick={handleClick} disabled={loading} className="gap-2">
+        {loading ? (
+          "Uploading..."
+        ) : (
+          <>
+            <span>⬆</span>
+            Upload Resume (PDF)
+          </>
+        )}
+      </Button>
+    </>
+  )
 }

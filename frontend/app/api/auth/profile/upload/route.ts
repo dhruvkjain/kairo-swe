@@ -22,10 +22,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const data = await req.formData();
-    const file = data.get("image") as File | null;
+    // accept both 'image' and 'file' form fields (some clients use 'file')
+    const rawFile = data.get("image") ?? data.get("file");
+    const file = rawFile instanceof File ? (rawFile as File) : null;
 
-    if (!file)
+    if (!file) {
+      console.error('No file found in formData. Keys:', Array.from(data.keys()))
       return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
+    }
 
     // Convert file to base64 so Cloudinary can accept it
     const bytes = await file.arrayBuffer();

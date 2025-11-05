@@ -1,44 +1,54 @@
 "use client"
 
-import { useState, FormEvent } from "react";
+import { useState, FormEvent } from "react"
 
 export default function UploadProfileForm() {
-  const [preview, setPreview] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [preview, setPreview] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const file = e.target.files?.[0]
     if (file) {
-      setPreview(URL.createObjectURL(file));
+      setPreview(URL.createObjectURL(file))
     }
-  };
+  }
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const formData = new FormData(form);
+    e.preventDefault()
+    const formData = new FormData(e.currentTarget)
 
-    setLoading(true);
-    const res = await fetch("/api/auth/profile/upload", {
-      method: "POST",
-      body: formData,
-    });
-    setLoading(false);
+    setLoading(true)
+    try {
+      const res = await fetch("/api/auth/profile/upload", {
+        method: "POST",
+        body: formData,
+      })
 
-    if (res.ok) {
-      alert("Profile picture updated!");
-      window.location.reload();
-    } else {
-      alert("Failed to upload picture.");
+      if (res.ok) {
+        const data = await res.json()
+        if (data.imageUrl) {
+          // refresh to show updated profile picture
+          window.location.reload()
+        } else {
+          throw new Error("No image URL returned")
+        }
+      } else {
+        const error = await res.json().catch(() => ({ message: 'Unknown error' }))
+        throw new Error(error.message || "Failed to upload picture")
+      }
+    } catch (error) {
+      console.error("Upload error:", error)
+      alert("Failed to upload picture")
+    } finally {
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col items-center space-y-4 mt-6 text-slate-800"
+      className="w-full flex flex-col items-center space-y-4"
     >
-      {/* Preview image */}
       {preview && (
         <img
           src={preview}
@@ -47,10 +57,9 @@ export default function UploadProfileForm() {
         />
       )}
 
-      {/* File input */}
       <input
         type="file"
-        name="image"
+        name="file"
         accept="image/*"
         onChange={handleFileChange}
         className="block w-full text-sm text-slate-700"
@@ -60,10 +69,10 @@ export default function UploadProfileForm() {
       <button
         type="submit"
         disabled={loading}
-        className="px-4 py-2 rounded-md border border-gray-300 bg-white text-slate-800 hover:bg-slate-50 disabled:opacity-50 shadow-sm"
+        className="mt-2 w-full px-4 py-2 bg-white text-slate-800 border border-gray-300 rounded-md hover:bg-slate-50 disabled:opacity-50 shadow-sm"
       >
         {loading ? "Uploading..." : "Upload Photo"}
       </button>
     </form>
-  );
+  )
 }

@@ -1,41 +1,41 @@
-"use client";
+"use client"
 
-import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button"
+import { useState } from "react"
 
-export default function DeleteResumeButton({
-  userId,
-  fileUrl,
-}: {
-  userId: string;
-  fileUrl: string;
-}) {
-  const router = useRouter();
+export default function DeleteResumeButton({ userId, fileUrl }: { userId: string; fileUrl: string }) {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
 
   const handleDelete = async () => {
-    if (!confirm("Are you sure you want to delete your resume?")) return;
+    if (!window.confirm("Are you sure you want to delete your resume?")) return
 
-    const res = await fetch("/api/auth/profile/DeleteResume", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, fileUrl }),
-    });
+    setLoading(true)
+    setError("")
+    try {
+      const response = await fetch("/api/auth/profile/delete-resume", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, fileUrl }),
+      })
 
-    const data = await res.json();
+      if (!response.ok) throw new Error("Failed to delete resume")
 
-    if (data.success) {
-      alert("Resume deleted successfully!");
-      router.refresh();
-    } else {
-      alert(data.error || "Failed to delete resume");
+      window.location.reload()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error deleting resume")
+    } finally {
+      setLoading(false)
     }
-  };
+  }
 
   return (
-    <button
-      onClick={handleDelete}
-      className="px-4 py-2 rounded-md border border-gray-300 bg-white text-slate-800 hover:bg-slate-50 transition shadow-sm"
-    >
-      Delete Resume
-    </button>
-  );
+    <>
+      <Button variant="destructive" size="sm" onClick={handleDelete} disabled={loading} className="gap-2">
+        <span>🗑</span>
+        Delete
+      </Button>
+      {error && <p className="text-red-500 text-xs">{error}</p>}
+    </>
+  )
 }
