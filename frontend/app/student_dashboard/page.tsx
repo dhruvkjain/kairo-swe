@@ -61,7 +61,7 @@ const StudentDashboard = ({ params }: StudentDashboardProps) => {
       if (minPay) params.append("minStipend", minPay);
       if (maxPay) params.append("maxStipend", maxPay);
 
-      const res = await fetch(`/api/findInternship?${params.toString()}`, {
+      const res = await fetch(`/api/auth/findInternship?${params.toString()}`, {
         cache: "no-store",
       });
       const data = await res.json();
@@ -95,7 +95,7 @@ const StudentDashboard = ({ params }: StudentDashboardProps) => {
       setLoading(true);
       setMessage(null);
 
-      const res = await fetch("/api/findInternship", {
+      const res = await fetch("/api/auth/findInternship", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
