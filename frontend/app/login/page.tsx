@@ -73,7 +73,7 @@ const Login: React.FC = () => {
 
       toast.success("Sign in successful! Redirecting...");
 
-      router.push(`/profile/${data.user.id}`);
+      router.push(`/student_dashboard/${data.user.id}`);
 
     } catch (err: any) {
       toast.error(err.message || "Something went wrong.");
