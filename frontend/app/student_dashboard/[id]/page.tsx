@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   SlidersHorizontal,
   Briefcase,
@@ -15,6 +15,16 @@ import {
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
+import Link from "next/link";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogOverlay,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 interface StudentDashboardProps {
   params: { id: string };
@@ -23,7 +33,7 @@ interface StudentDashboardProps {
 const StudentDashboard = ({ params }: StudentDashboardProps) => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const userId = params.id;
+  const Id = params.id;
 
   const [internships, setInternships] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -33,20 +43,22 @@ const StudentDashboard = ({ params }: StudentDashboardProps) => {
 
   // Filters
   const [search, setSearch] = useState(searchParams.get("search") || "");
-  const [location, setLocation] = useState(
-    searchParams.get("location") || "all"
-  );
+  const [location, setLocation] = useState(searchParams.get("location") || "all");
   const [mode, setMode] = useState(searchParams.get("mode") || "all");
   const [type, setType] = useState(searchParams.get("type") || "all");
-  const [category, setCategory] = useState(
-    searchParams.get("category") || "all"
-  );
+  const [category, setCategory] = useState(searchParams.get("category") || "all");
   const [skills, setSkills] = useState(searchParams.get("skills") || "");
   const [minPay, setMinPay] = useState(searchParams.get("minStipend") || "");
   const [maxPay, setMaxPay] = useState(searchParams.get("maxStipend") || "");
 
+  // Apply modal state
+  const [showApplyDialog, setShowApplyDialog] = useState(false);
+  const [selectedInternship, setSelectedInternship] = useState<any>(null);
+  const [resumeUrl, setResumeUrl] = useState("");
+  const [coverLetter, setCoverLetter] = useState("");
+
   // 🔹 Fetch internships
-  const fetchInternships = async () => {
+  const fetchInternships = useCallback(async () => {
     try {
       setLoading(true);
       setMessage(null);
@@ -68,7 +80,7 @@ const StudentDashboard = ({ params }: StudentDashboardProps) => {
 
       if (res.ok) {
         setInternships(data);
-        router.replace(`/student_dashboard/${userId}?${params.toString()}`);
+        router.replace(`/student_dashboard/${Id}?${params.toString()}`);
       } else {
         setInternships([]);
         setMessage({
@@ -82,11 +94,15 @@ const StudentDashboard = ({ params }: StudentDashboardProps) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [search, location, mode, type, category, skills, minPay, maxPay, router, Id]);
 
   // 🔹 Apply to internship
-  const applyToInternship = async (internshipId: string) => {
-    if (!userId) {
+  const applyToInternship = async (
+    internshipId: string,
+    resumeUrl: string,
+    coverLetter: string
+  ) => {
+    if (!Id) {
       setMessage({ type: "error", text: "You must be logged in to apply." });
       return;
     }
@@ -100,9 +116,9 @@ const StudentDashboard = ({ params }: StudentDashboardProps) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           internshipId,
-          userId,
-          coverLetter: "Excited to apply for this opportunity!",
-          resumeUrl: "https://example.com/resume.pdf",
+          userId: Id,
+          coverLetter,
+          resumeUrl,
         }),
       });
 
@@ -110,6 +126,9 @@ const StudentDashboard = ({ params }: StudentDashboardProps) => {
 
       if (res.ok) {
         setMessage({ type: "success", text: "Applied successfully!" });
+        setShowApplyDialog(false);
+        setResumeUrl("");
+        setCoverLetter("");
       } else {
         setMessage({
           type: "error",
@@ -129,14 +148,13 @@ const StudentDashboard = ({ params }: StudentDashboardProps) => {
     fetchInternships();
   }, []);
 
-  // 🔹 Real-time updates when any filter changes (debounced)
+  // 🔹 Refetch when filters change (debounced)
   useEffect(() => {
     const delay = setTimeout(() => {
       fetchInternships();
-    }, 500); // debounce 0.5s after user stops typing/changing
-
+    }, 500);
     return () => clearTimeout(delay);
-  }, [search, location, mode, type, category, skills, minPay, maxPay]);
+  }, [search, location, mode, type, category, skills, minPay, maxPay, fetchInternships]);
 
   // 🔹 Clear filters
   const clearFilters = () => {
@@ -167,7 +185,7 @@ const StudentDashboard = ({ params }: StudentDashboardProps) => {
 
           <div className="flex items-center gap-4">
             <button
-              onClick={() => router.push("/student_dashboard/Profile_section")}
+              onClick={() => router.push(`/profile/${Id}`)} // ✅ lowercase path
               className="relative"
             >
               <img
@@ -212,7 +230,7 @@ const StudentDashboard = ({ params }: StudentDashboardProps) => {
         )}
 
         <div className="flex flex-col lg:flex-row gap-6 mt-6">
-          {/* Left Sidebar - Filters */}
+          {/* Sidebar Filters */}
           <motion.section
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -310,9 +328,7 @@ const StudentDashboard = ({ params }: StudentDashboardProps) => {
                 <p className="text-gray-600 text-sm">
                   {loading
                     ? "Loading internships..."
-                    : `${internships.length} internship${
-                        internships.length !== 1 ? "s" : ""
-                      } found`}
+                    : `${internships.length} internship${internships.length !== 1 ? "s" : ""} found`}
                 </p>
                 <button
                   onClick={clearFilters}
@@ -324,7 +340,7 @@ const StudentDashboard = ({ params }: StudentDashboardProps) => {
             </div>
           </motion.section>
 
-          {/* Right Content - Internships */}
+          {/* Internship Cards */}
           <motion.section
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -370,17 +386,74 @@ const StudentDashboard = ({ params }: StudentDashboardProps) => {
                   </div>
 
                   <button
-                    onClick={() => applyToInternship(internship.id)}
+                    onClick={() => {
+                      setSelectedInternship(internship);
+                      setShowApplyDialog(true);
+                    }}
                     className="w-full bg-gray-900 text-white py-2 rounded-lg hover:bg-gray-800 transition disabled:opacity-50"
                     disabled={loading}
                   >
-                    {loading ? "Applying..." : "Apply Now"}
+                    Apply Now
                   </button>
                 </motion.div>
               ))}
           </motion.section>
         </div>
       </main>
+
+      {/* 🧱 Apply Dialog */}
+      <Dialog open={showApplyDialog} onOpenChange={setShowApplyDialog}>
+        <DialogOverlay className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              Apply for {selectedInternship?.title || "this internship"}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="flex flex-col gap-4 mt-2">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Resume URL
+              </label>
+              <input
+                type="url"
+                value={resumeUrl}
+                onChange={(e) => setResumeUrl(e.target.value)}
+                placeholder="https://example.com/resume.pdf"
+                className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-gray-900 outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Why do you want to join this role?
+              </label>
+              <textarea
+                value={coverLetter}
+                onChange={(e) => setCoverLetter(e.target.value)}
+                placeholder="Share what excites you about this opportunity..."
+                className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-gray-900 outline-none resize-none"
+                rows={4}
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="flex justify-end gap-3 mt-4">
+            <Button variant="outline" onClick={() => setShowApplyDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() =>
+                applyToInternship(selectedInternship?.id, resumeUrl, coverLetter)
+              }
+              disabled={!resumeUrl || !coverLetter || loading}
+            >
+              {loading ? "Submitting..." : "Submit Application"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
