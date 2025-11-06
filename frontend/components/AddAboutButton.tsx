@@ -1,92 +1,83 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button"
+import { useState } from "react"
 
-export default function AddAboutButton({
-  userId,
-  initialAbout,
-  role,
-}: {
-  userId: string;
-  initialAbout?: string | null;
-  role: "APPLICANT" | "RECRUITER";
-}) {
-  const [about, setAbout] = useState(initialAbout ?? ""); // handles null safely
-  const [isEditing, setIsEditing] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const wordLimit = 200;
+interface AddAboutButtonProps {
+  userId: string
+  initialAbout?: string
+  role: string
+}
 
-  const router = useRouter();
+export default function AddAboutButton({ userId, initialAbout, role }: AddAboutButtonProps) {
+  const [isEditing, setIsEditing] = useState(false)
+  const [about, setAbout] = useState(initialAbout || "")
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
 
-  const handleSubmit = async () => {
-    if (about.trim().split(/\s+/).length > wordLimit) {
-      alert(`About section cannot exceed ${wordLimit} words.`);
-      return;
-    }
-
-    setLoading(true);
+  const handleSave = async () => {
+    setLoading(true)
+    setError("")
     try {
-      const res = await fetch("/api/auth/profile/about", {
+      const response = await fetch("/api/auth/profile/about", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, about, role }),
-      });
+        body: JSON.stringify({ userId, about , role}),
+      })
 
-      if (res.ok) {
-        alert("About section updated successfully!");
-        setIsEditing(false);
-        router.refresh();
-      } else {
-        const error = await res.json();
-        alert(error.message || "Something went wrong");
-      }
+      if (!response.ok) throw new Error("Failed to update about")
+
+      setIsEditing(false)
+      window.location.reload()
     } catch (err) {
-      console.error(err);
-      alert("Error updating about section.");
+      setError(err instanceof Error ? err.message : "Error updating about")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   if (!isEditing) {
     return (
-      <button
-        onClick={() => setIsEditing(true)}
-        className="mt-4 px-4 py-2 rounded-md border border-gray-300 bg-white text-slate-800 hover:bg-slate-50 transition shadow-sm"
-      >
-        {about ? "Edit About" : "Add About"}
-      </button>
-    );
+      <Button variant="outline" size="sm" onClick={() => setIsEditing(true)} className="gap-2">
+        {initialAbout ? (
+          <>
+            <span>✎</span>
+            Edit About
+          </>
+        ) : (
+          <>
+            <span>+</span>
+            Add About
+          </>
+        )}
+      </Button>
+    )
   }
 
   return (
-    <div className="mt-4 flex flex-col gap-3 items-center w-full text-slate-800">
+    <div className="space-y-3 p-4 border rounded-lg bg-muted/50">
       <textarea
         value={about}
         onChange={(e) => setAbout(e.target.value)}
-        rows={5}
-        className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-1 focus:ring-slate-400"
-        placeholder="Write about yourself..."
+        placeholder={`Add an about section for your ${role}...`}
+        className="w-full px-3 py-2 border rounded-md text-sm resize-none h-24"
       />
-      <p className="text-sm text-slate-500">
-        {about.trim() === "" ? 0 : about.trim().split(/\s+/).length}/{wordLimit} words
-      </p>
-      <div className="flex gap-3">
-        <button
-          onClick={handleSubmit}
-          disabled={loading}
-          className="px-4 py-2 rounded-md border border-gray-300 bg-slate-800 text-white hover:bg-slate-900 disabled:opacity-50"
-        >
-          {loading ? "Saving..." : "Save"}
-        </button>
-        <button
-          onClick={() => setIsEditing(false)}
-          className="px-4 py-2 rounded-md border border-gray-200 bg-white hover:bg-slate-50"
+      {error && <p className="text-red-500 text-xs">{error}</p>}
+      <div className="flex gap-2">
+        <Button size="sm" onClick={handleSave} disabled={loading}>
+          Save
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => {
+            setIsEditing(false)
+            setAbout(initialAbout || "")
+          }}
         >
           Cancel
-        </button>
+        </Button>
       </div>
     </div>
-  );
+  )
 }

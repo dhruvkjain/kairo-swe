@@ -1,47 +1,61 @@
-"use client";
+"use client"
 
-import { useState } from "react";
+import { Button } from "@/components/ui/button"
+import { useState } from "react"
 
-export default function DeleteSkill({ userId, initialSkills = [], isOwner = false }: { userId: string; initialSkills?: string[]; isOwner?: boolean }) {
-  const [skills, setSkills] = useState(initialSkills);
+export default function DeleteSkill({
+  userId,
+  initialSkills,
+  isOwner,
+}: { userId: string; initialSkills: string[]; isOwner: boolean }) {
+  const [skills, setSkills] = useState<string[]>(initialSkills || [])
+  const [loading, setLoading] = useState(false)
 
-  const handleRemoveSkill = async (skill: string) => {
+  const handleDelete = async (skillToDelete: string) => {
+    setLoading(true)
     try {
-      const res = await fetch("/api/auth/profile/Removeskill", {
-        method: "DELETE",
+      const response = await fetch("/api/auth/profile/delete-skill", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, skill }),
-      });
+        body: JSON.stringify({ userId, skillName: skillToDelete }),
+      })
 
-      if (!res.ok) throw new Error("Failed to remove skill");
+      if (!response.ok) throw new Error("Failed to delete skill")
 
-      const data = await res.json();
-      setSkills(data.skills);
+      setSkills(skills.filter((s) => s !== skillToDelete))
+      window.location.reload()
     } catch (err) {
-      console.error(err);
-      alert("Error removing skill!");
+      console.error("Error deleting skill:", err)
+    } finally {
+      setLoading(false)
     }
-  };
+  }
+
+  if (!initialSkills || initialSkills.length === 0) {
+    return <p className="text-muted-foreground text-center text-sm">No skills added yet.</p>
+  }
 
   return (
-    <div className="p-4 border rounded-lg shadow-sm max-w-md bg-white text-slate-800">
-      <h2 className="text-xl font-serif font-semibold mb-3">Skills</h2>
-
-      <ul className="mb-3 flex flex-wrap gap-2">
-        {skills.map((skill) => (
-          <li key={skill} className="flex items-center gap-2 px-3 py-1 bg-slate-100 text-sm rounded-full">
-            <span className="text-slate-800">{skill}</span>
-            {isOwner && (
-              <button
-                onClick={() => handleRemoveSkill(skill)}
-                className="text-slate-700 hover:text-slate-900 font-medium"
-              >
-                ✕
-              </button>
-            )}
-          </li>
-        ))}
-      </ul>
+    <div className="flex flex-wrap gap-2">
+      {skills.map((skill) => (
+        <div
+          key={skill}
+          className="inline-flex items-center gap-2 px-3 py-2 bg-primary/10 text-primary rounded-full text-sm font-medium"
+        >
+          <span>{skill}</span>
+          {isOwner && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleDelete(skill)}
+              disabled={loading}
+              className="h-4 w-4 p-0 hover:bg-primary/20"
+            >
+              ✕
+            </Button>
+          )}
+        </div>
+      ))}
     </div>
-  );
+  )
 }

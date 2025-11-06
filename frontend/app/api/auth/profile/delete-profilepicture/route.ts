@@ -9,9 +9,15 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET!,
 });
 
-export async function POST(req: Request) {
+export async function DELETE(req: Request) {
+  return handleDelete(req);
+}
+
+async function handleDelete(req: Request) {
   try {
-    const { imageUrl } = await req.json();
+    // Accept optional userId from client but always verify against session
+    const { imageUrl, userId: clientUserId } = await req.json();
+    console.log("Delete image request for URL:", imageUrl, "clientUserId:", clientUserId);
     const sessionToken = cookies().get("sessionToken")?.value;
 
     if (!sessionToken) {
@@ -24,6 +30,11 @@ export async function POST(req: Request) {
 
     if (!session) {
       return NextResponse.json({ error: "Session not found" }, { status: 401 });
+    }
+
+    // If client provided a userId, ensure it matches the session user id
+    if (clientUserId && clientUserId !== session.userId) {
+      return NextResponse.json({ error: "Not authorized to delete this image" }, { status: 403 });
     }
 
     if (!imageUrl) {
@@ -45,7 +56,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Cloudinary delete failed", result }, { status: 500 });
     }
 
-    // Remove image URL from DB
+    // Remove image URL from DB (use session user id)
     await prisma.user.update({
       where: { id: session.userId },
       data: { image: null },

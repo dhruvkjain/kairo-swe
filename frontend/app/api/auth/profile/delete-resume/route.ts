@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import prisma from "@/lib/prisma";
 
 export async function POST(req: Request) {
@@ -9,6 +10,16 @@ export async function POST(req: Request) {
     if (!userId || !fileUrl) {
       return NextResponse.json({ error: "Missing userId or fileUrl" }, { status: 400 });
     }
+
+    // Authenticate session
+    const sessionToken = cookies().get("sessionToken")?.value;
+    if (!sessionToken) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const session = await prisma.session.findUnique({ where: { sessionToken } });
+    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    // Only owner can delete their resume
+    if (session.userId !== userId)
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
     // Extract Uploadcare file UUID
     const match = fileUrl.match(

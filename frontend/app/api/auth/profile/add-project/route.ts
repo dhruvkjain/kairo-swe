@@ -1,11 +1,31 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import prisma from "@/lib/prisma";
 
 export async function POST(req: Request) {
   try {
     const { userId, title, description, skills } = await req.json();
-    if (!userId || !title || !description || !skills?.length)
+    console.log("Received data:", { userId, title, description, skills });
+
+    // Normalize skills: accept array, comma-separated string, or absent
+    const normalizedSkills = Array.isArray(skills)
+      ? skills
+      : typeof skills === "string"
+      ? skills.split(",").map((s) => s.trim()).filter(Boolean)
+      : [];
+
+    if (!userId || !title || !description)
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+
+    // Authenticate session
+    const sessionToken = cookies().get("sessionToken")?.value;
+    if (!sessionToken) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const session = await prisma.session.findUnique({ where: { sessionToken } });
+    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    // Authorize: only the profile owner can add a project
+    if (session.userId !== userId)
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
     const applicant = await prisma.applicant.findUnique({ where: { userId } });
     if (!applicant)
@@ -15,7 +35,7 @@ export async function POST(req: Request) {
       id: crypto.randomUUID(),
       title,
       description,
-      skills,
+      skills: normalizedSkills,
     });
 
     const updatedApplicant = await prisma.applicant.update({
