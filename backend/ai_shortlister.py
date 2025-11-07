@@ -12,7 +12,7 @@ This file contains all the core logic for:
 """
 
 from sentence_transformers import SentenceTransformer, util
-from pydantic import BaseModel, Field  # <-- Corrected from 'pantic'
+from pydantic import BaseModel, Field
 from typing import List, Dict, Optional
 import re
 
@@ -46,7 +46,7 @@ class ApplicantScore(BaseModel):
     applicant_id: int
     name: str
     final_score: float
-    breakdown: Dict[str, float] # The "explainable" part
+    breakdown: Dict[str, float] 
 
 # --- 2. AI Model Loading ---
 
