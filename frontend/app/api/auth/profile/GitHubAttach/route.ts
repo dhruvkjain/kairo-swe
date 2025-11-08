@@ -22,20 +22,20 @@ export async function POST(req: NextRequest) {
     }
 
     const userId = session.user.id;
-    const { username } = await req.json();
+    const { githubLink } = await req.json();
 
-    console.log("Request body:", { username });
-    if (!username) {
+    console.log("Request body:", { githubLink });
+    if (!githubLink) {
       return NextResponse.json(
         { error: "Username is required" },
         { status: 400 }
       );
     }
 
-    console.log("Received GitHub username:", username);
+    console.log("Received GitHub username:", githubLink);
 
     // Clean up username if user pasted full GitHub URL
-    const cleanUsername = username
+    const cleanUsername = githubLink
       .trim()
       .replace(/^https?:\/\/(www\.)?github\.com\//, "")
       .split("/")[0];
@@ -44,7 +44,6 @@ export async function POST(req: NextRequest) {
 
     // Fetch GitHub user data
     const githubUser = await getGitHubUser(cleanUsername);
-    const githubLink = `https://github.com/${cleanUsername}`;
 
     // Save to Applicant model
     const updatedApplicant = await prisma.applicant.upsert({

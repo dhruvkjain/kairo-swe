@@ -5,20 +5,17 @@ import { requireAuth } from "@/lib/auth";
 export async function DELETE(req: Request) {
   try {
     const currentUser = await requireAuth();
-
     const { userId, field, value } = await req.json();
 
-    if (currentUser.id !== userId) {
+    if (currentUser.id !== userId)
       return NextResponse.json({ error: "Forbidden: user mismatch" }, { status: 403 });
-    }
 
-    if (!userId || field !== "linkedInLink") {
+    if (!userId || field !== "linkedInLink")
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
-    }
 
     const updatedApplicant = await prisma.applicant.update({
       where: { userId },
-      data: { linkedInLink: value }, 
+      data: { linkedInLink: value },
       select: { id: true, linkedInLink: true },
     });
 
@@ -26,17 +23,22 @@ export async function DELETE(req: Request) {
       message: "LinkedIn link removed successfully",
       applicant: updatedApplicant,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error("Error removing LinkedIn link:", error);
-
-    let message = "Internal Server Error";
     let status = 500;
-
-    if (error instanceof Error) {
-      message = error.message;
-      if (message.includes("Unauthorized")) status = 401;
-    }
-
+    let message = "Internal Server Error";
+    if (error instanceof Error && error.message.includes("Unauthorized")) status = 401;
     return NextResponse.json({ error: message }, { status });
   }
+}
+
+export async function OPTIONS() {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "DELETE, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    },
+  });
 }
