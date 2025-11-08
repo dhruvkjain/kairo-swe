@@ -1,7 +1,8 @@
-"use client";
+"use client"; // client-side component
 
 import React, { useState, ChangeEvent } from "react";
 
+// single experience structure
 interface Experience {
   id: number;
   role: string;
@@ -13,6 +14,7 @@ interface Experience {
 }
 
 const ExperienceSection: React.FC = () => {
+  // all experiences
   const [experiences, setExperiences] = useState<Experience[]>([
     {
       id: 1,
@@ -22,11 +24,14 @@ const ExperienceSection: React.FC = () => {
       duration: "Dec 2024 – Dec 2024 · 1 mo",
       location: "Sutrapada, Gir-Somnath, Gujarat, India · On-site",
       description:
-        'As part of a 12-member DA-IICT team for the "Sustainable Rural Development" project. Conducted digital literacy workshops for village students and taught fundamental computer skills and internet awareness.',
+        'Part of a 12-member DA-IICT team for the "Sustainable Rural Development" project. Conducted digital literacy workshops for village students.',
     },
   ]);
 
+  // edit/add toggle
   const [isEditing, setIsEditing] = useState<boolean>(false);
+
+  // form input data
   const [formData, setFormData] = useState<Experience>({
     id: 0,
     role: "",
@@ -37,7 +42,7 @@ const ExperienceSection: React.FC = () => {
     description: "",
   });
 
-  // Handle input changes
+  // handle input change
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -45,7 +50,7 @@ const ExperienceSection: React.FC = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handle Add or Update
+  // add or update experience
   const handleSubmit = () => {
     if (isEditing) {
       setExperiences((prev) =>
@@ -53,13 +58,10 @@ const ExperienceSection: React.FC = () => {
       );
       setIsEditing(false);
     } else {
-      setExperiences((prev) => [
-        ...prev,
-        { ...formData, id: Date.now() },
-      ]);
+      setExperiences((prev) => [...prev, { ...formData, id: Date.now() }]);
     }
 
-    // Reset form
+    // reset form
     setFormData({
       id: 0,
       role: "",
@@ -71,20 +73,20 @@ const ExperienceSection: React.FC = () => {
     });
   };
 
-  // Handle Edit
+  // edit handler
   const handleEdit = (exp: Experience) => {
     setFormData(exp);
     setIsEditing(true);
   };
 
-  // Handle Delete
+  // delete handler
   const handleDelete = (id: number) => {
     setExperiences((prev) => prev.filter((exp) => exp.id !== id));
   };
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center p-6">
-      {/* Add New Button */}
+      {/* add new button */}
       <div className="w-full max-w-2xl flex justify-end mb-4">
         <button
           onClick={() => {
@@ -105,12 +107,13 @@ const ExperienceSection: React.FC = () => {
         </button>
       </div>
 
-      {/* Form */}
+      {/* form section */}
       <div className="bg-white w-full max-w-2xl rounded-2xl shadow-md p-6 mb-6">
         <h2 className="text-lg font-semibold mb-3 text-gray-800">
           {isEditing ? "Edit Experience" : "Add New Experience"}
         </h2>
 
+        {/* input fields */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <input
             type="text"
@@ -154,6 +157,7 @@ const ExperienceSection: React.FC = () => {
           />
         </div>
 
+        {/* textarea */}
         <textarea
           name="description"
           placeholder="Description"
@@ -171,7 +175,7 @@ const ExperienceSection: React.FC = () => {
         </button>
       </div>
 
-      {/* Experience Cards */}
+      {/* list of experiences */}
       <div className="w-full max-w-2xl space-y-4">
         {experiences.map((exp) => (
           <div
@@ -191,6 +195,8 @@ const ExperienceSection: React.FC = () => {
                   {exp.location}
                 </p>
               </div>
+
+              {/* action buttons */}
               <div className="flex gap-2">
                 <button
                   onClick={() => handleEdit(exp)}
@@ -207,6 +213,7 @@ const ExperienceSection: React.FC = () => {
               </div>
             </div>
 
+            {/* description */}
             <p className="mt-3 text-gray-700 text-sm">{exp.description}</p>
           </div>
         ))}
@@ -215,4 +222,4 @@ const ExperienceSection: React.FC = () => {
   );
 };
 
-export default ExperienceSection;
+export default ExperienceSection; // export main component
