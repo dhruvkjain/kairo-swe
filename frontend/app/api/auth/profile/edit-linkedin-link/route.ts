@@ -20,10 +20,11 @@ export async function PUT(request: Request) {
   try {
     // get data from request body
     const body = await request.json();
-    const { userId, linkedInLink } = body;
+    const { userId, linkedinLink } = body;
 
+    console.log("Received data:", userId, linkedinLink);
     // quick validation check
-    if (!userId || !linkedInLink) {
+    if (!userId || !linkedinLink) {
       // return early if data is missing
       return NextResponse.json(
         { error: "Missing userId or linkedInLink" },
@@ -31,6 +32,7 @@ export async function PUT(request: Request) {
       );
     }
 
+    console.log("Updating LinkedIn link for userId:", userId);
     // find applicant by userId
     const applicant = await prisma.applicant.findUnique({
       where: { userId },
@@ -47,7 +49,7 @@ export async function PUT(request: Request) {
     // perform update operation
     const updatedApplicant = await prisma.applicant.update({
       where: { userId },
-      data: { linkedInLink },
+      data: { linkedInLink: linkedinLink },
     });
 
     // return success response
