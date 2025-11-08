@@ -7,13 +7,15 @@ This file contains all the core logic for:
 3. FAKE_DB (for testing)
 4. The main logic function (get_shortlist_logic)
 5. The core AI calculation (calculate_shortlist)
+6. The API Endpoint Router
 """
 
 from sentence_transformers import SentenceTransformer, util
 from pydantic import BaseModel, Field
 from typing import List, Dict, Optional
 import re
-from fastapi import HTTPException
+from fastapi import HTTPException, APIRouter, Query, Depends
+from fastapi.concurrency import run_in_threadpool
 
 # --- 1. Pydantic Models ---
 class JobDetails(BaseModel):
@@ -23,10 +25,7 @@ class JobDetails(BaseModel):
     preferred_skills: List[str] = Field(default_factory=list)
 
 class ApplicantProfile(BaseModel):
-    """
-    Structured data for a single applicant.
-    This reflects the output of parser.
-    """
+    """Structured data for a single applicant."""
     id: int
     name: str
     raw_resume_text: str 
@@ -40,8 +39,7 @@ class ApplicantScore(BaseModel):
     final_score: float
     breakdown: Dict[str, float]
 
-# --- 2. AI Model Loading (THE CHANGE) ---
-# We set it to None first. It will be loaded by the 'lifespan' event.
+# --- 2. AI Model Loading---
 model: Optional[SentenceTransformer] = None
 
 def load_model():
@@ -50,14 +48,14 @@ def load_model():
     to load the heavy AI model BEFORE the server starts.
     """
     global model
-    if model is None: # Only load if it hasn't been loaded
+    if model is None:
         print("INFO:     Server starting up...")
         print("INFO:     Loading semantic model (all-mpnet-base-v2)...")
         try:
             model = SentenceTransformer('all-mpnet-base-v2')
             print("INFO:     Semantic model loaded successfully.")
         except Exception as e:
-            print(f"FATAL:    Could not load sentence transformer model: {e}")
+            print(f"FATAL:     Could not load sentence transformer model: {e}")
     else:
         print("INFO:     Model already loaded.")
 
@@ -74,14 +72,14 @@ DEFAULT_WEIGHTS = {
 def normalize_skill(skill: str) -> str:
     """
     Cleans up skill strings for better matching.
-    e.g., "  Python " -> "python"
+    e.g., "   Python " -> "python"
     e.g., "React.js" -> "react"
     """
     skill_lower = skill.lower().strip()
     skill_lower = re.sub(r'[\.\s]', '', skill_lower)
     return skill_lower
 
-# --- 5. FAKE DATABASE (MOVED FROM main.py) ---
+# --- 5. FAKE DATABASE ---
 FAKE_DB_JOBS = {
     1: {
         "id": 1,
@@ -143,7 +141,7 @@ def calculate_shortlist(
     
     # If the model isn't loaded yet, tell the user to wait.
     if model is None:
-        print("ERROR:    Model not loaded. Server is still starting.")
+        print("ERROR:     Model not loaded. Server is still starting.")
         # 503 Service Unavailable
         raise HTTPException(status_code=503, detail="Server is still loading AI model. Please try again in 30 seconds.")
 
@@ -212,7 +210,6 @@ def calculate_shortlist(
 
 
 # --- 7. Main Logic Function (Synchronous) ---
-# This function is called by main.py
 def get_shortlist_logic(
     job_id: int, 
     weights: Dict[str, float]
@@ -262,3 +259,47 @@ def get_shortlist_logic(
     )
     
     return shortlist
+
+
+# --- 8. API ROUTER (This is the new/moved code) ---
+# Create a router to hold all endpoints for this module
+router = APIRouter()
+
+@router.get("/jobs/{job_id}/shortlist", response_model=List[ApplicantScore])
+async def get_ai_shortlist(
+    job_id: int,
+    # Define the weights as optional query parameters
+    weight_skills: float = Query(0.4, ge=0, le=1),
+    weight_experience: float = Query(0.3, ge=0, le=1),
+    weight_projects: float = Query(0.2, ge=0, le=1),
+    weight_bonus: float = Query(0.1, ge=0, le=1)
+):  
+    # --- 1. Validation: Ensure weights sum to 1.0 ---
+    total_weight = weight_skills + weight_experience + weight_projects + weight_bonus
+    # Use a small tolerance for floating point math
+    if not (0.99 <= total_weight <= 1.01):
+        raise HTTPException(
+            status_code=400,  
+            detail=f"Weights must sum to 1.0, but received: {total_weight}"
+        )
+    
+    weights = {
+        "skills": weight_skills,
+        "experience": weight_experience,
+        "projects": weight_projects,
+        "bonus": weight_bonus
+    }
+
+    # --- 2. Call the Logic Function ---
+    # OLD, BLOCKING WAY:
+    # return get_shortlist_logic(job_id=job_id, weights=weights)
+
+    # NEW, NON-BLOCKING (PROFESSIONAL) WAY:
+    # We tell FastAPI to run the blocking "get_shortlist_logic" function
+    # in a separate thread, and our main waiter "await"s the result.
+    # The server is now free to handle other requests.
+    return await run_in_threadpool(
+        get_shortlist_logic, # The function to run
+        job_id=job_id,         # The arguments to pass to it
+        weights=weights
+    )
