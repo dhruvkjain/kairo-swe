@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
   console.log("Received request to attach LinkedIn profile");
+
   try {
     const sessionToken = cookies().get("sessionToken")?.value;
     if (!sessionToken) {
@@ -36,7 +37,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Clean up LinkedIn link
-    const cleanLinkedin = linkedinLink
+    const cleanLinkedin = linkedinLink 
       .trim()
       // remove base URLs
       .replace(/^https?:\/\/(www\.)?linkedin\.com\//, "")

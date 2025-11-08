@@ -21,7 +21,6 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { toast } from "sonner";
-import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 interface RegistrationFormData {
@@ -225,6 +224,7 @@ const Registration: React.FC = () => {
             {/* Terms Checkbox */}
             <div className="flex items-center space-x-2">
               <input
+                title="terms"
                 id="terms"
                 type="checkbox"
                 checked={formData.termsAccepted}
@@ -250,30 +250,12 @@ const Registration: React.FC = () => {
               {isLoading ? "Creating Account..." : "Create Account"}
             </Button>
 
-            {/* Google Sign-In */}
-            {/* Google Sign-In */}
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full flex items-center justify-center gap-2"
-              onClick={() => signIn("google")}
-            >
-              {/* Google Logo */}
-              <img
-                src="https://www.svgrepo.com/show/475656/google-color.svg"
-                alt="Google"
-                className="w-5 h-5"
-              />
-              Sign up with Google
-            </Button>
-
-
             {/* Already have account */}
             <div className="text-center">
               <p className="text-sm text-muted-foreground">
                 Already have an account?{" "}
                 <Link
-                  href="/login"
+                  href="/signin"
                   className="text-primary hover:underline font-medium"
                 >
                   Sign in here

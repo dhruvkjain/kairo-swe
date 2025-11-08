@@ -9,28 +9,26 @@ export async function POST(req: NextRequest) {
   try {
     const { name, email, password, role } = await req.json();
 
-    if (!email || !password) {
-      return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
+    if (!name || !email || !password || !role) {
+      return NextResponse.json({ error: "Missing fields." }, { status: 400 });
     }
 
-    // validate Role
-    const validRoles = ["APPLICANT", "RECRUITER"];
-    const normalizedRole = role?.toUpperCase();
-
-    if (!validRoles.includes(normalizedRole)) {
-      return NextResponse.json({ error: "Invalid role" }, { status: 400 });
+    // validate role
+    const normalizedRole = role.toUpperCase();
+    if (normalizedRole !== "APPLICANT" && normalizedRole !== "RECRUITER") {
+      return NextResponse.json({ error: "Invalid role." }, { status: 400 });
     }
 
-    // Check if user exists
+    // check if user exists
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
-      return NextResponse.json({ error: "Email already registered" }, { status: 400 });
+      return NextResponse.json({ error: "Email already registered." }, { status: 400 });
     }
 
-    // Hash the password
+    // hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
+    // create new user
     const user = await prisma.user.create({
       data: {
         name,
@@ -42,7 +40,7 @@ export async function POST(req: NextRequest) {
 
     console.log("User created:", user);
 
-    // Create role-specific profile
+    // create role-specific profile
     if (normalizedRole === "APPLICANT") {
       await prisma.applicant.create({
         data: {
@@ -59,8 +57,7 @@ export async function POST(req: NextRequest) {
       console.log("Recruiter profile created");
     }
 
-
-    //Generate verification token
+    // generate verification token
     const token = crypto.randomBytes(32).toString("hex");
     const expires = new Date(Date.now() + 10 * 60 * 1000); // 10 min
 
@@ -72,7 +69,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Send verification email
+    // send verification email
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
@@ -88,6 +85,7 @@ export async function POST(req: NextRequest) {
       to: user.email!,
       subject: "Verify your email",
       html: `<p>Hi ${user.name},</p>
+             <p>Welcome to Kairo!</p>
              <p>Click below to verify your email:</p>
              <a href="${verificationUrl}">Verify Email</a>`,
     });

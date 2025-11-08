@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getGitHubUser } from "@/lib/GithubAPI";
+import { getGitHubUser } from "@/lib/github_api";
 import { cookies } from "next/headers";
 import prisma from "@/lib/prisma";
 
@@ -7,6 +7,7 @@ export async function POST(req: NextRequest) {
   console.log("Received request to attach GitHub profile");
   try {
     const sessionToken = cookies().get("sessionToken")?.value;
+    console.log(sessionToken);
     if (!sessionToken) {
       return NextResponse.json({ error: "No session found" }, { status: 401 });
     }

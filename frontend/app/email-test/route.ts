@@ -1,4 +1,4 @@
-// go to http://localhost:3000/email-test to see if the eamil is working or not
+// go to http://localhost:3000/email-test to see if the email is working or not
 import { NextRequest, NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 

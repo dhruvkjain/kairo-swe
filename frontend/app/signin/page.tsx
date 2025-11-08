@@ -1,6 +1,6 @@
 "use client";
 
-import React, { ChangeEvent, FormEvent, useState } from "react";
+import React, { FormEvent, useState } from "react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -12,16 +12,14 @@ import {
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Eye, EyeOff, Lock, Mail, User, UserCheck } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail, UserCheck } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { toast } from "sonner";
- import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 interface LoginFormData {
@@ -40,7 +38,6 @@ const Login: React.FC = () => {
   });
 
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleInputChange = (name: string, value: string | boolean) => {
@@ -56,7 +53,7 @@ const Login: React.FC = () => {
     try {
       setIsLoading(true);
 
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch("/api/auth/signin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -68,8 +65,8 @@ const Login: React.FC = () => {
       });
 
       const data = await res.json();
-
-      if (!res.ok) throw new Error(data.message || "Sign in failed.");
+      console.log(data)
+      if (!res.ok) throw new Error(data.message || data.error || "Sign in failed.");
 
       toast.success("Sign in successful! Redirecting...");
 
@@ -83,7 +80,7 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-xl border border-gray-200">
         <CardHeader className="text-center">
           <div className="mx-auto w-16 h-16 bg-primary rounded-full flex items-center justify-center mb-4">
@@ -167,24 +164,6 @@ const Login: React.FC = () => {
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Signing in..." : "Sign in"}
             </Button>
-
-            {/* Google Sign-In */}
-            {/* Google Sign-In */}
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full flex items-center justify-center gap-2"
-              onClick={() => signIn("google")}
-            >
-              {/* Google Logo */}
-              <img
-                src="https://www.svgrepo.com/show/475656/google-color.svg"
-                alt="Google"
-                className="w-5 h-5"
-              />
-              Sign in with Google
-            </Button>
-
 
             {/* Not have account */}
             <div className="text-center">
