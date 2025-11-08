@@ -29,7 +29,7 @@ export default function LinkedInSection({ hasLinkedIn, applicant, isOwner }: Lin
           </svg>
         </a>
       ) : (
-        isOwner && <LinkedinButton />
+        isOwner && <LinkedinButton userId={applicant.userId}/>
       )}
     </section>
   )

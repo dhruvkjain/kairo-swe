@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import Link from "next/link";
 import {
   Dialog,
   DialogContent,
@@ -24,6 +23,7 @@ import {
   DialogFooter,
   DialogOverlay,
 } from "@/components/ui/dialog";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 interface StudentDashboardProps {
@@ -57,7 +57,7 @@ const StudentDashboard = ({ params }: StudentDashboardProps) => {
   const [resumeUrl, setResumeUrl] = useState("");
   const [coverLetter, setCoverLetter] = useState("");
 
-  // 🔹 Fetch internships
+  // Fetch internships
   const fetchInternships = useCallback(async () => {
     try {
       setLoading(true);
@@ -96,7 +96,7 @@ const StudentDashboard = ({ params }: StudentDashboardProps) => {
     }
   }, [search, location, mode, type, category, skills, minPay, maxPay, router, Id]);
 
-  // 🔹 Apply to internship
+  // Apply to internship
   const applyToInternship = async (
     internshipId: string,
     resumeUrl: string,
@@ -143,12 +143,12 @@ const StudentDashboard = ({ params }: StudentDashboardProps) => {
     }
   };
 
-  // 🔹 Initial fetch
+  // Initial fetch
   useEffect(() => {
     fetchInternships();
   }, []);
 
-  // 🔹 Refetch when filters change (debounced)
+  // Refetch when filters change (debounced)
   useEffect(() => {
     const delay = setTimeout(() => {
       fetchInternships();
@@ -156,7 +156,7 @@ const StudentDashboard = ({ params }: StudentDashboardProps) => {
     return () => clearTimeout(delay);
   }, [search, location, mode, type, category, skills, minPay, maxPay, fetchInternships]);
 
-  // 🔹 Clear filters
+  // Clear filters
   const clearFilters = () => {
     setSearch("");
     setLocation("all");
@@ -170,10 +170,11 @@ const StudentDashboard = ({ params }: StudentDashboardProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+    <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-100">
       {/* Header */}
       <header className="sticky top-0 bg-white/80 backdrop-blur-lg shadow-sm border-b border-gray-200 z-50">
         <div className="max-w-7xl mx-auto flex justify-between items-center py-4 px-6">
+          <Link href="/">
           <div className="flex items-center gap-3">
             <div className="bg-gray-900 p-2 rounded-xl">
               <Briefcase className="text-white w-6 h-6" />
@@ -182,14 +183,15 @@ const StudentDashboard = ({ params }: StudentDashboardProps) => {
               Kairo Internships
             </h1>
           </div>
+          </Link>
 
           <div className="flex items-center gap-4">
             <button
-              onClick={() => router.push(`/profile/${Id}`)} // ✅ lowercase path
+              onClick={() => router.push(`/profile/${Id}`)} 
               className="relative"
             >
               <img
-                src="https://api.dicebear.com/7.x/avataaars/svg?seed=John"
+                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${Id}`}
                 alt="Profile"
                 className="w-10 h-10 rounded-full border-2 border-gray-800 hover:scale-105 transition-transform"
               />
@@ -254,6 +256,7 @@ const StudentDashboard = ({ params }: StudentDashboardProps) => {
               />
 
               <select
+                title="location"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 className="border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-gray-900"
@@ -267,6 +270,7 @@ const StudentDashboard = ({ params }: StudentDashboardProps) => {
               </select>
 
               <select
+                title="type"
                 value={type}
                 onChange={(e) => setType(e.target.value)}
                 className="border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-gray-900"
@@ -278,6 +282,7 @@ const StudentDashboard = ({ params }: StudentDashboardProps) => {
               </select>
 
               <select
+                title="mode"
                 value={mode}
                 onChange={(e) => setMode(e.target.value)}
                 className="border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-gray-900"
@@ -288,6 +293,7 @@ const StudentDashboard = ({ params }: StudentDashboardProps) => {
               </select>
 
               <select
+                title="categories"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 className="border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-gray-900"
@@ -401,7 +407,7 @@ const StudentDashboard = ({ params }: StudentDashboardProps) => {
         </div>
       </main>
 
-      {/* 🧱 Apply Dialog */}
+      {/* Apply Dialog */}
       <Dialog open={showApplyDialog} onOpenChange={setShowApplyDialog}>
         <DialogOverlay className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
         <DialogContent className="sm:max-w-md">

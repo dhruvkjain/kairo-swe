@@ -1,5 +1,5 @@
 import { getCurrentUser } from "@/lib/auth"
-import { getGitHubUser } from "@/lib/GithubAPI"
+import { getGitHubUser } from "@/lib/github_api"
 import prisma from "@/lib/prisma"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import ProfileHeader from "@/components/profile/ProfileHeader"

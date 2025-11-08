@@ -5,10 +5,10 @@ import { randomBytes } from "crypto";
 import { cookies } from "next/headers";
 export async function POST(req: NextRequest) {
     try {
-        const { email, password } = await req.json();
+        const { email, password, role } = await req.json();
 
-        if (!email || !password) {
-            return NextResponse.json({ error: "Email and password are required." }, { status: 400 });
+        if (!email || !password || !role) {
+            return NextResponse.json({ error: "Missing fields." }, { status: 400 });
         }
 
         // Find user
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
         });
     
         if (!user) {
-            return NextResponse.json({ error: "Invalid credentials." }, { status: 401 });
+            return NextResponse.json({ error: "User not found." }, { status: 401 });
         }
 
         // Check if email is verified

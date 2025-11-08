@@ -75,7 +75,7 @@ export function CreativeNavigation() {
               </div>
             ) : (
               <>
-                <Link href="/login">
+                <Link href="/signin">
                   <MagneticButton variant="ghost" className="rounded-full">
                     Sign In
                   </MagneticButton>
@@ -133,7 +133,7 @@ export function CreativeNavigation() {
               </>
             ) : (
               <>
-                <Link href="/login">
+                <Link href="/signin">
                   <MagneticButton variant="ghost" className="w-full">
                     Sign In
                   </MagneticButton>

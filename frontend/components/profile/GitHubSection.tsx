@@ -105,7 +105,7 @@ export default function GitHubSection({ hasGitHub, githubData, applicant, isOwne
           )}
         </div>
       ) : (
-        isOwner && <GithubButton />
+        isOwner && <GithubButton userId={applicant.userId}/>
       )}
     </section>
   )
