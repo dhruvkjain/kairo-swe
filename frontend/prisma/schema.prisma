@@ -99,7 +99,7 @@ model Applicant {
   skills        String[]
   experience    String[]
   projects      String[]
-  phoneNumber   String?
+  phoneNumber   String[]
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
