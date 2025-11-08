@@ -1,14 +1,24 @@
 from fastapi import FastAPI, Depends, HTTPException, Query
 from typing import List, Dict, Optional
 from pydantic import BaseModel
+from contextlib import asynccontextmanager
 
 from ai_shortlister import (
     ApplicantScore,
-    get_shortlist_logic
+    get_shortlist_logic,
+    load_model
 )
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # This code runs BEFORE the server starts accepting requests
+    load_model() # This runs our synchronous, slow model loading
+    print("INFO:     Application startup complete. Server is ready.")
+    yield
+    # This code runs when the server is shutting down
+    print("INFO:     Application shutting down.")
 
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 
 @app.get("/")
 def root():

@@ -3,7 +3,7 @@ AI Shortlister Module (Four-Component Model)
 
 This file contains all the core logic for:
 1. Pydantic Models
-2. AI Model Loading
+2. AI Model Loading (via a function)
 3. FAKE_DB (for testing)
 4. The main logic function (get_shortlist_logic)
 5. The core AI calculation (calculate_shortlist)
@@ -15,13 +15,18 @@ from typing import List, Dict, Optional
 import re
 from fastapi import HTTPException
 
-# --- 1. Pydantic Models for Type-Safe Data ---
+# --- 1. Pydantic Models ---
 class JobDetails(BaseModel):
+    """Structured data for a single job posting."""
     responsibilities: str
     required_skills: List[str] = Field(default_factory=list)
     preferred_skills: List[str] = Field(default_factory=list)
 
 class ApplicantProfile(BaseModel):
+    """
+    Structured data for a single applicant.
+    This reflects the output of parser.
+    """
     id: int
     name: str
     raw_resume_text: str 
@@ -29,19 +34,33 @@ class ApplicantProfile(BaseModel):
     ocr_projects_text: str = Field(default_factory=str) 
 
 class ApplicantScore(BaseModel):
+    """The final output for a single scored applicant."""
     applicant_id: int
     name: str
     final_score: float
     breakdown: Dict[str, float]
 
-# --- 2. AI Model Loading ---
-print("INFO:     Loading semantic model (all-mpnet-base-v2)...")
-try:
-    model = SentenceTransformer('all-mpnet-base-v2')
-    print("INFO:     Semantic model loaded successfully.")
-except Exception as e:
-    print(f"FATAL:    Could not load sentence transformer model: {e}")
-    model = None
+# --- 2. AI Model Loading (THE CHANGE) ---
+# We set it to None first. It will be loaded by the 'lifespan' event.
+model: Optional[SentenceTransformer] = None
+
+def load_model():
+    """
+    This function is called by main.py's lifespan event
+    to load the heavy AI model BEFORE the server starts.
+    """
+    global model
+    if model is None: # Only load if it hasn't been loaded
+        print("INFO:     Server starting up...")
+        print("INFO:     Loading semantic model (all-mpnet-base-v2)...")
+        try:
+            model = SentenceTransformer('all-mpnet-base-v2')
+            print("INFO:     Semantic model loaded successfully.")
+        except Exception as e:
+            print(f"FATAL:    Could not load sentence transformer model: {e}")
+    else:
+        print("INFO:     Model already loaded.")
+
 
 # --- 3. Default Weights ---
 DEFAULT_WEIGHTS = {
@@ -62,8 +81,7 @@ def normalize_skill(skill: str) -> str:
     skill_lower = re.sub(r'[\.\s]', '', skill_lower)
     return skill_lower
 
-
-# --- 5. FAKE DATABASE ---
+# --- 5. FAKE DATABASE (MOVED FROM main.py) ---
 FAKE_DB_JOBS = {
     1: {
         "id": 1,
@@ -116,7 +134,6 @@ FAKE_DB_APPLICANTS = [
     }
 ]
 
-
 # --- 6. Core Calculation Logic (CPU-Bound) ---
 def calculate_shortlist(
     job: JobDetails, 
@@ -124,9 +141,11 @@ def calculate_shortlist(
     custom_weights: Optional[Dict[str, float]] = None
 ) -> List[ApplicantScore]:
     
+    # If the model isn't loaded yet, tell the user to wait.
     if model is None:
-        print("ERROR:    Model not loaded. Cannot calculate shortlist.")
-        return []
+        print("ERROR:    Model not loaded. Server is still starting.")
+        # 503 Service Unavailable
+        raise HTTPException(status_code=503, detail="Server is still loading AI model. Please try again in 30 seconds.")
 
     weights = custom_weights if custom_weights else DEFAULT_WEIGHTS
     
