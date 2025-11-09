@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
 
-export default function ContactButton({ userId, currentPhone }: { userId: string; currentPhone: string[] }) {
+export default function ContactButton({ userId, currentPhone }: { userId: string; currentPhone: string[]}) {
   const [isEditing, setIsEditing] = useState(false)
   const [phones, setPhones] = useState<string[]>(currentPhone || ["", ""])
   const [loading, setLoading] = useState(false)
