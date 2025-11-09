@@ -6,9 +6,15 @@ const prisma = new PrismaClient()
 export async function POST(req: Request) {
   try {
     const body = await req.json()
-    const { userId, role, company, duration, referenceEmails, description } = body
+    const { userId, experience } = body
 
-    if (!userId || !role || !company || !duration || !description) {
+    if (!userId || !experience) {
+      return NextResponse.json({ error: "Missing required data" }, { status: 400 })
+    }
+
+    const { id, role, company, duration, referenceEmails, description } = experience
+
+    if (!id || !role || !company || !duration || !description) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
@@ -21,8 +27,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Applicant not found" }, { status: 404 })
     }
 
-    // Create new experience entry
+    // Create new experience entry (includes ID)
     const newExperience = {
+      id,
       role,
       company,
       duration,
@@ -30,13 +37,13 @@ export async function POST(req: Request) {
       referenceEmails,
     }
 
-    // Ensure experience is stored as a JSON array
+    // Append or initialize experience array
     const updatedExperience = Array.isArray(applicant.experience)
       ? [...applicant.experience, newExperience]
       : [newExperience]
 
-    // Update applicant’s experience array
-    const updated = await prisma.applicant.update({
+    // Update applicant’s experience JSON array
+    await prisma.applicant.update({
       where: { userId },
       data: {
         experience: updatedExperience,

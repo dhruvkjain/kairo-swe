@@ -3,6 +3,16 @@
 import { useState } from "react"
 import AddExperienceButton from "@/components/AddExperienceButton"
 import { Button } from "@/components/ui/button"
+import DeleteExperienceButton from "@/components/DeleteExperienceButton"
+
+interface Experience {
+  id: string
+  role: string
+  company: string
+  duration: string
+  description: string
+  referenceEmails?: string
+}
 
 interface ExperienceSectionProps {
   isApplicant: boolean
@@ -10,16 +20,22 @@ interface ExperienceSectionProps {
 }
 
 export default function ExperienceSection({ isApplicant, applicant }: ExperienceSectionProps) {
-  const parsedExperiences =
-    applicant?.experience?.map((exp: string) => {
+  const [expanded, setExpanded] = useState<number | null>(null)
+
+  const parsedExperiences: Experience[] =
+    applicant?.experience?.map((exp: string | Experience) => {
       try {
         return typeof exp === "string" ? JSON.parse(exp) : exp
       } catch {
-        return { role: exp }
+        return { id: "", role: exp as string, company: "", duration: "", description: "" }
       }
     }) || []
 
-  const [expanded, setExpanded] = useState<number | null>(null)
+  const [experiences, setExperiences] = useState<Experience[]>(parsedExperiences)
+
+  const handleDelete = (deletedId: string) => {
+    setExperiences((prev) => prev.filter((exp) => exp.id !== deletedId))
+  }
 
   return (
     <section className="bg-card border border-border rounded-xl shadow-sm p-6 sm:p-8 relative">
@@ -29,21 +45,29 @@ export default function ExperienceSection({ isApplicant, applicant }: Experience
         {isApplicant && applicant && (
           <AddExperienceButton
             userId={applicant.userId}
-            initialExperiences={parsedExperiences}
+            initialExperiences={experiences}
           />
         )}
       </div>
 
       {isApplicant && applicant ? (
-        parsedExperiences.length > 0 ? (
+        experiences.length > 0 ? (
           <ul className="space-y-3">
-            {parsedExperiences.map((exp: any, idx: number) => {
+            {experiences.map((exp, idx) => {
               const isExpanded = expanded === idx
               return (
                 <li
-                  key={idx}
-                  className="border border-border p-4 rounded-lg bg-background/50"
+                  key={exp.id || idx}
+                  className="group border border-border p-4 rounded-lg bg-background/50 relative hover:shadow-md transition-shadow"
                 >
+                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <DeleteExperienceButton
+                      userId={applicant.userId}
+                      experienceId={exp.id}
+                      onDelete={() => handleDelete(exp.id)}
+                    />
+                  </div>
+
                   <p className="font-semibold text-foreground">
                     {exp.role} @ {exp.company}
                   </p>
@@ -71,9 +95,7 @@ export default function ExperienceSection({ isApplicant, applicant }: Experience
                       variant="link"
                       size="sm"
                       className="text-primary mt-1 p-0 h-auto"
-                      onClick={() =>
-                        setExpanded(isExpanded ? null : idx)
-                      }
+                      onClick={() => setExpanded(isExpanded ? null : idx)}
                     >
                       {isExpanded ? "See less" : "See more"}
                     </Button>

@@ -23,7 +23,9 @@ export default function AddExperienceButton({
     referenceEmails: "",
   })
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
   }
 
@@ -35,16 +37,23 @@ export default function AddExperienceButton({
 
     try {
       setLoading(true)
+
+      // Generate a unique ID for this experience
+      const newExperience = {
+        id: crypto.randomUUID(),
+        ...formData,
+      }
+
       const res = await fetch("/api/auth/profile/add-experience", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, ...formData }),
+        body: JSON.stringify({ userId, experience: newExperience }),
       })
 
       if (!res.ok) throw new Error("Failed to add experience")
 
-      const newExp = await res.json()
-      setExperiences([...experiences, newExp])
+      const data = await res.json()
+      setExperiences([...experiences, data])
 
       // Reset form
       setFormData({
@@ -56,7 +65,7 @@ export default function AddExperienceButton({
       })
       setOpen(false)
 
-      // 🔄 Reload after success
+      // Refresh to reflect updates
       window.location.reload()
     } catch (err) {
       console.error(err)
@@ -68,7 +77,6 @@ export default function AddExperienceButton({
 
   return (
     <>
-      {/* Button to open popup */}
       <Button
         variant="secondary"
         size="sm"
@@ -78,7 +86,6 @@ export default function AddExperienceButton({
         + Add New Experience
       </Button>
 
-      {/* Popup Overlay */}
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/40">
           <div className="bg-white dark:bg-neutral-900 rounded-lg shadow-xl p-6 w-full max-w-md relative border border-border">
@@ -105,8 +112,6 @@ export default function AddExperienceButton({
                 value={formData.duration}
                 onChange={handleChange}
               />
-
-              {/* Description textarea */}
               <textarea
                 name="description"
                 placeholder="Describe your role and work briefly"
@@ -114,7 +119,6 @@ export default function AddExperienceButton({
                 onChange={handleChange}
                 className="w-full h-24 border border-border rounded-md p-2 text-sm text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary"
               />
-
               <Input
                 name="referenceEmails"
                 placeholder="Reference Emails (comma-separated)"
@@ -136,7 +140,6 @@ export default function AddExperienceButton({
               </Button>
             </div>
 
-            {/* Close button in corner */}
             <button
               onClick={() => setOpen(false)}
               className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 dark:hover:text-gray-200"
