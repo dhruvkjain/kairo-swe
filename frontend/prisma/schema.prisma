@@ -97,7 +97,8 @@ model Applicant {
   portfolioLink String?
   about         String?  @db.Text
   skills        String[]
-  experience    String[]
+  experience    Json?
+  education     Json?
   projects      String[]
   phoneNumber   String[]
 

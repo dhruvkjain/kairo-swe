@@ -44,11 +44,13 @@ export default function LinkedInDeleteButton({ userId, onDelete }: LinkedInDelet
   }
 
   return (
-     <>
-      <Button variant="destructive" size="sm" onClick={handleDelete} disabled={isDeleting} className="gap-2">
-        <span>🗑</span>
-        Delete
-      </Button>
+    <>
+     <button
+      onClick={handleDelete}
+      className="flex items-center justify-center gap-2 w-28 px-4 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 active:bg-red-700 rounded-md shadow-sm transition-all"
+    >
+      <span>🗑</span> Delete
+    </button>
       {error && <p className="text-red-500 text-xs">{error}</p>}
     </>
   )
