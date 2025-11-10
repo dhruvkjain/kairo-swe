@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException, Query
+from resume_parser import router as resume_router
 from contextlib import asynccontextmanager
 
 from ai_shortlister import router as shortlist_router
@@ -18,6 +19,12 @@ app.include_router(
     shortlist_router, 
     prefix="/api/v1", 
     tags=["AI Shortlister"]
+)
+
+app.include_router(
+    resume_router, 
+    prefix="/api/v1", 
+    tags=["Resume Parser"]
 )
 
 @app.get("/")
