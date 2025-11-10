@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { Space_Grotesk, DM_Sans } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { Suspense } from "react"
+import { Toaster } from "@/components/ui/sonner"
 import { AuthProvider } from "@/components/auth-provider"
 import "./globals.css"
 
@@ -32,6 +33,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`font-sans ${spaceGrotesk.variable} ${dmSans.variable} antialiased`}>
         <AuthProvider>
+          <Toaster position="top-center"/>
           <Suspense fallback={null}>{children}</Suspense>
         </AuthProvider>
         <Analytics />

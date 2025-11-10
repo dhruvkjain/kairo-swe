@@ -8,7 +8,7 @@ import { ArrowRight, Briefcase, Users, Zap } from "lucide-react";
 
 const LandingPage: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 flex flex-col items-center justify-center text-center px-4 overflow-hidden">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-slate-100 to-slate-200 flex flex-col items-center justify-center text-center px-4 overflow-hidden">
       
       {/* Hero Section */}
       <div className="max-w-3xl space-y-6 animate-fadeInUp">
@@ -30,7 +30,7 @@ const LandingPage: React.FC = () => {
 
         {/* Buttons */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8">
-          <Link href="/login">
+          <Link href="/signin">
             <Button className="px-8 py-5 text-lg shadow-md hover:scale-110 transition-all duration-300">
               Sign In
             </Button>

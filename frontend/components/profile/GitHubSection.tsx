@@ -1,4 +1,8 @@
+"use client"
+
 import GithubButton from "@/components/GithubButton"
+import GitHubDeleteButton from "@/components/GitHubDeleteButton"
+import EditGitHubLinkButton from "@/components/EditGitHubLink"
 
 interface GitHubSectionProps {
   hasGitHub: boolean
@@ -7,24 +11,36 @@ interface GitHubSectionProps {
   isOwner: boolean
 }
 
-export default function GitHubSection({ hasGitHub, githubData, applicant, isOwner }: GitHubSectionProps) {
+export default function GitHubSection({
+  hasGitHub,
+  githubData,
+  applicant,
+  isOwner,
+}: GitHubSectionProps) {
+  const handleDelete = () => {
+    window.location.reload()
+  }
+
   return (
-    <section className="bg-card border border-border rounded-xl shadow-sm p-6 sm:p-8">
+    <section className="group bg-card border border-border rounded-xl shadow-sm p-6 sm:p-8 relative overflow-hidden">
       <h2 className="text-2xl font-bold text-foreground mb-6">GitHub Integration</h2>
 
       {hasGitHub ? (
         <div className="space-y-6">
           {githubData ? (
             <>
-              {/* GitHub Profile Header */}
-              <div className="flex items-start gap-4 pb-6 border-b border-border">
+              {/* --- Profile Header --- */}
+              <div className="flex items-start gap-4 pb-6 border-b border-border relative">
                 <img
                   src={githubData.avatar_url || "/placeholder.svg"}
                   alt={`${githubData.login}'s avatar`}
                   className="w-16 h-16 rounded-lg border border-border shadow-sm"
                 />
+
                 <div className="flex-1">
-                  <h3 className="text-xl font-semibold text-foreground">{githubData.name || githubData.login}</h3>
+                  <h3 className="text-xl font-semibold text-foreground">
+                    {githubData.name || githubData.login}
+                  </h3>
                   <a
                     href={applicant.githubLink}
                     target="_blank"
@@ -33,28 +49,55 @@ export default function GitHubSection({ hasGitHub, githubData, applicant, isOwne
                   >
                     @{githubData.login}
                   </a>
-                  {githubData.company && <p className="text-sm text-foreground/70 mt-1">{githubData.company}</p>}
-                  {githubData.location && <p className="text-sm text-foreground/70">{githubData.location}</p>}
+                  {githubData.company && (
+                    <p className="text-sm text-foreground/70 mt-1">
+                      {githubData.company}
+                    </p>
+                  )}
+                  {githubData.location && (
+                    <p className="text-sm text-foreground/70">
+                      {githubData.location}
+                    </p>
+                  )}
                 </div>
+
+                {/* --- Edit + Delete Buttons (hover) --- */}
+                {isOwner && (
+                  <div className="absolute top-0 right-0 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <EditGitHubLinkButton
+                      userId={applicant.userId}
+                      currentLink={applicant.githubLink}
+                    />
+                    <GitHubDeleteButton userId={applicant.userId} onDelete={handleDelete} />
+                  </div>
+                )}
               </div>
 
-              {/* GitHub Stats */}
+              {/* --- Stats --- */}
               <div className="grid grid-cols-3 gap-4">
                 <div className="p-4 bg-muted/50 rounded-lg text-center">
-                  <div className="text-2xl font-bold text-foreground">{githubData.public_repos}</div>
+                  <div className="text-2xl font-bold text-foreground">
+                    {githubData.public_repos}
+                  </div>
                   <div className="text-xs text-muted-foreground mt-1">Repositories</div>
                 </div>
+
                 <div className="p-4 bg-muted/50 rounded-lg text-center">
-                  <div className="text-2xl font-bold text-foreground">{githubData.followers}</div>
+                  <div className="text-2xl font-bold text-foreground">
+                    {githubData.followers}
+                  </div>
                   <div className="text-xs text-muted-foreground mt-1">Followers</div>
                 </div>
+
                 <div className="p-4 bg-muted/50 rounded-lg text-center">
-                  <div className="text-2xl font-bold text-foreground">{githubData.following}</div>
+                  <div className="text-2xl font-bold text-foreground">
+                    {githubData.following}
+                  </div>
                   <div className="text-xs text-muted-foreground mt-1">Following</div>
                 </div>
               </div>
 
-              {/* Additional Info */}
+              {/* --- Additional Info --- */}
               {(githubData.blog || githubData.created_at) && (
                 <div className="space-y-2 text-sm">
                   {githubData.blog && (
@@ -82,7 +125,7 @@ export default function GitHubSection({ hasGitHub, githubData, applicant, isOwne
                 </div>
               )}
 
-              {/* View Profile Button */}
+              {/* --- View Profile Button --- */}
               <a
                 href={applicant.githubLink}
                 target="_blank"
@@ -90,7 +133,12 @@ export default function GitHubSection({ hasGitHub, githubData, applicant, isOwne
                 className="inline-flex w-full items-center justify-center gap-2 px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
               >
                 View Full GitHub Profile
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -101,11 +149,21 @@ export default function GitHubSection({ hasGitHub, githubData, applicant, isOwne
               </a>
             </>
           ) : (
-            <p className="text-muted-foreground text-center py-8">Unable to fetch GitHub data.</p>
+            <p className="text-muted-foreground text-center py-8">
+              Unable to fetch GitHub data.
+            </p>
           )}
         </div>
       ) : (
-        isOwner && <GithubButton />
+        isOwner && (
+          <div className="flex flex-col items-center gap-4">
+            <GithubButton userId={applicant.userId} />
+            <EditGitHubLinkButton
+              userId={applicant.userId}
+              currentLink={applicant.githubLink}
+            />
+          </div>
+        )
       )}
     </section>
   )

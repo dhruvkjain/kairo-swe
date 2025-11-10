@@ -11,6 +11,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No session found" }, { status: 401 });
     }
 
+    console.log("Session token found:", sessionToken);
     // Find user from Prisma using sessionToken
     const session = await prisma.session.findUnique({
       where: { sessionToken },
@@ -25,10 +26,10 @@ export async function POST(req: NextRequest) {
     }
 
     const userId = session.user.id;
-    const { linkedin } = await req.json();
+    const { linkedinLink } = await req.json();
 
-    console.log("Request body:", { linkedin });
-    if (!linkedin) {
+    console.log("Request body:", { linkedinLink });
+    if (!linkedinLink) {
       return NextResponse.json(
         { error: "LinkedIn URL or username is required" },
         { status: 400 }
@@ -36,7 +37,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Clean up LinkedIn link
-    const cleanLinkedin = linkedin
+    const cleanLinkedin = linkedinLink 
       .trim()
       // remove base URLs
       .replace(/^https?:\/\/(www\.)?linkedin\.com\//, "")

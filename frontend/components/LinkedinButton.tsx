@@ -15,7 +15,7 @@ export default function LinkedinButton({ userId, currentLink }: { userId: string
     setLoading(true)
     setError("")
     try {
-      const response = await fetch("/api/auth/profile/LinkedInAttach", {
+      const response = await fetch("/api/auth/profile/LinkedinAttach", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, linkedinLink }),

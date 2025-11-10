@@ -4,7 +4,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Image from "next/image";
 import Link from "next/link";
 import { ProfileForm } from "./ProfileForm";
-import type { FC } from "react";
 
 interface ProfileCardProps {
   user: {

@@ -4,8 +4,8 @@ import prisma from "@/lib/prisma";
 
 export async function POST(req: Request) {
   try {
-    const { userId, title, description, skills } = await req.json();
-    console.log("Received data:", { userId, title, description, skills });
+    const { userId, title, description, link, skills } = await req.json();
+    console.log("Received data:", { userId, title, description, link, skills });
 
     // Normalize skills: accept array, comma-separated string, or absent
     const normalizedSkills = Array.isArray(skills)
@@ -35,9 +35,14 @@ export async function POST(req: Request) {
       id: crypto.randomUUID(),
       title,
       description,
+      link: link || "",
       skills: normalizedSkills,
     });
 
+    const currentProjects = Array.isArray(applicant.projects)
+      ? applicant.projects
+      : [];
+      
     const updatedApplicant = await prisma.applicant.update({
       where: { userId },
       data: { projects: [...applicant.projects, newProject] },
