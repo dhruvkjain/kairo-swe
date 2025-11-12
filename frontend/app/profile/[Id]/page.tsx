@@ -11,7 +11,7 @@ import GitHubSection from "@/components/profile/GitHubSection"
 import LinkedInSection from "@/components/profile/LinkedInSection"
 import ResumeSection from "@/components/profile/ResumeSection"
 import { is } from "date-fns/locale"
-import { RecruiterProfile } from "@/components/recruiter/RecruiterProfile"
+import { RecruiterProfile } from "@/components/RecruiterDashboard"
 
 export default async function ProfilePage({ params }: { params: { Id: string } }) {
   const loggedInUser = await getCurrentUser()
