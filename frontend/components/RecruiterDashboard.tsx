@@ -10,13 +10,19 @@ import {
   Building2, GraduationCap, Award
 } from 'lucide-react';
 
+// new imports for charts
+import {
+  LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid,
+  ResponsiveContainer, PieChart, Pie, Cell, Legend,
+  BarChart, Bar
+} from 'recharts';
+
 const RecruiterDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showNotifications, setShowNotifications] = useState(false);
   const [selectedInternship, setSelectedInternship] = useState(null);
   const [selectedApplicant, setSelectedApplicant] = useState(null);
   const [showPostModal, setShowPostModal] = useState(false);
-
 
   // Mock data
   const dashboardStats = [
@@ -83,7 +89,9 @@ const RecruiterDashboard = () => {
       appliedFor: 'Frontend Developer Intern',
       appliedDate: '2024-11-10',
       status: 'Shortlisted',
-      resumeUrl: '#'
+      resumeUrl: '#',
+      gender: 'female',
+      source: 'Company Website'
     },
     {
       id: 2,
@@ -99,7 +107,9 @@ const RecruiterDashboard = () => {
       appliedFor: 'Backend Developer Intern',
       appliedDate: '2024-11-09',
       status: 'Applied',
-      resumeUrl: '#'
+      resumeUrl: '#',
+      gender: 'male',
+      source: 'Job Boards'
     },
     {
       id: 3,
@@ -115,8 +125,13 @@ const RecruiterDashboard = () => {
       appliedFor: 'UI/UX Design Intern',
       appliedDate: '2024-11-08',
       status: 'Interview',
-      resumeUrl: '#'
+      resumeUrl: '#',
+      gender: 'female',
+      source: 'Social Media'
     },
+    { id: 4, name: 'Aman Singh', gender: 'male', source: 'Company Website', appliedFor: 'Frontend Developer Intern', appliedDate: '2024-11-07', status: 'Applied', email: '', phone: '', college: '', course: '', year: '', cgpa: '', skills: [], experience: '', resumeUrl: '#' },
+    { id: 5, name: 'Rhea Kapoor', gender: 'female', source: 'Referrals', appliedFor: 'Backend Developer Intern', appliedDate: '2024-11-06', status: 'Applied', email: '', phone: '', college: '', course: '', year: '', cgpa: '', skills: [], experience: '', resumeUrl: '#' },
+    { id: 6, name: 'Sam Alex', gender: 'other', source: 'Company Website', appliedFor: 'UI/UX Design Intern', appliedDate: '2024-11-05', status: 'Applied', email: '', phone: '', college: '', course: '', year: '', cgpa: '', skills: [], experience: '', resumeUrl: '#' }
   ];
 
   const notifications = [
@@ -124,6 +139,196 @@ const RecruiterDashboard = () => {
     { id: 2, text: 'Interview scheduled with Priya Sharma', time: '1 hour ago', unread: true },
     { id: 3, text: 'Deadline approaching for Backend Developer Intern', time: '2 hours ago', unread: false },
   ];
+
+  // Analytics mock data
+  const monthlyStats = [
+    { month: 'Jan', applications: 80, hired: 5, interviews: 12 },
+    { month: 'Feb', applications: 95, hired: 8, interviews: 15 },
+    { month: 'Mar', applications: 110, hired: 10, interviews: 20 },
+    { month: 'Apr', applications: 90, hired: 7, interviews: 18 },
+    { month: 'May', applications: 140, hired: 18, interviews: 25 },
+    { month: 'Jun', applications: 160, hired: 20, interviews: 28 },
+    { month: 'Jul', applications: 150, hired: 17, interviews: 24 },
+    { month: 'Aug', applications: 135, hired: 15, interviews: 22 },
+    { month: 'Sep', applications: 120, hired: 12, interviews: 19 },
+    { month: 'Oct', applications: 145, hired: 18, interviews: 26 },
+    { month: 'Nov', applications: 155, hired: 16, interviews: 23 },
+    { month: 'Dec', applications: 170, hired: 19, interviews: 30 },
+  ];
+
+  const sourceOfHire = [
+    { name: 'Company Website', value: 280 },
+    { name: 'Job Boards', value: 150 },
+    { name: 'Social Media', value: 190 },
+    { name: 'Referrals', value: 120 },
+    { name: 'Campus Drive', value: 90 }
+  ];
+
+  const stagesData = [
+    { stage: 'Applied', count: 400 },
+    { stage: 'Phone Screen', count: 180 },
+    { stage: 'Technical Test', count: 120 },
+    { stage: 'Interview', count: 70 },
+    { stage: 'Hired', count: 25 }
+  ];
+
+  const COLORS = ['#6b8cff', '#a3b3ff', '#dbe1ff', '#fbbf24', '#34d399'];
+
+  // Demographics & hires-from-kairo calculations
+  const genderCounts = applicants.reduce((acc, a) => {
+    const g = (a.gender || 'other').toLowerCase();
+    acc[g] = (acc[g] || 0) + 1;
+    return acc;
+  }, {});
+  const totalApplicants = applicants.length;
+  const genderPieData = [
+    { name: 'Male', value: genderCounts.male || 0 },
+    { name: 'Female', value: genderCounts.female || 0 },
+    { name: 'Other', value: genderCounts.other || 0 }
+  ];
+
+  // Count hires coming from KAIRO
+  const hiresFromKairoCount = applicants.filter(a => (a.source || '').toLowerCase() === 'company website' && a.status === 'Hired').length;
+  const hiresFromKairoTotalSource = applicants.filter(a => (a.source || '').toLowerCase() === 'company website').length;
+
+  // Analytics view component
+  const AnalyticsView = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-gray-900">Analytics</h2>
+        <div className="text-sm text-gray-600">Overview of key recruiting metrics</div>
+      </div>
+
+      {/* Demographics + hires-from-kairo summary row */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <h4 className="text-sm font-medium text-gray-700">Applicants by Gender</h4>
+          <div className="mt-3 flex items-center gap-4">
+            <div style={{ width: 120, height: 120 }}>
+              <ResponsiveContainer>
+                <PieChart>
+                  <Pie data={genderPieData} dataKey="value" innerRadius={32} outerRadius={48}>
+                    {genderPieData.map((entry, idx) => (
+                      <Cell key={`g-${idx}`} fill={['#60a5fa','#f472b6','#a78bfa'][idx % 3]} />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div>
+              {genderPieData.map((g) => {
+                const pct = totalApplicants ? Math.round((g.value / totalApplicants) * 100) : 0;
+                return (
+                  <div key={g.name} className="text-sm text-gray-700">
+                    <span className="font-semibold">{g.name}:</span> {g.value} ({pct}%)
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <h4 className="text-sm font-medium text-gray-700">Hires from KAIRO</h4>
+          <div className="mt-4 flex items-center justify-between">
+            <div>
+              <div className="text-2xl font-bold text-gray-900">{hiresFromKairoCount}</div>
+              <div className="text-sm text-gray-600">Confirmed hires from KAIRO</div>
+            </div>
+            <div className="text-right">
+              <div className="text-lg font-semibold text-gray-900">{hiresFromKairoTotalSource}</div>
+              <div className="text-sm text-gray-600">Total applicants who applied via KAIRO</div>
+            </div>
+          </div>
+          <div className="mt-3 text-xs text-gray-500">Note: 'Confirmed hires' counts applicants with status 'Hired'. Mock data may show 0; replace with backend data for true numbers.</div>
+        </div>
+
+        <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <h4 className="text-sm font-medium text-gray-700">Gender Ratio</h4>
+          <div className="mt-3">
+            {genderPieData.map((g, idx) => {
+              const pct = totalApplicants ? Math.round((g.value / totalApplicants) * 100) : 0;
+              return (
+                <div key={g.name} className="mb-3">
+                  <div className="flex items-center justify-between text-sm text-gray-700 mb-1">
+                    <span>{g.name}</span>
+                    <span className="font-semibold">{g.value} ({pct}%)</span>
+                  </div>
+                  <div className="w-full bg-gray-100 rounded-full h-2">
+                    <div className={`h-2 rounded-full`} style={{ width: `${pct}%`, background: ['#60a5fa','#f472b6','#a78bfa'][idx % 3] }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Line chart: Applications vs Hired */}
+        <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Applications vs Hires (Monthly)</h3>
+          <div style={{ width: '100%', height: 300 }}>
+            <ResponsiveContainer>
+              <LineChart data={monthlyStats} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" stroke="#6b7280" />
+                <YAxis stroke="#6b7280" />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="applications" stroke="#6b8cff" strokeWidth={3} activeDot={{ r: 6 }} />
+                <Line type="monotone" dataKey="hired" stroke="#10b981" strokeWidth={3} />
+                <Line type="monotone" dataKey="interviews" stroke="#f59e0b" strokeWidth={2} strokeDasharray="5 5" />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Pie chart: Source of hires */}
+        <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Source of Applicants</h3>
+          <div style={{ width: '100%', height: 300 }} className="flex items-center justify-center">
+            <ResponsiveContainer>
+              <PieChart>
+                <Pie
+                  data={sourceOfHire}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={90}
+                  innerRadius={50}
+                  label
+                >
+                  {sourceOfHire.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Legend verticalAlign="bottom" height={36} />
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Bar chart: Funnel / Stages (full width) */}
+        <div className="col-span-1 lg:col-span-2 bg-white p-4 rounded-lg border border-gray-200">
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Hiring Funnel (counts)</h3>
+          <div style={{ width: '100%', height: 340 }}>
+            <ResponsiveContainer>
+              <BarChart data={stagesData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="stage" stroke="#6b7280" />
+                <YAxis stroke="#6b7280" />
+                <Tooltip />
+                <Bar dataKey="count" fill="#6b8cff" radius={[6,6,0,0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   const Sidebar = () => (
     <div className="w-64 bg-white border-r border-gray-200 h-screen fixed left-0 top-0 flex flex-col">
@@ -205,7 +410,6 @@ const RecruiterDashboard = () => {
             <Plus className="w-4 h-4" />
             <span className="text-sm font-medium">Post Internship</span>
           </button>
-
         </div>
       </div>
 
@@ -618,13 +822,7 @@ const RecruiterDashboard = () => {
               <p className="text-gray-600">Interview scheduling module coming soon</p>
             </div>
           )}
-          {activeTab === 'analytics' && (
-            <div className="bg-white p-8 rounded-lg border border-gray-200 text-center">
-              <BarChart3 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Analytics</h3>
-              <p className="text-gray-600">Analytics dashboard coming soon</p>
-            </div>
-          )}
+          {activeTab === 'analytics' && <AnalyticsView />}
           {activeTab === 'settings' && (
             <div className="space-y-6">
               <h2 className="text-2xl font-bold text-gray-900">Settings</h2>
@@ -647,25 +845,29 @@ const RecruiterDashboard = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-1">About Company</label>
                     <textarea rows="4" defaultValue="Tech Corp Inc. is a leading technology company..." className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"></textarea>
                   </div>
-                  <button className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800">
+                  <button className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors">
                     Save Changes
                   </button>
                 </div>
               </div>
             </div>
           )}
-          
         </main>
-        {showPostModal && (
-          <Recruiter_PostInternshipModel onClose={() => setShowPostModal(false)} />
-        )}
       </div>
 
+      {/* Modals */}
       {selectedApplicant && (
-        <ApplicantModal applicant={selectedApplicant} onClose={() => setSelectedApplicant(null)} />
+        <ApplicantModal 
+          applicant={selectedApplicant} 
+          onClose={() => setSelectedApplicant(null)} 
+        />
       )}
-      
 
+      {showPostModal && (
+        <Recruiter_PostInternshipModel 
+          onClose={() => setShowPostModal(false)}
+        />
+      )}
     </div>
   );
 };
