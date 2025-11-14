@@ -20,7 +20,7 @@ interface InternshipPayload {
   skillsRequired?: string[];
   perks?: string[];
   question?: string[];
-  eligibility?: string | null;
+  requirements?: string | null;
   userType?: UserType | null;
   startDate?: string | Date | null;
   applicationDeadline?: string | Date | null;
@@ -64,6 +64,8 @@ export async function POST(req: Request) {
       );
     }
 
+    const recruiter = await prisma.recruiter.findUnique({ where: { userId : body.recruiterId } })
+
     // --- Auto-generate slug if not provided ---
     const baseSlug = slugify(body.slug || body.title, { lower: true, strict: true });
 
@@ -91,12 +93,12 @@ export async function POST(req: Request) {
         skillsRequired: body.skillsRequired ?? [],
         perks: body.perks ?? [],
         question: body.question ?? [],
-        eligibility: body.eligibility ?? null,
+        eligibility: body.requirements ?? null,
         userType: body.userType ?? null,
         startDate: body.startDate ? new Date(body.startDate) : null,
         applicationDeadline: body.applicationDeadline ? new Date(body.applicationDeadline) : null,
         companyId: body.companyId,
-        recruiterId: body.recruiterId,
+        recruiterId: recruiter?.id,
         status: body.status ?? "DRAFT",
       },
     });
