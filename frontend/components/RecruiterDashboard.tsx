@@ -1,216 +1,356 @@
 "use client";
-import React, { useState } from 'react';
-import Recruiter_PostInternshipModel from './Recruiter_PostInternshipModel';
+import React, { useEffect, useState } from "react";
+import Recruiter_PostInternshipModel from "./Recruiter_PostInternshipModel";
 
 import {
-  LayoutDashboard, Briefcase, Users, MessageSquare, Calendar,
-  BarChart3, Settings, Bell, Search, Plus, Filter, Download,
-  Eye, Edit2, Trash2, MoreVertical, TrendingUp, TrendingDown,
-  Clock, MapPin, DollarSign, X, ChevronDown, FileText, Mail,
-  Phone, Linkedin, ExternalLink, CheckCircle, XCircle, User,
-  Building2, GraduationCap, Award
-} from 'lucide-react';
+  LayoutDashboard,
+  Briefcase,
+  Users,
+  MessageSquare,
+  Calendar,
+  BarChart3,
+  Settings,
+  Bell,
+  Search,
+  Plus,
+  Filter,
+  Download,
+  Eye,
+  Edit2,
+  Trash2,
+  MoreVertical,
+  TrendingUp,
+  TrendingDown,
+  Clock,
+  MapPin,
+  DollarSign,
+  X,
+  ChevronDown,
+  FileText,
+  Mail,
+  Phone,
+  Linkedin,
+  ExternalLink,
+  CheckCircle,
+  XCircle,
+  User,
+  Building2,
+  GraduationCap,
+  Award,
+} from "lucide-react";
 
 // new imports for charts
 import {
-  LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid,
-  ResponsiveContainer, PieChart, Pie, Cell, Legend,
-  BarChart, Bar
-} from 'recharts';
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+  BarChart,
+  Bar,
+} from "recharts";
 
-const RecruiterDashboard = () => {
-  const [activeTab, setActiveTab] = useState('dashboard');
+const RecruiterDashboard = (id: { id: string }) => {
+  const [activeTab, setActiveTab] = useState("dashboard");
   const [showNotifications, setShowNotifications] = useState(false);
   const [selectedInternship, setSelectedInternship] = useState(null);
   const [selectedApplicant, setSelectedApplicant] = useState(null);
   const [showPostModal, setShowPostModal] = useState(false);
+  const [stats, setStats] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [internships, setInternships] = useState([]);
 
-  // Mock data
-  const dashboardStats = [
-    { label: 'Active Internships', value: '12', change: '+2', trend: 'up', icon: Briefcase },
-    { label: 'Total Applicants', value: '248', change: '+18', trend: 'up', icon: Users },
-    { label: 'Shortlisted', value: '45', change: '+8', trend: 'up', icon: CheckCircle },
-    { label: 'Interviews Scheduled', value: '15', change: '-3', trend: 'down', icon: Calendar },
-  ];
+  const recruiterId = id;
 
-  const internships = [
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const res1 = await fetch(
+          `/api/auth/recruiter/internshipData?recruiterId=${recruiterId}`
+        );
+        const data1 = await res1.json();
+        setStats(data1);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadStats();
+  }, [recruiterId]);
+
+  useEffect(() => {
+    if (!recruiterId) return;
+
+    const loadInternships = async () => {
+      try {
+        const res2 = await fetch(
+          `/api/auth/recruiter/myInternship?recruiterId=cmhyz9eqg0002wskkwadfhjx1`
+        );
+
+        if (!res2.ok) {
+          console.error("Fetch error:", await res2.text());
+          return;
+        }
+
+        const data2 = await res2.json();
+        setInternships(data2);
+      } catch (error) {
+        console.error("Network error:", error);
+      }
+    };
+
+    loadInternships();
+  }, [recruiterId]);
+
+  if (loading) return <p>Loading dashboard...</p>;
+  if (!stats) return <p>No data found</p>;
+
+  const cards = [
     {
-      id: 1,
-      title: 'Frontend Developer Intern',
-      location: 'Remote',
-      type: 'Full-time',
-      stipend: '₹15,000/month',
-      duration: '6 months',
-      applicants: 45,
-      views: 234,
-      status: 'Active',
-      postedDate: '2024-11-01',
-      deadline: '2024-12-01'
+      label: "Active Internships",
+      ...stats.activeInternships,
+      icon: Briefcase,
+    },
+    { label: "Total Applicants", ...stats.totalApplicants, icon: Users },
+    {
+      label: "Accepted Applicants",
+      ...stats.acceptedApplicants,
+      icon: CheckCircle,
     },
     {
-      id: 2,
-      title: 'Backend Developer Intern',
-      location: 'Bangalore',
-      type: 'Full-time',
-      stipend: '₹18,000/month',
-      duration: '6 months',
-      applicants: 38,
-      views: 189,
-      status: 'Active',
-      postedDate: '2024-10-28',
-      deadline: '2024-11-28'
-    },
-    {
-      id: 3,
-      title: 'UI/UX Design Intern',
-      location: 'Hybrid',
-      type: 'Part-time',
-      stipend: '₹12,000/month',
-      duration: '3 months',
-      applicants: 52,
-      views: 301,
-      status: 'Paused',
-      postedDate: '2024-10-25',
-      deadline: '2024-11-25'
+      label: "Rejected Applicants",
+      ...stats.rejectedApplicants,
+      icon: XCircle,
     },
   ];
 
   const applicants = [
     {
       id: 1,
-      name: 'Priya Sharma',
-      email: 'priya.sharma@email.com',
-      phone: '+91 98765 43210',
-      college: 'IIT Delhi',
-      course: 'B.Tech CSE',
-      year: '3rd Year',
-      cgpa: '8.9',
-      skills: ['React', 'JavaScript', 'Node.js', 'MongoDB'],
-      experience: '2 Internships',
-      appliedFor: 'Frontend Developer Intern',
-      appliedDate: '2024-11-10',
-      status: 'Shortlisted',
-      resumeUrl: '#',
-      gender: 'female',
-      source: 'Company Website'
+      name: "Priya Sharma",
+      email: "priya.sharma@email.com",
+      phone: "+91 98765 43210",
+      college: "IIT Delhi",
+      course: "B.Tech CSE",
+      year: "3rd Year",
+      cgpa: "8.9",
+      skills: ["React", "JavaScript", "Node.js", "MongoDB"],
+      experience: "2 Internships",
+      appliedFor: "Frontend Developer Intern",
+      appliedDate: "2024-11-10",
+      status: "Shortlisted",
+      resumeUrl: "#",
+      gender: "female",
+      source: "Company Website",
     },
     {
       id: 2,
-      name: 'Rahul Verma',
-      email: 'rahul.v@email.com',
-      phone: '+91 98123 45678',
-      college: 'NIT Trichy',
-      course: 'B.Tech IT',
-      year: '4th Year',
-      cgpa: '8.5',
-      skills: ['Python', 'Django', 'PostgreSQL', 'AWS'],
-      experience: '1 Internship',
-      appliedFor: 'Backend Developer Intern',
-      appliedDate: '2024-11-09',
-      status: 'Applied',
-      resumeUrl: '#',
-      gender: 'male',
-      source: 'Job Boards'
+      name: "Rahul Verma",
+      email: "rahul.v@email.com",
+      phone: "+91 98123 45678",
+      college: "NIT Trichy",
+      course: "B.Tech IT",
+      year: "4th Year",
+      cgpa: "8.5",
+      skills: ["Python", "Django", "PostgreSQL", "AWS"],
+      experience: "1 Internship",
+      appliedFor: "Backend Developer Intern",
+      appliedDate: "2024-11-09",
+      status: "Applied",
+      resumeUrl: "#",
+      gender: "male",
+      source: "Job Boards",
     },
     {
       id: 3,
-      name: 'Sneha Patel',
-      email: 'sneha.p@email.com',
-      phone: '+91 99887 76655',
-      college: 'BITS Pilani',
-      course: 'B.Des',
-      year: '3rd Year',
-      cgpa: '9.1',
-      skills: ['Figma', 'Adobe XD', 'Prototyping', 'User Research'],
-      experience: '3 Projects',
-      appliedFor: 'UI/UX Design Intern',
-      appliedDate: '2024-11-08',
-      status: 'Interview',
-      resumeUrl: '#',
-      gender: 'female',
-      source: 'Social Media'
+      name: "Sneha Patel",
+      email: "sneha.p@email.com",
+      phone: "+91 99887 76655",
+      college: "BITS Pilani",
+      course: "B.Des",
+      year: "3rd Year",
+      cgpa: "9.1",
+      skills: ["Figma", "Adobe XD", "Prototyping", "User Research"],
+      experience: "3 Projects",
+      appliedFor: "UI/UX Design Intern",
+      appliedDate: "2024-11-08",
+      status: "Interview",
+      resumeUrl: "#",
+      gender: "female",
+      source: "Social Media",
     },
-    { id: 4, name: 'Aman Singh', gender: 'male', source: 'Company Website', appliedFor: 'Frontend Developer Intern', appliedDate: '2024-11-07', status: 'Applied', email: '', phone: '', college: '', course: '', year: '', cgpa: '', skills: [], experience: '', resumeUrl: '#' },
-    { id: 5, name: 'Rhea Kapoor', gender: 'female', source: 'Referrals', appliedFor: 'Backend Developer Intern', appliedDate: '2024-11-06', status: 'Applied', email: '', phone: '', college: '', course: '', year: '', cgpa: '', skills: [], experience: '', resumeUrl: '#' },
-    { id: 6, name: 'Sam Alex', gender: 'other', source: 'Company Website', appliedFor: 'UI/UX Design Intern', appliedDate: '2024-11-05', status: 'Applied', email: '', phone: '', college: '', course: '', year: '', cgpa: '', skills: [], experience: '', resumeUrl: '#' }
+    {
+      id: 4,
+      name: "Aman Singh",
+      gender: "male",
+      source: "Company Website",
+      appliedFor: "Frontend Developer Intern",
+      appliedDate: "2024-11-07",
+      status: "Applied",
+      email: "",
+      phone: "",
+      college: "",
+      course: "",
+      year: "",
+      cgpa: "",
+      skills: [],
+      experience: "",
+      resumeUrl: "#",
+    },
+    {
+      id: 5,
+      name: "Rhea Kapoor",
+      gender: "female",
+      source: "Referrals",
+      appliedFor: "Backend Developer Intern",
+      appliedDate: "2024-11-06",
+      status: "Applied",
+      email: "",
+      phone: "",
+      college: "",
+      course: "",
+      year: "",
+      cgpa: "",
+      skills: [],
+      experience: "",
+      resumeUrl: "#",
+    },
+    {
+      id: 6,
+      name: "Sam Alex",
+      gender: "other",
+      source: "Company Website",
+      appliedFor: "UI/UX Design Intern",
+      appliedDate: "2024-11-05",
+      status: "Applied",
+      email: "",
+      phone: "",
+      college: "",
+      course: "",
+      year: "",
+      cgpa: "",
+      skills: [],
+      experience: "",
+      resumeUrl: "#",
+    },
   ];
 
   const notifications = [
-    { id: 1, text: 'New application for Frontend Developer Intern', time: '5 min ago', unread: true },
-    { id: 2, text: 'Interview scheduled with Priya Sharma', time: '1 hour ago', unread: true },
-    { id: 3, text: 'Deadline approaching for Backend Developer Intern', time: '2 hours ago', unread: false },
+    {
+      id: 1,
+      text: "New application for Frontend Developer Intern",
+      time: "5 min ago",
+      unread: true,
+    },
+    {
+      id: 2,
+      text: "Interview scheduled with Priya Sharma",
+      time: "1 hour ago",
+      unread: true,
+    },
+    {
+      id: 3,
+      text: "Deadline approaching for Backend Developer Intern",
+      time: "2 hours ago",
+      unread: false,
+    },
   ];
 
   // Analytics mock data
   const monthlyStats = [
-    { month: 'Jan', applications: 80, hired: 5, interviews: 12 },
-    { month: 'Feb', applications: 95, hired: 8, interviews: 15 },
-    { month: 'Mar', applications: 110, hired: 10, interviews: 20 },
-    { month: 'Apr', applications: 90, hired: 7, interviews: 18 },
-    { month: 'May', applications: 140, hired: 18, interviews: 25 },
-    { month: 'Jun', applications: 160, hired: 20, interviews: 28 },
-    { month: 'Jul', applications: 150, hired: 17, interviews: 24 },
-    { month: 'Aug', applications: 135, hired: 15, interviews: 22 },
-    { month: 'Sep', applications: 120, hired: 12, interviews: 19 },
-    { month: 'Oct', applications: 145, hired: 18, interviews: 26 },
-    { month: 'Nov', applications: 155, hired: 16, interviews: 23 },
-    { month: 'Dec', applications: 170, hired: 19, interviews: 30 },
+    { month: "Jan", applications: 80, hired: 5, interviews: 12 },
+    { month: "Feb", applications: 95, hired: 8, interviews: 15 },
+    { month: "Mar", applications: 110, hired: 10, interviews: 20 },
+    { month: "Apr", applications: 90, hired: 7, interviews: 18 },
+    { month: "May", applications: 140, hired: 18, interviews: 25 },
+    { month: "Jun", applications: 160, hired: 20, interviews: 28 },
+    { month: "Jul", applications: 150, hired: 17, interviews: 24 },
+    { month: "Aug", applications: 135, hired: 15, interviews: 22 },
+    { month: "Sep", applications: 120, hired: 12, interviews: 19 },
+    { month: "Oct", applications: 145, hired: 18, interviews: 26 },
+    { month: "Nov", applications: 155, hired: 16, interviews: 23 },
+    { month: "Dec", applications: 170, hired: 19, interviews: 30 },
   ];
 
   const sourceOfHire = [
-    { name: 'Company Website', value: 280 },
-    { name: 'Job Boards', value: 150 },
-    { name: 'Social Media', value: 190 },
-    { name: 'Referrals', value: 120 },
-    { name: 'Campus Drive', value: 90 }
+    { name: "Company Website", value: 280 },
+    { name: "Job Boards", value: 150 },
+    { name: "Social Media", value: 190 },
+    { name: "Referrals", value: 120 },
+    { name: "Campus Drive", value: 90 },
   ];
 
   const stagesData = [
-    { stage: 'Applied', count: 400 },
-    { stage: 'Phone Screen', count: 180 },
-    { stage: 'Technical Test', count: 120 },
-    { stage: 'Interview', count: 70 },
-    { stage: 'Hired', count: 25 }
+    { stage: "Applied", count: 400 },
+    { stage: "Phone Screen", count: 180 },
+    { stage: "Technical Test", count: 120 },
+    { stage: "Interview", count: 70 },
+    { stage: "Hired", count: 25 },
   ];
 
-  const COLORS = ['#6b8cff', '#a3b3ff', '#dbe1ff', '#fbbf24', '#34d399'];
+  const COLORS = ["#6b8cff", "#a3b3ff", "#dbe1ff", "#fbbf24", "#34d399"];
 
   // Demographics & hires-from-kairo calculations
   const genderCounts = applicants.reduce((acc, a) => {
-    const g = (a.gender || 'other').toLowerCase();
+    const g = (a.gender || "other").toLowerCase();
     acc[g] = (acc[g] || 0) + 1;
     return acc;
   }, {});
   const totalApplicants = applicants.length;
   const genderPieData = [
-    { name: 'Male', value: genderCounts.male || 0 },
-    { name: 'Female', value: genderCounts.female || 0 },
-    { name: 'Other', value: genderCounts.other || 0 }
+    { name: "Male", value: genderCounts.male || 0 },
+    { name: "Female", value: genderCounts.female || 0 },
+    { name: "Other", value: genderCounts.other || 0 },
   ];
 
   // Count hires coming from KAIRO
-  const hiresFromKairoCount = applicants.filter(a => (a.source || '').toLowerCase() === 'company website' && a.status === 'Hired').length;
-  const hiresFromKairoTotalSource = applicants.filter(a => (a.source || '').toLowerCase() === 'company website').length;
+  const hiresFromKairoCount = applicants.filter(
+    (a) =>
+      (a.source || "").toLowerCase() === "company website" &&
+      a.status === "Hired"
+  ).length;
+  const hiresFromKairoTotalSource = applicants.filter(
+    (a) => (a.source || "").toLowerCase() === "company website"
+  ).length;
 
   // Analytics view component
   const AnalyticsView = () => (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-gray-900">Analytics</h2>
-        <div className="text-sm text-gray-600">Overview of key recruiting metrics</div>
+        <div className="text-sm text-gray-600">
+          Overview of key recruiting metrics
+        </div>
       </div>
 
       {/* Demographics + hires-from-kairo summary row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <h4 className="text-sm font-medium text-gray-700">Applicants by Gender</h4>
+          <h4 className="text-sm font-medium text-gray-700">
+            Applicants by Gender
+          </h4>
           <div className="mt-3 flex items-center gap-4">
             <div style={{ width: 120, height: 120 }}>
               <ResponsiveContainer>
                 <PieChart>
-                  <Pie data={genderPieData} dataKey="value" innerRadius={32} outerRadius={48}>
+                  <Pie
+                    data={genderPieData}
+                    dataKey="value"
+                    innerRadius={32}
+                    outerRadius={48}
+                  >
                     {genderPieData.map((entry, idx) => (
-                      <Cell key={`g-${idx}`} fill={['#60a5fa','#f472b6','#a78bfa'][idx % 3]} />
+                      <Cell
+                        key={`g-${idx}`}
+                        fill={["#60a5fa", "#f472b6", "#a78bfa"][idx % 3]}
+                      />
                     ))}
                   </Pie>
                 </PieChart>
@@ -218,10 +358,13 @@ const RecruiterDashboard = () => {
             </div>
             <div>
               {genderPieData.map((g) => {
-                const pct = totalApplicants ? Math.round((g.value / totalApplicants) * 100) : 0;
+                const pct = totalApplicants
+                  ? Math.round((g.value / totalApplicants) * 100)
+                  : 0;
                 return (
                   <div key={g.name} className="text-sm text-gray-700">
-                    <span className="font-semibold">{g.name}:</span> {g.value} ({pct}%)
+                    <span className="font-semibold">{g.name}:</span> {g.value} (
+                    {pct}%)
                   </div>
                 );
               })}
@@ -230,33 +373,56 @@ const RecruiterDashboard = () => {
         </div>
 
         <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <h4 className="text-sm font-medium text-gray-700">Hires from KAIRO</h4>
+          <h4 className="text-sm font-medium text-gray-700">
+            Hires from KAIRO
+          </h4>
           <div className="mt-4 flex items-center justify-between">
             <div>
-              <div className="text-2xl font-bold text-gray-900">{hiresFromKairoCount}</div>
-              <div className="text-sm text-gray-600">Confirmed hires from KAIRO</div>
+              <div className="text-2xl font-bold text-gray-900">
+                {hiresFromKairoCount}
+              </div>
+              <div className="text-sm text-gray-600">
+                Confirmed hires from KAIRO
+              </div>
             </div>
             <div className="text-right">
-              <div className="text-lg font-semibold text-gray-900">{hiresFromKairoTotalSource}</div>
-              <div className="text-sm text-gray-600">Total applicants who applied via KAIRO</div>
+              <div className="text-lg font-semibold text-gray-900">
+                {hiresFromKairoTotalSource}
+              </div>
+              <div className="text-sm text-gray-600">
+                Total applicants who applied via KAIRO
+              </div>
             </div>
           </div>
-          <div className="mt-3 text-xs text-gray-500">Note: 'Confirmed hires' counts applicants with status 'Hired'. Mock data may show 0; replace with backend data for true numbers.</div>
+          <div className="mt-3 text-xs text-gray-500">
+            Note: 'Confirmed hires' counts applicants with status 'Hired'. Mock
+            data may show 0; replace with backend data for true numbers.
+          </div>
         </div>
 
         <div className="bg-white p-4 rounded-lg border border-gray-200">
           <h4 className="text-sm font-medium text-gray-700">Gender Ratio</h4>
           <div className="mt-3">
             {genderPieData.map((g, idx) => {
-              const pct = totalApplicants ? Math.round((g.value / totalApplicants) * 100) : 0;
+              const pct = totalApplicants
+                ? Math.round((g.value / totalApplicants) * 100)
+                : 0;
               return (
                 <div key={g.name} className="mb-3">
                   <div className="flex items-center justify-between text-sm text-gray-700 mb-1">
                     <span>{g.name}</span>
-                    <span className="font-semibold">{g.value} ({pct}%)</span>
+                    <span className="font-semibold">
+                      {g.value} ({pct}%)
+                    </span>
                   </div>
                   <div className="w-full bg-gray-100 rounded-full h-2">
-                    <div className={`h-2 rounded-full`} style={{ width: `${pct}%`, background: ['#60a5fa','#f472b6','#a78bfa'][idx % 3] }} />
+                    <div
+                      className={`h-2 rounded-full`}
+                      style={{
+                        width: `${pct}%`,
+                        background: ["#60a5fa", "#f472b6", "#a78bfa"][idx % 3],
+                      }}
+                    />
                   </div>
                 </div>
               );
@@ -268,18 +434,40 @@ const RecruiterDashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Line chart: Applications vs Hired */}
         <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Applications vs Hires (Monthly)</h3>
-          <div style={{ width: '100%', height: 300 }}>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            Applications vs Hires (Monthly)
+          </h3>
+          <div style={{ width: "100%", height: 300 }}>
             <ResponsiveContainer>
-              <LineChart data={monthlyStats} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+              <LineChart
+                data={monthlyStats}
+                margin={{ top: 10, right: 20, left: 0, bottom: 0 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" stroke="#6b7280" />
                 <YAxis stroke="#6b7280" />
                 <Tooltip />
                 <Legend />
-                <Line type="monotone" dataKey="applications" stroke="#6b8cff" strokeWidth={3} activeDot={{ r: 6 }} />
-                <Line type="monotone" dataKey="hired" stroke="#10b981" strokeWidth={3} />
-                <Line type="monotone" dataKey="interviews" stroke="#f59e0b" strokeWidth={2} strokeDasharray="5 5" />
+                <Line
+                  type="monotone"
+                  dataKey="applications"
+                  stroke="#6b8cff"
+                  strokeWidth={3}
+                  activeDot={{ r: 6 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="hired"
+                  stroke="#10b981"
+                  strokeWidth={3}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="interviews"
+                  stroke="#f59e0b"
+                  strokeWidth={2}
+                  strokeDasharray="5 5"
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -287,8 +475,13 @@ const RecruiterDashboard = () => {
 
         {/* Pie chart: Source of hires */}
         <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Source of Applicants</h3>
-          <div style={{ width: '100%', height: 300 }} className="flex items-center justify-center">
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            Source of Applicants
+          </h3>
+          <div
+            style={{ width: "100%", height: 300 }}
+            className="flex items-center justify-center"
+          >
             <ResponsiveContainer>
               <PieChart>
                 <Pie
@@ -302,7 +495,10 @@ const RecruiterDashboard = () => {
                   label
                 >
                   {sourceOfHire.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
                   ))}
                 </Pie>
                 <Legend verticalAlign="bottom" height={36} />
@@ -314,15 +510,20 @@ const RecruiterDashboard = () => {
 
         {/* Bar chart: Funnel / Stages (full width) */}
         <div className="col-span-1 lg:col-span-2 bg-white p-4 rounded-lg border border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Hiring Funnel (counts)</h3>
-          <div style={{ width: '100%', height: 340 }}>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            Hiring Funnel (counts)
+          </h3>
+          <div style={{ width: "100%", height: 340 }}>
             <ResponsiveContainer>
-              <BarChart data={stagesData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+              <BarChart
+                data={stagesData}
+                margin={{ top: 10, right: 20, left: 0, bottom: 0 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="stage" stroke="#6b7280" />
                 <YAxis stroke="#6b7280" />
                 <Tooltip />
-                <Bar dataKey="count" fill="#6b8cff" radius={[6,6,0,0]} />
+                <Bar dataKey="count" fill="#6b8cff" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -347,21 +548,21 @@ const RecruiterDashboard = () => {
 
       <nav className="flex-1 p-4 space-y-1">
         {[
-          { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-          { id: 'internships', label: 'Internships', icon: Briefcase },
-          { id: 'applicants', label: 'Applicants', icon: Users },
-          { id: 'messages', label: 'Messages', icon: MessageSquare },
-          { id: 'interviews', label: 'Interviews', icon: Calendar },
-          { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-          { id: 'settings', label: 'Settings', icon: Settings },
+          { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+          { id: "internships", label: "Internships", icon: Briefcase },
+          { id: "applicants", label: "Applicants", icon: Users },
+          { id: "messages", label: "Messages", icon: MessageSquare },
+          { id: "interviews", label: "Interviews", icon: Calendar },
+          { id: "analytics", label: "Analytics", icon: BarChart3 },
+          { id: "settings", label: "Settings", icon: Settings },
         ].map((item) => (
           <button
             key={item.id}
             onClick={() => setActiveTab(item.id)}
             className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors ${
               activeTab === item.id
-                ? 'bg-gray-900 text-white'
-                : 'text-gray-700 hover:bg-gray-100'
+                ? "bg-gray-900 text-white"
+                : "text-gray-700 hover:bg-gray-100"
             }`}
           >
             <item.icon className="w-5 h-5" />
@@ -376,8 +577,12 @@ const RecruiterDashboard = () => {
             <Building2 className="w-5 h-5 text-gray-600" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-gray-900 truncate">Tech Corp Inc.</p>
-            <p className="text-xs text-gray-500 truncate">recruiter@techcorp.com</p>
+            <p className="text-sm font-semibold text-gray-900 truncate">
+              Tech Corp Inc.
+            </p>
+            <p className="text-xs text-gray-500 truncate">
+              recruiter@techcorp.com
+            </p>
           </div>
         </div>
       </div>
@@ -399,8 +604,10 @@ const RecruiterDashboard = () => {
         </div>
 
         <div className="flex items-center space-x-3 ml-4">
-          <button className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            onClick={() => setShowNotifications(!showNotifications)}>
+          <button
+            className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            onClick={() => setShowNotifications(!showNotifications)}
+          >
             <Bell className="w-5 h-5 text-gray-700" />
             <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
           </button>
@@ -424,9 +631,12 @@ const RecruiterDashboard = () => {
           </div>
           <div className="max-h-96 overflow-y-auto">
             {notifications.map((notif) => (
-              <div key={notif.id} className={`p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${
-                notif.unread ? 'bg-blue-50' : ''
-              }`}>
+              <div
+                key={notif.id}
+                className={`p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${
+                  notif.unread ? "bg-blue-50" : ""
+                }`}
+              >
                 <p className="text-sm text-gray-900">{notif.text}</p>
                 <p className="text-xs text-gray-500 mt-1">{notif.time}</p>
               </div>
@@ -440,20 +650,33 @@ const RecruiterDashboard = () => {
   const DashboardView = () => (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {dashboardStats.map((stat, index) => (
-          <div key={index} className="bg-white p-4 rounded-lg border border-gray-200">
+        {cards.map((stat, index) => (
+          <div
+            key={index}
+            className="bg-white p-4 rounded-lg border border-gray-200"
+          >
             <div className="flex items-center justify-between mb-2">
-              <div className={`p-2 rounded-lg ${
-                stat.trend === 'up' ? 'bg-green-100' : 'bg-red-100'
-              }`}>
-                <stat.icon className={`w-5 h-5 ${
-                  stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
-                }`} />
+              <div
+                className={`p-2 rounded-lg ${
+                  stat.trend === "up" ? "bg-green-100" : "bg-red-100"
+                }`}
+              >
+                <stat.icon
+                  className={`w-5 h-5 ${
+                    stat.trend === "up" ? "text-green-600" : "text-red-600"
+                  }`}
+                />
               </div>
-              <div className={`flex items-center space-x-1 text-sm ${
-                stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
-              }`}>
-                {stat.trend === 'up' ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+              <div
+                className={`flex items-center space-x-1 text-sm ${
+                  stat.trend === "up" ? "text-green-600" : "text-red-600"
+                }`}
+              >
+                {stat.trend === "up" ? (
+                  <TrendingUp className="w-4 h-4" />
+                ) : (
+                  <TrendingDown className="w-4 h-4" />
+                )}
                 <span className="font-medium">{stat.change}</span>
               </div>
             </div>
@@ -465,25 +688,38 @@ const RecruiterDashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Applicants</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Recent Applicants
+          </h3>
           <div className="space-y-3">
             {applicants.slice(0, 3).map((applicant) => (
-              <div key={applicant.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer"
-                onClick={() => setSelectedApplicant(applicant)}>
+              <div
+                key={applicant.id}
+                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer"
+                onClick={() => setSelectedApplicant(applicant)}
+              >
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
                     <User className="w-5 h-5 text-gray-600" />
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900 text-sm">{applicant.name}</p>
-                    <p className="text-xs text-gray-500">{applicant.appliedFor}</p>
+                    <p className="font-medium text-gray-900 text-sm">
+                      {applicant.name}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {applicant.appliedFor}
+                    </p>
                   </div>
                 </div>
-                <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                  applicant.status === 'Shortlisted' ? 'bg-blue-100 text-blue-700' :
-                  applicant.status === 'Interview' ? 'bg-purple-100 text-purple-700' :
-                  'bg-gray-100 text-gray-700'
-                }`}>
+                <span
+                  className={`px-2 py-1 text-xs font-medium rounded-full ${
+                    applicant.status === "Shortlisted"
+                      ? "bg-blue-100 text-blue-700"
+                      : applicant.status === "Interview"
+                      ? "bg-purple-100 text-purple-700"
+                      : "bg-gray-100 text-gray-700"
+                  }`}
+                >
                   {applicant.status}
                 </span>
               </div>
@@ -492,28 +728,48 @@ const RecruiterDashboard = () => {
         </div>
 
         <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Active Internships</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Active Internships
+          </h3>
           <div className="space-y-3">
-            {internships.filter(i => i.status === 'Active').slice(0, 3).map((internship) => (
-              <div key={internship.id} className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
-                <div className="flex items-start justify-between mb-2">
-                  <h4 className="font-medium text-gray-900 text-sm">{internship.title}</h4>
-                  <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">
-                    {internship.status}
-                  </span>
-                </div>
-                <div className="flex items-center space-x-3 text-xs text-gray-500">
-                  <span className="flex items-center space-x-1">
-                    <Users className="w-3 h-3" />
-                    <span>{internship.applicants} applicants</span>
-                  </span>
-                  <span className="flex items-center space-x-1">
-                    <Eye className="w-3 h-3" />
-                    <span>{internship.views} views</span>
-                  </span>
-                </div>
+            <div className="bg-white p-4 rounded-lg border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Active Internships
+              </h3>
+
+              <div className="space-y-3">
+                {internships
+                  .filter((i) => i.isActive === true) // show only active-type items
+                  .map((internship) => (
+                    <div
+                      key={internship.id}
+                      className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <h4 className="font-medium text-gray-900 text-sm">
+                          {internship.title}
+                        </h4>
+
+                        <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+                          {internship.status}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center space-x-3 text-xs text-gray-500">
+                        <span className="flex items-center space-x-1">
+                          <Users className="w-3 h-3" />
+                          <span>{internship.applicationsCount} applicants</span>
+                        </span>
+
+                        <span className="flex items-center space-x-1">
+                          <Eye className="w-3 h-3" />
+                          <span>{internship.viewsCount} views</span>
+                        </span>
+                      </div>
+                    </div>
+                  ))}
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </div>
@@ -540,12 +796,24 @@ const RecruiterDashboard = () => {
         <table className="w-full">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Internship</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Location</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Stipend</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Applicants</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Actions</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                Internship
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                Location
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                Stipend
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                Applicants
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                Status
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -553,8 +821,12 @@ const RecruiterDashboard = () => {
               <tr key={internship.id} className="hover:bg-gray-50">
                 <td className="px-4 py-3">
                   <div>
-                    <p className="font-medium text-gray-900 text-sm">{internship.title}</p>
-                    <p className="text-xs text-gray-500">{internship.duration} • {internship.type}</p>
+                    <p className="font-medium text-gray-900 text-sm">
+                      {internship.title}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {internship.duration} • {internship.type}
+                    </p>
                   </div>
                 </td>
                 <td className="px-4 py-3">
@@ -571,28 +843,45 @@ const RecruiterDashboard = () => {
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center space-x-2">
-                    <span className="font-medium text-gray-900">{internship.applicants}</span>
-                    <span className="text-xs text-gray-500">({internship.views} views)</span>
+                    <span className="font-medium text-gray-900">
+                      {internship.applicants}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      ({internship.views} views)
+                    </span>
                   </div>
                 </td>
                 <td className="px-4 py-3">
-                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                    internship.status === 'Active' ? 'bg-green-100 text-green-700' :
-                    internship.status === 'Paused' ? 'bg-yellow-100 text-yellow-700' :
-                    'bg-gray-100 text-gray-700'
-                  }`}>
+                  <span
+                    className={`px-2 py-1 text-xs font-medium rounded-full ${
+                      internship.status === "Active"
+                        ? "bg-green-100 text-green-700"
+                        : internship.status === "Paused"
+                        ? "bg-yellow-100 text-yellow-700"
+                        : "bg-gray-100 text-gray-700"
+                    }`}
+                  >
                     {internship.status}
                   </span>
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center space-x-1">
-                    <button className="p-1.5 hover:bg-gray-100 rounded transition-colors" title="View">
+                    <button
+                      className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                      title="View"
+                    >
                       <Eye className="w-4 h-4 text-gray-600" />
                     </button>
-                    <button className="p-1.5 hover:bg-gray-100 rounded transition-colors" title="Edit">
+                    <button
+                      className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                      title="Edit"
+                    >
                       <Edit2 className="w-4 h-4 text-gray-600" />
                     </button>
-                    <button className="p-1.5 hover:bg-gray-100 rounded transition-colors" title="Delete">
+                    <button
+                      className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                      title="Delete"
+                    >
                       <Trash2 className="w-4 h-4 text-red-600" />
                     </button>
                     <button className="p-1.5 hover:bg-gray-100 rounded transition-colors">
@@ -630,8 +919,11 @@ const RecruiterDashboard = () => {
 
       <div className="grid grid-cols-1 gap-4">
         {applicants.map((applicant) => (
-          <div key={applicant.id} className="bg-white p-4 rounded-lg border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
-            onClick={() => setSelectedApplicant(applicant)}>
+          <div
+            key={applicant.id}
+            className="bg-white p-4 rounded-lg border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => setSelectedApplicant(applicant)}
+          >
             <div className="flex items-start justify-between">
               <div className="flex items-start space-x-4 flex-1">
                 <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
@@ -639,17 +931,26 @@ const RecruiterDashboard = () => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center space-x-2 mb-1">
-                    <h3 className="font-semibold text-gray-900">{applicant.name}</h3>
-                    <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
-                      applicant.status === 'Shortlisted' ? 'bg-blue-100 text-blue-700' :
-                      applicant.status === 'Interview' ? 'bg-purple-100 text-purple-700' :
-                      applicant.status === 'Applied' ? 'bg-gray-100 text-gray-700' :
-                      'bg-red-100 text-red-700'
-                    }`}>
+                    <h3 className="font-semibold text-gray-900">
+                      {applicant.name}
+                    </h3>
+                    <span
+                      className={`px-2 py-0.5 text-xs font-medium rounded-full ${
+                        applicant.status === "Shortlisted"
+                          ? "bg-blue-100 text-blue-700"
+                          : applicant.status === "Interview"
+                          ? "bg-purple-100 text-purple-700"
+                          : applicant.status === "Applied"
+                          ? "bg-gray-100 text-gray-700"
+                          : "bg-red-100 text-red-700"
+                      }`}
+                    >
                       {applicant.status}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-600 mb-2">{applicant.appliedFor}</p>
+                  <p className="text-sm text-gray-600 mb-2">
+                    {applicant.appliedFor}
+                  </p>
                   <div className="grid grid-cols-2 gap-2 mb-2">
                     <div className="flex items-center space-x-1.5 text-xs text-gray-500">
                       <GraduationCap className="w-3.5 h-3.5" />
@@ -670,7 +971,10 @@ const RecruiterDashboard = () => {
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {applicant.skills.slice(0, 4).map((skill, idx) => (
-                      <span key={idx} className="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded">
+                      <span
+                        key={idx}
+                        className="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded"
+                      >
                         {skill}
                       </span>
                     ))}
@@ -704,8 +1008,13 @@ const RecruiterDashboard = () => {
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto">
           <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-900">Applicant Details</h2>
-            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
+            <h2 className="text-xl font-bold text-gray-900">
+              Applicant Details
+            </h2>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 rounded-lg"
+            >
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -716,8 +1025,12 @@ const RecruiterDashboard = () => {
                 <User className="w-10 h-10 text-gray-600" />
               </div>
               <div className="flex-1">
-                <h3 className="text-2xl font-bold text-gray-900 mb-1">{applicant.name}</h3>
-                <p className="text-gray-600 mb-2">{applicant.course} • {applicant.year}</p>
+                <h3 className="text-2xl font-bold text-gray-900 mb-1">
+                  {applicant.name}
+                </h3>
+                <p className="text-gray-600 mb-2">
+                  {applicant.course} • {applicant.year}
+                </p>
                 <div className="flex flex-wrap gap-2 mb-3">
                   <span className="flex items-center space-x-1 text-sm text-gray-600">
                     <GraduationCap className="w-4 h-4" />
@@ -729,11 +1042,17 @@ const RecruiterDashboard = () => {
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-3 text-sm">
-                  <a href={`mailto:${applicant.email}`} className="flex items-center space-x-1 text-blue-600 hover:underline">
+                  <a
+                    href={`mailto:${applicant.email}`}
+                    className="flex items-center space-x-1 text-blue-600 hover:underline"
+                  >
                     <Mail className="w-4 h-4" />
                     <span>{applicant.email}</span>
                   </a>
-                  <a href={`tel:${applicant.phone}`} className="flex items-center space-x-1 text-blue-600 hover:underline">
+                  <a
+                    href={`tel:${applicant.phone}`}
+                    className="flex items-center space-x-1 text-blue-600 hover:underline"
+                  >
                     <Phone className="w-4 h-4" />
                     <span>{applicant.phone}</span>
                   </a>
@@ -744,14 +1063,19 @@ const RecruiterDashboard = () => {
             <div>
               <h4 className="font-semibold text-gray-900 mb-2">Applied For</h4>
               <p className="text-gray-700">{applicant.appliedFor}</p>
-              <p className="text-sm text-gray-500 mt-1">Applied on {applicant.appliedDate}</p>
+              <p className="text-sm text-gray-500 mt-1">
+                Applied on {applicant.appliedDate}
+              </p>
             </div>
 
             <div>
               <h4 className="font-semibold text-gray-900 mb-2">Skills</h4>
               <div className="flex flex-wrap gap-2">
                 {applicant.skills.map((skill, idx) => (
-                  <span key={idx} className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
+                  <span
+                    key={idx}
+                    className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full"
+                  >
                     {skill}
                   </span>
                 ))}
@@ -764,13 +1088,20 @@ const RecruiterDashboard = () => {
             </div>
 
             <div>
-              <h4 className="font-semibold text-gray-900 mb-2">Current Status</h4>
-              <span className={`inline-block px-3 py-1 text-sm font-medium rounded-full ${
-                applicant.status === 'Shortlisted' ? 'bg-blue-100 text-blue-700' :
-                applicant.status === 'Interview' ? 'bg-purple-100 text-purple-700' :
-                applicant.status === 'Applied' ? 'bg-gray-100 text-gray-700' :
-                'bg-red-100 text-red-700'
-              }`}>
+              <h4 className="font-semibold text-gray-900 mb-2">
+                Current Status
+              </h4>
+              <span
+                className={`inline-block px-3 py-1 text-sm font-medium rounded-full ${
+                  applicant.status === "Shortlisted"
+                    ? "bg-blue-100 text-blue-700"
+                    : applicant.status === "Interview"
+                    ? "bg-purple-100 text-purple-700"
+                    : applicant.status === "Applied"
+                    ? "bg-gray-100 text-gray-700"
+                    : "bg-red-100 text-red-700"
+                }`}
+              >
                 {applicant.status}
               </span>
             </div>
@@ -806,45 +1137,77 @@ const RecruiterDashboard = () => {
       <div className="ml-64">
         <TopBar />
         <main className="p-6">
-          {activeTab === 'dashboard' && <DashboardView />}
-          {activeTab === 'internships' && <InternshipsView />}
-          {activeTab === 'applicants' && <ApplicantsView />}
-          {activeTab === 'messages' && (
+          {activeTab === "dashboard" && <DashboardView />}
+          {activeTab === "internships" && <InternshipsView />}
+          {activeTab === "applicants" && <ApplicantsView />}
+          {activeTab === "messages" && (
             <div className="bg-white p-8 rounded-lg border border-gray-200 text-center">
               <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Messages</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Messages
+              </h3>
               <p className="text-gray-600">Communication module coming soon</p>
             </div>
           )}
-          {activeTab === 'interviews' && (
+          {activeTab === "interviews" && (
             <div className="bg-white p-8 rounded-lg border border-gray-200 text-center">
               <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Interviews</h3>
-              <p className="text-gray-600">Interview scheduling module coming soon</p>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Interviews
+              </h3>
+              <p className="text-gray-600">
+                Interview scheduling module coming soon
+              </p>
             </div>
           )}
-          {activeTab === 'analytics' && <AnalyticsView />}
-          {activeTab === 'settings' && (
+          {activeTab === "analytics" && <AnalyticsView />}
+          {activeTab === "settings" && (
             <div className="space-y-6">
               <h2 className="text-2xl font-bold text-gray-900">Settings</h2>
               <div className="bg-white p-6 rounded-lg border border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Company Profile</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Company Profile
+                </h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
-                    <input type="text" defaultValue="Tech Corp Inc." className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900" />
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Company Name
+                    </label>
+                    <input
+                      type="text"
+                      defaultValue="Tech Corp Inc."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                    />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                    <input type="email" defaultValue="recruiter@techcorp.com" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900" />
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      defaultValue="recruiter@techcorp.com"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                    />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Website</label>
-                    <input type="url" defaultValue="https://techcorp.com" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900" />
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Website
+                    </label>
+                    <input
+                      type="url"
+                      defaultValue="https://techcorp.com"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                    />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">About Company</label>
-                    <textarea rows="4" defaultValue="Tech Corp Inc. is a leading technology company..." className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"></textarea>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      About Company
+                    </label>
+                    <textarea
+                      rows="4"
+                      defaultValue="Tech Corp Inc. is a leading technology company..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                    ></textarea>
                   </div>
                   <button className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors">
                     Save Changes
@@ -858,14 +1221,15 @@ const RecruiterDashboard = () => {
 
       {/* Modals */}
       {selectedApplicant && (
-        <ApplicantModal 
-          applicant={selectedApplicant} 
-          onClose={() => setSelectedApplicant(null)} 
+        <ApplicantModal
+          applicant={selectedApplicant}
+          onClose={() => setSelectedApplicant(null)}
         />
       )}
 
       {showPostModal && (
-        <Recruiter_PostInternshipModel 
+        <Recruiter_PostInternshipModel
+          id={id}
           onClose={() => setShowPostModal(false)}
         />
       )}

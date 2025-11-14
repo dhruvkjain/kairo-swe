@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
 import { X, CheckCircle } from 'lucide-react';
 
-const Recruiter_PostInternshipModal = ({ isOpen, onClose }) => {
+interface RecruiterPostInternshipModelProps {
+  id: string;
+  onClose: () => void;
+}
+
+const Recruiter_PostInternshipModal = ({ id, onClose }: RecruiterPostInternshipModelProps) => {
   const [postStep, setPostStep] = useState(1);
   const [IsSubmitting ,setIsSubmitting] = useState(false);
   const [internshipForm, setInternshipForm] = useState({
@@ -9,7 +14,7 @@ const Recruiter_PostInternshipModal = ({ isOpen, onClose }) => {
     category: '',
     location: '',
     Mode: '',
-    Type: 'Remote',
+    Type: 'REMOTE',
     userType:'',
     duration: '',
     openings: 1,
@@ -17,7 +22,7 @@ const Recruiter_PostInternshipModal = ({ isOpen, onClose }) => {
     responsibilities: '',
     requirements: '',
     skills: [],
-    stipendType: 'Fixed',
+    stipendType: 'PAID',
     stipendAmount: '',
     perks: [],
     applicationDeadline: '',
@@ -39,9 +44,9 @@ const Recruiter_PostInternshipModal = ({ isOpen, onClose }) => {
   const handleClose = () => {
     setPostStep(1);
     setInternshipForm({
-      title: '', category: '', location: '', Mode: '', Type:'Remote', userType:'', duration: '', openings: 1,
+      title: '', category: '', location: '', Mode: '', Type:'REMOTE', userType:'', duration: '', openings: 1,
       description: '', responsibilities: '', requirements: '', skills: [],
-      stipendType: 'Fixed', stipendAmount: '', perks: [], applicationDeadline: '', startDate: '',
+      stipendType: 'PAID', stipendAmount: '', perks: [], applicationDeadline: '', startDate: '',
       questionsRequired: false, customQuestions: []
     });
     onClose();
@@ -74,8 +79,8 @@ const Recruiter_PostInternshipModal = ({ isOpen, onClose }) => {
         question: internshipForm.customQuestions,
         applicationDeadline: internshipForm.applicationDeadline || null,
         startDate: internshipForm.startDate || null,
-        companyId : "comp3",
-        recruiterId : "recruiter1",
+        companyId : "comp1",
+        recruiterId : id.id,
       };
 
       const res = await fetch('/api/auth/uploadInternship', {
@@ -416,7 +421,7 @@ const Recruiter_PostInternshipModal = ({ isOpen, onClose }) => {
                   <div className="space-y-1 text-sm">
                     <p><span className="font-medium">Title:</span> {internshipForm.title}</p>
                     <p><span className="font-medium">Category:</span> {internshipForm.category}</p>
-                    <p><span className="font-medium">Work Mode:</span> {internshipForm.workMode}</p>
+                    <p><span className="font-medium">Work Mode:</span> {internshipForm.Mode}</p>
                     <p><span className="font-medium">Location:</span> {internshipForm.location || 'N/A'}</p>
                     <p><span className="font-medium">Duration:</span> {internshipForm.duration}</p>
                     <p><span className="font-medium">Openings:</span> {internshipForm.openings}</p>

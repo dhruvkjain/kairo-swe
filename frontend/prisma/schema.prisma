@@ -219,9 +219,7 @@ model Session {
 }
 
 model VerificationToken {
+  token      String   @id
   identifier String
-  token      String   @unique
   expires    DateTime
-
-  @@unique([identifier, token])
 }
