@@ -20,6 +20,12 @@ enum Role {
   RECRUITER
 }
 
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
 enum InternshipCategory {
   ENGINEERING
   DESIGN
@@ -79,6 +85,7 @@ enum Stipendtype{
 model User {
   id            String    @id @default(cuid())
   name          String?
+  gender        Gender    @default(OTHER)
   email         String?   @unique
   password      String?
   emailVerified DateTime?

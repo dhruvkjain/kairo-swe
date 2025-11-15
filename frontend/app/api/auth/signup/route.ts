@@ -7,9 +7,9 @@ import nodemailer from "nodemailer";
 export async function POST(req: NextRequest) {
   console.log("runnig");
   try {
-    const { name, email, password, role } = await req.json();
-
-    if (!name || !email || !password || !role) {
+    const { name, email, password, role, gender } = await req.json();
+    // validate input fields        
+    if (!name || !email || !password || !role || !gender) {
       return NextResponse.json({ error: "Missing fields." }, { status: 400 });
     }
 
@@ -17,6 +17,12 @@ export async function POST(req: NextRequest) {
     const normalizedRole = role.toUpperCase();
     if (normalizedRole !== "APPLICANT" && normalizedRole !== "RECRUITER") {
       return NextResponse.json({ error: "Invalid role." }, { status: 400 });
+    }
+
+    // validate gender
+    const normalizedGender = gender.toUpperCase();
+    if (normalizedGender !== "MALE" && normalizedGender !== "FEMALE" && normalizedGender !== "OTHER") {
+      return NextResponse.json({ error: "Invalid gender." }, { status: 400 });
     }
 
     // check if user exists
@@ -35,6 +41,7 @@ export async function POST(req: NextRequest) {
         email,
         password: hashedPassword,
         role: normalizedRole,
+        gender: normalizedGender,
       },
     });
 
