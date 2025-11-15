@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import Recruiter_PostInternshipModel from "./Recruiter_PostInternshipModel";
+import UpdateInternshipModal from "./UpdateInternship";
 
 import {
   LayoutDashboard,
@@ -37,6 +38,7 @@ import {
   Building2,
   GraduationCap,
   Award,
+  Edit2Icon,
 } from "lucide-react";
 
 // new imports for charts
@@ -55,6 +57,7 @@ import {
   BarChart,
   Bar,
 } from "recharts";
+import { error } from "console";
 
 const RecruiterDashboard = (id: { id: string }) => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -65,6 +68,10 @@ const RecruiterDashboard = (id: { id: string }) => {
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [internships, setInternships] = useState([]);
+  const [openUpdate, setOpenUpdate] = useState(false);
+  const [selectedId, setSelectedId] = useState(null);
+  const [Delete , setDelete] = useState(false);
+  const [applicants, setApplicants] = useState([]);
 
   const recruiterId = id;
 
@@ -109,6 +116,19 @@ const RecruiterDashboard = (id: { id: string }) => {
     loadInternships();
   }, [recruiterId]);
 
+  useEffect(() => {
+    const fetchApplicants = async () => {
+      try {
+        const res = await fetch(`/api/auth/recruiter/recentApplicant?recruiterId=cmhyz9eza0004wskk70bbe40k`);
+        const data = await res.json();
+        setApplicants(data);
+      } catch (error) {
+        console.error("Error fetching applicants:", error);
+      }
+    };
+    fetchApplicants();
+  }, [recruiterId]);
+
   if (loading) return <p>Loading dashboard...</p>;
   if (!stats) return <p>No data found</p>;
 
@@ -131,116 +151,31 @@ const RecruiterDashboard = (id: { id: string }) => {
     },
   ];
 
-  const applicants = [
-    {
-      id: 1,
-      name: "Priya Sharma",
-      email: "priya.sharma@email.com",
-      phone: "+91 98765 43210",
-      college: "IIT Delhi",
-      course: "B.Tech CSE",
-      year: "3rd Year",
-      cgpa: "8.9",
-      skills: ["React", "JavaScript", "Node.js", "MongoDB"],
-      experience: "2 Internships",
-      appliedFor: "Frontend Developer Intern",
-      appliedDate: "2024-11-10",
-      status: "Shortlisted",
-      resumeUrl: "#",
-      gender: "female",
-      source: "Company Website",
-    },
-    {
-      id: 2,
-      name: "Rahul Verma",
-      email: "rahul.v@email.com",
-      phone: "+91 98123 45678",
-      college: "NIT Trichy",
-      course: "B.Tech IT",
-      year: "4th Year",
-      cgpa: "8.5",
-      skills: ["Python", "Django", "PostgreSQL", "AWS"],
-      experience: "1 Internship",
-      appliedFor: "Backend Developer Intern",
-      appliedDate: "2024-11-09",
-      status: "Applied",
-      resumeUrl: "#",
-      gender: "male",
-      source: "Job Boards",
-    },
-    {
-      id: 3,
-      name: "Sneha Patel",
-      email: "sneha.p@email.com",
-      phone: "+91 99887 76655",
-      college: "BITS Pilani",
-      course: "B.Des",
-      year: "3rd Year",
-      cgpa: "9.1",
-      skills: ["Figma", "Adobe XD", "Prototyping", "User Research"],
-      experience: "3 Projects",
-      appliedFor: "UI/UX Design Intern",
-      appliedDate: "2024-11-08",
-      status: "Interview",
-      resumeUrl: "#",
-      gender: "female",
-      source: "Social Media",
-    },
-    {
-      id: 4,
-      name: "Aman Singh",
-      gender: "male",
-      source: "Company Website",
-      appliedFor: "Frontend Developer Intern",
-      appliedDate: "2024-11-07",
-      status: "Applied",
-      email: "",
-      phone: "",
-      college: "",
-      course: "",
-      year: "",
-      cgpa: "",
-      skills: [],
-      experience: "",
-      resumeUrl: "#",
-    },
-    {
-      id: 5,
-      name: "Rhea Kapoor",
-      gender: "female",
-      source: "Referrals",
-      appliedFor: "Backend Developer Intern",
-      appliedDate: "2024-11-06",
-      status: "Applied",
-      email: "",
-      phone: "",
-      college: "",
-      course: "",
-      year: "",
-      cgpa: "",
-      skills: [],
-      experience: "",
-      resumeUrl: "#",
-    },
-    {
-      id: 6,
-      name: "Sam Alex",
-      gender: "other",
-      source: "Company Website",
-      appliedFor: "UI/UX Design Intern",
-      appliedDate: "2024-11-05",
-      status: "Applied",
-      email: "",
-      phone: "",
-      college: "",
-      course: "",
-      year: "",
-      cgpa: "",
-      skills: [],
-      experience: "",
-      resumeUrl: "#",
-    },
-  ];
+  const deleteHandle = async (id :String) => {
+    if (!id) return;
+
+    try {
+      const res = await fetch(`/api/auth/uploadInternship?internshipId=${id}`, {
+        method: "DELETE",
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error);
+        return;
+      }
+
+      alert("Deleted Successfully!");
+      setDelete(false);
+      // If needed, refresh page or data
+      // router.refresh();
+    } catch (err) {
+      console.log("Delete error:", err);
+    }
+  };
+
+
 
   const notifications = [
     {
@@ -847,14 +782,14 @@ const RecruiterDashboard = (id: { id: string }) => {
                       {internship.applicants}
                     </span>
                     <span className="text-xs text-gray-500">
-                      ({internship.views} views)
+                      ({internship.viewsCount} views)
                     </span>
                   </div>
                 </td>
                 <td className="px-4 py-3">
                   <span
                     className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      internship.status === "Active"
+                      internship.status === "DRAFT"
                         ? "bg-green-100 text-green-700"
                         : internship.status === "Paused"
                         ? "bg-yellow-100 text-yellow-700"
@@ -866,27 +801,28 @@ const RecruiterDashboard = (id: { id: string }) => {
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center space-x-1">
+                    
                     <button
-                      className="p-1.5 hover:bg-gray-100 rounded transition-colors"
-                      title="View"
-                    >
-                      <Eye className="w-4 h-4 text-gray-600" />
-                    </button>
-                    <button
+                      onClick={() => {
+                        setSelectedId(internship.id);
+                        setOpenUpdate(true);
+                      }}
                       className="p-1.5 hover:bg-gray-100 rounded transition-colors"
                       title="Edit"
                     >
-                      <Edit2 className="w-4 h-4 text-gray-600" />
+                      <Edit2 className="w-5 h-5 text-blue-600" />
                     </button>
+
                     <button
+                      onClick={() => {
+                        deleteHandle(internship.id)
+                      }}
                       className="p-1.5 hover:bg-gray-100 rounded transition-colors"
                       title="Delete"
                     >
-                      <Trash2 className="w-4 h-4 text-red-600" />
+                      <Trash2 className="w-5 h-5 text-red-600" />
                     </button>
-                    <button className="p-1.5 hover:bg-gray-100 rounded transition-colors">
-                      <MoreVertical className="w-4 h-4 text-gray-600" />
-                    </button>
+                    
                   </div>
                 </td>
               </tr>
@@ -1224,6 +1160,13 @@ const RecruiterDashboard = (id: { id: string }) => {
         <ApplicantModal
           applicant={selectedApplicant}
           onClose={() => setSelectedApplicant(null)}
+        />
+      )}
+
+      {openUpdate && (
+        <UpdateInternshipModal
+          id={selectedId}
+          onClose={() => setOpenUpdate(false)}
         />
       )}
 

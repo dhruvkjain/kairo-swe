@@ -40,7 +40,7 @@ export async function GET(req: Request) {
       where: {
         recruiterId,
         isActive: true,
-        status: "PUBLISHED",
+        status: "DRAFT",
         createdAt: { gte: startOfThisWeek },
       },
     });
@@ -49,7 +49,7 @@ export async function GET(req: Request) {
       where: {
         recruiterId,
         isActive: true,
-        status: "PUBLISHED",
+        status: "DRAFT",
         createdAt: { gte: startOfLastWeek, lt: endOfLastWeek },
       },
     });
