@@ -40,12 +40,21 @@ export default function ProfileHeader({
 
       <div className="px-6 sm:px-8 pb-8 -mt-16 relative">
         <div className="flex flex-col sm:flex-row gap-6 items-start">
-          {/* Avatar */}
-          <div className="shrink-0 relative z-10">
+          {/* Avatar + Gender */}
+          <div className="flex flex-col items-center shrink-0 relative z-10">
             {profileUser.image ? (
               <ImageManager imageUrl={profileUser.image} userId={profileUser.id} isOwner={isOwner} />
             ) : (
               isOwner && <UploadProfileForm />
+            )}
+
+            {/* Gender emoji under avatar */}
+            {profileUser.gender && (
+              <p className="text-xl mt-3">
+                {profileUser.gender === "MALE" && "♂️"}
+                {profileUser.gender === "FEMALE" && "♀️"}
+                {profileUser.gender === "OTHER" && "⚧"}
+              </p>
             )}
           </div>
 

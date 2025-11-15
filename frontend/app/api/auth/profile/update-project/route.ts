@@ -4,7 +4,7 @@ import prisma from "@/lib/prisma";
 
 export async function PUT(req: Request) {
   try {
-    const { userId, projectId, title, description, skills } = await req.json();
+    const { userId, projectId, title, description, skills, link } = await req.json();
     if (!userId || !projectId || !title || !description || !skills?.length)
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
 
@@ -29,6 +29,7 @@ export async function PUT(req: Request) {
           ...parsed,
           title,
           description,
+          link: link || parsed.link || "",
           skills,
         });
       }
