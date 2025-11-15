@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient, InternshipType, InternshipMode, Stipendtype, UserType, InternshipStatus } from "@prisma/client";
 import slugify from "slugify";
 
@@ -32,22 +32,45 @@ interface InternshipPayload {
 /**
  * GET /api/internships
  */
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const internships = await prisma.internship.findMany({
-      orderBy: { createdAt: "desc" },
+    const { searchParams } = new URL(req.url);
+    const internshipId = searchParams.get("internshipId");
+    
+    // Validate internshipId
+    if (!internshipId) {
+      return NextResponse.json(
+        { error: "Missing internshipId in query parameters" },
+        { status: 400 }
+      );
+    }
+
+    const internship = await prisma.internship.findUnique({
+      where: { id: internshipId },
       include: {
         company: true,
         recruiter: true,
       },
     });
 
-    return NextResponse.json(internships, { status: 200 });
+    if (!internship) {
+      return NextResponse.json(
+        { error: "Internship not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(internship, { status: 200 });
+
   } catch (error) {
-    console.error("❌ GET internships error:", error);
-    return NextResponse.json({ error: "Failed to fetch internships" }, { status: 500 });
+    console.error("❌ GET internship (single) error:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch internship" },
+      { status: 500 }
+    );
   }
 }
+
 
 /**
  * POST /api/internships
@@ -124,14 +147,20 @@ export async function POST(req: Request) {
  */
 export async function PUT(req: Request) {
   try {
+    const { searchParams } = new URL(req.url);
+    const internshipId = searchParams.get("internshipId");
+    
+    // Validate internshipId
+    if (!internshipId) {
+      return NextResponse.json(
+        { error: "Missing internshipId in query parameters" },
+        { status: 400 }
+      );
+    }
     const body: InternshipPayload = await req.json();
 
-    if (!body.id) {
-      return NextResponse.json({ error: "Internship ID is required" }, { status: 400 });
-    }
-
     const internship = await prisma.internship.update({
-      where: { id: body.id },
+      where: { id: internshipId },
       data: {
         category: body.category ?? undefined,
         title: body.title ?? undefined,
@@ -147,7 +176,7 @@ export async function PUT(req: Request) {
         skillsRequired: body.skillsRequired ?? undefined,
         perks: body.perks ?? undefined,
         question: body.question ?? undefined,
-        eligibility: body.eligibility ?? undefined,
+        eligibility: body.requirements ?? undefined,
         userType: body.userType ?? undefined,
         startDate: body.startDate ? new Date(body.startDate) : undefined,
         applicationDeadline: body.applicationDeadline ? new Date(body.applicationDeadline) : undefined,
@@ -159,5 +188,57 @@ export async function PUT(req: Request) {
   } catch (error) {
     console.error("❌ PUT internship error:", error);
     return NextResponse.json({ error: "Failed to update internship" }, { status: 500 });
+  }
+}
+
+/**
+ * DELETE /api/internships
+ * Delete an internship by ID
+ */
+export async function DELETE(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const internshipId = searchParams.get("internshipId");
+
+    if (!internshipId) {
+      return NextResponse.json(
+        { error: "Missing internshipId in query parameters" },
+        { status: 400 }
+      );
+    }
+
+    // Check if internship exists
+    const existing = await prisma.internship.findUnique({
+      where: { id: internshipId },
+    });
+
+    if (!existing) {
+      return NextResponse.json(
+        { error: "Internship not found" },
+        { status: 404 }
+      );
+    }
+
+    // 🔥 Delete related records first using a transaction
+    await prisma.$transaction([
+      prisma.internshipApplication.deleteMany({
+        where: { internshipId },
+      }),
+      prisma.internship.delete({
+        where: { id: internshipId },
+      }),
+    ]);
+
+    return NextResponse.json(
+      { message: "Internship deleted successfully" },
+      { status: 200 }
+    );
+
+  } catch (error) {
+    console.error("❌ DELETE internship error:", error);
+    return NextResponse.json(
+      { error: "Failed to delete internship" },
+      { status: 500 }
+    );
   }
 }

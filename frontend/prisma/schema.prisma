@@ -181,6 +181,7 @@ model InternshipApplication {
   applicantId  String
   coverLetter  String?
   resumeUrl    String?
+  resumeData   Json?
   status       ApplicationStatus @default(PENDING)
   createdAt    DateTime          @default(now())
 
