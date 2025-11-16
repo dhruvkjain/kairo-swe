@@ -167,7 +167,7 @@ const LandingPage: React.FC = () => {
               </div>
               <h3 className="text-lg font-semibold text-gray-900">Get Matched</h3>
               <p className="text-gray-600 mt-2 max-w-xs">
-                Our AI finds the best opportunities or candidates for you.
+                Our Platform finds the best opportunities or candidates for you.
               </p>
             </div>
 
