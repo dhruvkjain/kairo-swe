@@ -13,7 +13,6 @@ export async function GET(req: NextRequest) {
         { status: 400 }
       );
     }
-
     // Find the recruiter
     const recruiter = await prisma.recruiter.findUnique({
       where: { userId: recruiterId },

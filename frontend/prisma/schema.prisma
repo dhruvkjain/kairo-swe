@@ -62,11 +62,11 @@ enum InternshipStatus {
 }
 
 enum ApplicationStatus {
-  PENDING
-  REVIEWED
-  ACCEPTED
-  REJECTED
-  WITHDRAWN
+  Applied
+  Shortlisted
+  Interview
+  Hire
+  Reject
 }
 enum Stipendtype{
   PAID
@@ -176,14 +176,18 @@ model Internship {
 }
 
 model InternshipApplication {
-  id           String            @id @default(uuid())
-  internshipId String
-  applicantId  String
-  coverLetter  String?
-  resumeUrl    String?
-  resumeData   Json?
-  status       ApplicationStatus @default(PENDING)
-  createdAt    DateTime          @default(now())
+  id                  String            @id @default(uuid())
+  internshipId        String
+  applicantId         String
+  coverLetter         String?
+  resumeUrl           String?
+  resumeData          Json?
+  isApplied           Boolean?          @default(true)
+  isShortlisted       Boolean?
+  selectInterview     Boolean?
+  isHire              Boolean?
+  status              ApplicationStatus @default(Applied)
+  createdAt           DateTime          @default(now())
 
   internship Internship @relation(fields: [internshipId], references: [id])
   applicant  User       @relation(fields: [applicantId], references: [id])

@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from "react";
 import Recruiter_PostInternshipModel from "./Recruiter_PostInternshipModel";
 import UpdateInternshipModal from "./UpdateInternship";
-
 import {
   LayoutDashboard,
   Briefcase,
@@ -59,6 +58,7 @@ import {
 } from "recharts";
 import { error } from "console";
 
+
 const RecruiterDashboard = (id: { id: string }) => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [showNotifications, setShowNotifications] = useState(false);
@@ -70,10 +70,13 @@ const RecruiterDashboard = (id: { id: string }) => {
   const [internships, setInternships] = useState([]);
   const [openUpdate, setOpenUpdate] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
-  const [Delete , setDelete] = useState(false);
+  const [Delete, setDelete] = useState(false);
+  const [filteredApplicants, setFilteredApplicants] = useState([]);
+  const [monthlyStats ,setMonthlyStats] = useState([])
+  const [stagesData, setStagesData] = useState([]);
   const [applicants, setApplicants] = useState([]);
 
-  const recruiterId = id;
+  const recruiterId = id.id;
 
   useEffect(() => {
     const loadStats = async () => {
@@ -93,21 +96,49 @@ const RecruiterDashboard = (id: { id: string }) => {
   }, [recruiterId]);
 
   useEffect(() => {
+    const fetchStats = async () => {
+      const res = await fetch(`/api/auth/recruiter/analytics`);
+      if (res.ok) {
+        const data = await res.json();
+        console.log(data)
+        setMonthlyStats(data);
+      } else {
+        console.error("Failed to fetch monthly stats");
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      const res = await fetch(`/api/auth/recruiter/hiringFunnel`);
+      if (res.ok) {
+        const data = await res.json();
+        console.log(data)
+        setStagesData(data);
+      } else {
+        console.error("Failed to fetch monthly stats");
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  useEffect(() => {
     if (!recruiterId) return;
 
     const loadInternships = async () => {
       try {
-        const res2 = await fetch(
-          `/api/auth/recruiter/myInternship?recruiterId=cmhyz9eqg0002wskkwadfhjx1`
+        const response = await fetch(
+          `/api/auth/recruiter/myInternship?recruiterId=${recruiterId}`
         );
-
-        if (!res2.ok) {
-          console.error("Fetch error:", await res2.text());
+        if (!response.ok) {
+          console.error("Fetch error:", await response.text());
           return;
         }
-
-        const data2 = await res2.json();
-        setInternships(data2);
+        const internshipsData = await response.json();
+        setInternships(internshipsData);
       } catch (error) {
         console.error("Network error:", error);
       }
@@ -119,7 +150,9 @@ const RecruiterDashboard = (id: { id: string }) => {
   useEffect(() => {
     const fetchApplicants = async () => {
       try {
-        const res = await fetch(`/api/auth/recruiter/recentApplicant?recruiterId=cmhyz9eza0004wskk70bbe40k`);
+        const res = await fetch(
+          `/api/auth/recruiter/recentApplicant?recruiterId=${recruiterId}`
+        );
         const data = await res.json();
         setApplicants(data);
       } catch (error) {
@@ -128,6 +161,20 @@ const RecruiterDashboard = (id: { id: string }) => {
     };
     fetchApplicants();
   }, [recruiterId]);
+
+  useEffect(() => {
+    if (!selectedInternship) {
+      setFilteredApplicants([]);
+      return;
+    }
+
+    const filtered = applicants.filter(
+      (a) => a.internshipId === selectedInternship
+    );
+
+    setFilteredApplicants(filtered);
+  }, [selectedInternship, applicants]);
+
 
   if (loading) return <p>Loading dashboard...</p>;
   if (!stats) return <p>No data found</p>;
@@ -151,7 +198,7 @@ const RecruiterDashboard = (id: { id: string }) => {
     },
   ];
 
-  const deleteHandle = async (id :String) => {
+  const deleteHandle = async (id: String) => {
     if (!id) return;
 
     try {
@@ -175,7 +222,31 @@ const RecruiterDashboard = (id: { id: string }) => {
     }
   };
 
+  const updateStatus = async (id: string, status: string) => {
+    if (!id) return;
 
+    try {
+      const res = await fetch(`/api/auth/recruiter/applicant`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ applicationId: id, status }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error);
+        return;
+      }
+
+      alert(`${status} Successfully`);
+      // Optionally refresh data or UI here
+    } catch (err) {
+      console.log("Update error:", err);
+    }
+  };
 
   const notifications = [
     {
@@ -196,38 +267,6 @@ const RecruiterDashboard = (id: { id: string }) => {
       time: "2 hours ago",
       unread: false,
     },
-  ];
-
-  // Analytics mock data
-  const monthlyStats = [
-    { month: "Jan", applications: 80, hired: 5, interviews: 12 },
-    { month: "Feb", applications: 95, hired: 8, interviews: 15 },
-    { month: "Mar", applications: 110, hired: 10, interviews: 20 },
-    { month: "Apr", applications: 90, hired: 7, interviews: 18 },
-    { month: "May", applications: 140, hired: 18, interviews: 25 },
-    { month: "Jun", applications: 160, hired: 20, interviews: 28 },
-    { month: "Jul", applications: 150, hired: 17, interviews: 24 },
-    { month: "Aug", applications: 135, hired: 15, interviews: 22 },
-    { month: "Sep", applications: 120, hired: 12, interviews: 19 },
-    { month: "Oct", applications: 145, hired: 18, interviews: 26 },
-    { month: "Nov", applications: 155, hired: 16, interviews: 23 },
-    { month: "Dec", applications: 170, hired: 19, interviews: 30 },
-  ];
-
-  const sourceOfHire = [
-    { name: "Company Website", value: 280 },
-    { name: "Job Boards", value: 150 },
-    { name: "Social Media", value: 190 },
-    { name: "Referrals", value: 120 },
-    { name: "Campus Drive", value: 90 },
-  ];
-
-  const stagesData = [
-    { stage: "Applied", count: 400 },
-    { stage: "Phone Screen", count: 180 },
-    { stage: "Technical Test", count: 120 },
-    { stage: "Interview", count: 70 },
-    { stage: "Hired", count: 25 },
   ];
 
   const COLORS = ["#6b8cff", "#a3b3ff", "#dbe1ff", "#fbbf24", "#34d399"];
@@ -366,7 +405,7 @@ const RecruiterDashboard = (id: { id: string }) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols gap-6">
         {/* Line chart: Applications vs Hired */}
         <div className="bg-white p-4 rounded-lg border border-gray-200">
           <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -392,6 +431,12 @@ const RecruiterDashboard = (id: { id: string }) => {
                 />
                 <Line
                   type="monotone"
+                  dataKey="shortlisted"
+                  stroke="#6ee7b7"
+                  strokeWidth={3}
+                />
+                <Line
+                  type="monotone"
                   dataKey="hired"
                   stroke="#10b981"
                   strokeWidth={3}
@@ -409,59 +454,26 @@ const RecruiterDashboard = (id: { id: string }) => {
         </div>
 
         {/* Pie chart: Source of hires */}
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            Source of Applicants
-          </h3>
-          <div
-            style={{ width: "100%", height: 300 }}
-            className="flex items-center justify-center"
-          >
-            <ResponsiveContainer>
-              <PieChart>
-                <Pie
-                  data={sourceOfHire}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={90}
-                  innerRadius={50}
-                  label
-                >
-                  {sourceOfHire.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                    />
-                  ))}
-                </Pie>
-                <Legend verticalAlign="bottom" height={36} />
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+      </div>
 
-        {/* Bar chart: Funnel / Stages (full width) */}
-        <div className="col-span-1 lg:col-span-2 bg-white p-4 rounded-lg border border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            Hiring Funnel (counts)
-          </h3>
-          <div style={{ width: "100%", height: 340 }}>
-            <ResponsiveContainer>
-              <BarChart
-                data={stagesData}
-                margin={{ top: 10, right: 20, left: 0, bottom: 0 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="stage" stroke="#6b7280" />
-                <YAxis stroke="#6b7280" />
-                <Tooltip />
-                <Bar dataKey="count" fill="#6b8cff" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+      {/* Bar chart: Funnel / Stages (full width) */}
+      <div className="col-span-1 lg:col-span-2 bg-white p-4 rounded-lg border border-gray-200">
+        <h3 className="text-lg font-medium text-gray-900 mb-2">
+          Hiring Funnel (counts)
+        </h3>
+        <div style={{ width: "100%", height: 340 }}>
+          <ResponsiveContainer>
+            <BarChart
+              data={stagesData}
+              margin={{ top: 10, right: 20, left: 0, bottom: 0 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="stage" stroke="#6b7280" />
+              <YAxis stroke="#6b7280" />
+              <Tooltip />
+              <Bar dataKey="count" fill="#6b8cff" radius={[6, 6, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </div>
     </div>
@@ -626,39 +638,46 @@ const RecruiterDashboard = (id: { id: string }) => {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Recent Applicants
           </h3>
+
           <div className="space-y-3">
-            {applicants.slice(0, 3).map((applicant) => (
-              <div
-                key={applicant.id}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer"
-                onClick={() => setSelectedApplicant(applicant)}
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                    <User className="w-5 h-5 text-gray-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900 text-sm">
-                      {applicant.name}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {applicant.appliedFor}
-                    </p>
-                  </div>
-                </div>
-                <span
-                  className={`px-2 py-1 text-xs font-medium rounded-full ${
-                    applicant.status === "Shortlisted"
-                      ? "bg-blue-100 text-blue-700"
-                      : applicant.status === "Interview"
-                      ? "bg-purple-100 text-purple-700"
-                      : "bg-gray-100 text-gray-700"
-                  }`}
+            {applicants.slice(0, 3).map((applicant) => {
+              const resume = applicant.resumeData || {};
+
+              return (
+                <div
+                  key={applicant.id}
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer"
+                  onClick={() => setSelectedApplicant(applicant)}
                 >
-                  {applicant.status}
-                </span>
-              </div>
-            ))}
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+                      <User className="w-5 h-5 text-gray-600" />
+                    </div>
+
+                    <div>
+                      <p className="font-medium text-gray-900 text-sm">
+                        {resume.name}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {resume.appliedFor}
+                      </p>
+                    </div>
+                  </div>
+
+                  <span
+                    className={`px-2 py-1 text-xs font-medium rounded-full ${
+                      applicant.status === "Shortlisted"
+                        ? "bg-blue-100 text-blue-700"
+                        : applicant.status === "Interview"
+                        ? "bg-purple-100 text-purple-700"
+                        : "bg-gray-100 text-gray-700"
+                    }`}
+                  >
+                    {applicant.status}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -695,11 +714,6 @@ const RecruiterDashboard = (id: { id: string }) => {
                           <Users className="w-3 h-3" />
                           <span>{internship.applicationsCount} applicants</span>
                         </span>
-
-                        <span className="flex items-center space-x-1">
-                          <Eye className="w-3 h-3" />
-                          <span>{internship.viewsCount} views</span>
-                        </span>
                       </div>
                     </div>
                   ))}
@@ -712,137 +726,285 @@ const RecruiterDashboard = (id: { id: string }) => {
   );
 
   const InternshipsView = () => (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900">Manage Internships</h2>
-        <div className="flex items-center space-x-2">
-          <button className="flex items-center space-x-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-            <Filter className="w-4 h-4" />
-            <span className="text-sm">Filter</span>
-          </button>
-          <button className="flex items-center space-x-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-            <Download className="w-4 h-4" />
-            <span className="text-sm">Export</span>
-          </button>
-        </div>
-      </div>
+    <div className="grid grid-cols-2 gap-4">
+      {/* LEFT SIDE — INTERNSHIPS TABLE */}
+      <div className="space-y-4 col-span-1">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-gray-900">
+            Manage Internships
+          </h2>
 
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
-                Internship
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
-                Location
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
-                Stipend
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
-                Applicants
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
-                Status
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {internships.map((internship) => (
-              <tr key={internship.id} className="hover:bg-gray-50">
-                <td className="px-4 py-3">
-                  <div>
+          <div className="flex items-center space-x-2">
+            <button className="flex items-center space-x-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+              <Filter className="w-4 h-4" />
+              <span className="text-sm">Filter</span>
+            </button>
+
+            <button className="flex items-center space-x-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+              <Download className="w-4 h-4" />
+              <span className="text-sm">Export</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                  Internship
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                  Location
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                  Stipend
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                  Applicants
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                  Status
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+
+            <tbody className="divide-y divide-gray-200">
+              {internships.map((internship) => (
+                <tr
+                  key={internship.id}
+                  className="hover:bg-gray-50 cursor-pointer"
+                  onClick={() => setSelectedInternship(internship.id)}
+                >
+                  <td className="px-4 py-3">
                     <p className="font-medium text-gray-900 text-sm">
                       {internship.title}
                     </p>
                     <p className="text-xs text-gray-500">
                       {internship.duration} • {internship.type}
                     </p>
-                  </div>
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center space-x-1 text-sm text-gray-600">
-                    <MapPin className="w-3.5 h-3.5" />
-                    <span>{internship.location}</span>
-                  </div>
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center space-x-1 text-sm text-gray-600">
-                    <DollarSign className="w-3.5 h-3.5" />
-                    <span>{internship.stipend}</span>
-                  </div>
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center space-x-2">
-                    <span className="font-medium text-gray-900">
-                      {internship.applicants}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      ({internship.viewsCount} views)
-                    </span>
-                  </div>
-                </td>
-                <td className="px-4 py-3">
-                  <span
-                    className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      internship.status === "DRAFT"
-                        ? "bg-green-100 text-green-700"
-                        : internship.status === "Paused"
-                        ? "bg-yellow-100 text-yellow-700"
-                        : "bg-gray-100 text-gray-700"
-                    }`}
-                  >
-                    {internship.status}
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center space-x-1">
-                    
-                    <button
-                      onClick={() => {
-                        setSelectedId(internship.id);
-                        setOpenUpdate(true);
-                      }}
-                      className="p-1.5 hover:bg-gray-100 rounded transition-colors"
-                      title="Edit"
-                    >
-                      <Edit2 className="w-5 h-5 text-blue-600" />
-                    </button>
+                  </td>
 
-                    <button
-                      onClick={() => {
-                        deleteHandle(internship.id)
-                      }}
-                      className="p-1.5 hover:bg-gray-100 rounded transition-colors"
-                      title="Delete"
+                  <td className="px-4 py-3">
+                    <div className="flex items-center space-x-1 text-sm text-gray-600">
+                      <MapPin className="w-3.5 h-3.5" />
+                      <span>{internship.location}</span>
+                    </div>
+                  </td>
+
+                  <td className="px-4 py-3">
+                    <div className="flex items-center space-x-1 text-sm text-gray-600">
+                      <DollarSign className="w-3.5 h-3.5" />
+                      <span>{internship.stipend}</span>
+                    </div>
+                  </td>
+
+                  <td className="px-4 py-3">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-medium text-gray-900">
+                        {internship.applicants}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        ({internship.applicationsCount} applied)
+                      </span>
+                    </div>
+                  </td>
+
+                  <td className="px-4 py-3">
+                    <span
+                      className={`px-2 py-1 text-xs font-medium rounded-full ${
+                        internship.status === "DRAFT"
+                          ? "bg-green-100 text-green-700"
+                          : internship.status === "Paused"
+                          ? "bg-yellow-100 text-yellow-700"
+                          : "bg-gray-100 text-gray-700"
+                      }`}
                     >
-                      <Trash2 className="w-5 h-5 text-red-600" />
-                    </button>
-                    
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                      {internship.status}
+                    </span>
+                  </td>
+
+                  <td className="px-4 py-3">
+                    <div className="flex items-center space-x-1">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedId(internship.id);
+                          setOpenUpdate(true);
+                        }}
+                        className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                      >
+                        <Edit2 className="w-5 h-5 text-blue-600" />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteHandle(internship.id);
+                        }}
+                        className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                      >
+                        <Trash2 className="w-5 h-5 text-red-600" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* RIGHT SIDE — APPLICANTS */}
+      <div className="col-span-1 bg-white border border-gray-200 rounded-lg p-4 h-full overflow-y-auto">
+        {selectedInternship ? (
+          <>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Applicants for{" "}
+              {internships.find((i) => i.id === selectedInternship)?.title ||
+                "Internship"}
+            </h3>
+
+            {filteredApplicants.length === 0 ? (
+              <p className="text-gray-600 text-sm">No applicants found.</p>
+            ) : (
+              <div className="grid grid-cols-1 gap-4">
+                {filteredApplicants.map((applicant) => {
+                  const data = applicant.resumeData || {};
+
+                  return (
+                    <div
+                      key={applicant.id}
+                      className="bg-white p-4 rounded-lg border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
+                      onClick={() => setSelectedApplicant(applicant)}
+                    >
+                      <div className="flex items-start justify-between">
+                        {/* Left Section */}
+                        <div className="flex items-start space-x-4 flex-1">
+                          <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
+                            <User className="w-6 h-6 text-gray-600" />
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            {/* Name + Status */}
+                            <div className="flex items-center space-x-2 mb-1">
+                              <h3 className="font-semibold text-gray-900">
+                                {data.name}
+                              </h3>
+
+                              <span
+                                className={`px-2 py-0.5 text-xs font-medium rounded-full ${
+                                  data.status === "Shortlisted"
+                                    ? "bg-blue-100 text-blue-700"
+                                    : data.status === "Interview"
+                                    ? "bg-purple-100 text-purple-700"
+                                    : data.status === "Applied"
+                                    ? "bg-gray-100 text-gray-700"
+                                    : "bg-red-100 text-red-700"
+                                }`}
+                              >
+                                {applicant.status}
+                              </span>
+                            </div>
+
+                            {/* Applied For */}
+                            <p className="text-sm text-gray-600 mb-2">
+                              {data.appliedFor}
+                            </p>
+
+                            {/* College, CGPA, Email, Date */}
+                            <div className="grid grid-cols-2 gap-2 mb-2">
+                              <div className="flex items-center space-x-1.5 text-xs text-gray-500">
+                                <GraduationCap className="w-3.5 h-3.5" />
+                                <span>{data.college}</span>
+                              </div>
+
+                              <div className="flex items-center space-x-1.5 text-xs text-gray-500">
+                                <Award className="w-3.5 h-3.5" />
+                                <span>CGPA: {data.cgpa}</span>
+                              </div>
+
+                              <div className="flex items-center space-x-1.5 text-xs text-gray-500">
+                                <Mail className="w-3.5 h-3.5" />
+                                <span className="truncate">{data.email}</span>
+                              </div>
+
+                              <div className="flex items-center space-x-1.5 text-xs text-gray-500">
+                                <Clock className="w-3.5 h-3.5" />
+                                <span>Applied {data.appliedDate || "N/A"}</span>
+                              </div>
+                            </div>
+
+                            {/* Skills Badges */}
+                            <div className="flex flex-wrap gap-1.5">
+                              {data.skills?.slice(0, 4).map((skill, i) => (
+                                <span
+                                  key={i}
+                                  className="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded"
+                                >
+                                  {skill}
+                                </span>
+                              ))}
+
+                              {data.skills?.length > 4 && (
+                                <span className="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded">
+                                  +{data.skills.length - 4}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Right Buttons */}
+                        <div className="flex flex-col space-y-2 ml-4">
+                          <button className="px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded hover:bg-gray-800">
+                            View Profile
+                          </button>
+
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.open(data.resumeUrl, "_blank");
+                            }}
+                            className="px-3 py-1.5 border border-gray-300 text-gray-700 text-xs font-medium rounded hover:bg-gray-50"
+                          >
+                            Download Resume
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="text-gray-500 text-sm flex items-center justify-center h-full">
+            Select an internship to view applicants
+          </div>
+        )}
       </div>
     </div>
   );
 
   const ApplicantsView = () => (
     <div className="space-y-4">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-gray-900">Applicants</h2>
+
         <div className="flex items-center space-x-2">
           <select className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900">
             <option>All Internships</option>
             <option>Frontend Developer Intern</option>
             <option>Backend Developer Intern</option>
           </select>
+
           <select className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900">
             <option>All Status</option>
             <option>Applied</option>
@@ -853,86 +1015,114 @@ const RecruiterDashboard = (id: { id: string }) => {
         </div>
       </div>
 
+      {/* Applicants List */}
       <div className="grid grid-cols-1 gap-4">
-        {applicants.map((applicant) => (
-          <div
-            key={applicant.id}
-            className="bg-white p-4 rounded-lg border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
-            onClick={() => setSelectedApplicant(applicant)}
-          >
-            <div className="flex items-start justify-between">
-              <div className="flex items-start space-x-4 flex-1">
-                <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
-                  <User className="w-6 h-6 text-gray-600" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <h3 className="font-semibold text-gray-900">
-                      {applicant.name}
-                    </h3>
-                    <span
-                      className={`px-2 py-0.5 text-xs font-medium rounded-full ${
-                        applicant.status === "Shortlisted"
-                          ? "bg-blue-100 text-blue-700"
-                          : applicant.status === "Interview"
-                          ? "bg-purple-100 text-purple-700"
-                          : applicant.status === "Applied"
-                          ? "bg-gray-100 text-gray-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {applicant.status}
-                    </span>
+        {applicants.map((applicant) => {
+          const data = applicant.resumeData || {};
+
+          return (
+            <div
+              key={applicant.id}
+              className="bg-white p-4 rounded-lg border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => setSelectedApplicant(applicant)}
+            >
+              <div className="flex items-start justify-between">
+                {/* Left Section */}
+                <div className="flex items-start space-x-4 flex-1">
+                  <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
+                    <User className="w-6 h-6 text-gray-600" />
                   </div>
-                  <p className="text-sm text-gray-600 mb-2">
-                    {applicant.appliedFor}
-                  </p>
-                  <div className="grid grid-cols-2 gap-2 mb-2">
-                    <div className="flex items-center space-x-1.5 text-xs text-gray-500">
-                      <GraduationCap className="w-3.5 h-3.5" />
-                      <span>{applicant.college}</span>
-                    </div>
-                    <div className="flex items-center space-x-1.5 text-xs text-gray-500">
-                      <Award className="w-3.5 h-3.5" />
-                      <span>CGPA: {applicant.cgpa}</span>
-                    </div>
-                    <div className="flex items-center space-x-1.5 text-xs text-gray-500">
-                      <Mail className="w-3.5 h-3.5" />
-                      <span className="truncate">{applicant.email}</span>
-                    </div>
-                    <div className="flex items-center space-x-1.5 text-xs text-gray-500">
-                      <Clock className="w-3.5 h-3.5" />
-                      <span>Applied {applicant.appliedDate}</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {applicant.skills.slice(0, 4).map((skill, idx) => (
+
+                  <div className="flex-1 min-w-0">
+                    {/* Name + Status */}
+                    <div className="flex items-center space-x-2 mb-1">
+                      <h3 className="font-semibold text-gray-900">
+                        {data.name}
+                      </h3>
+
                       <span
-                        key={idx}
-                        className="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded"
+                        className={`px-2 py-0.5 text-xs font-medium rounded-full ${
+                          data.status === "Shortlisted"
+                            ? "bg-blue-100 text-blue-700"
+                            : data.status === "Interview"
+                            ? "bg-purple-100 text-purple-700"
+                            : data.status === "Applied"
+                            ? "bg-gray-100 text-gray-700"
+                            : "bg-red-100 text-red-700"
+                        }`}
                       >
-                        {skill}
+                        {applicant.status}
                       </span>
-                    ))}
-                    {applicant.skills.length > 4 && (
-                      <span className="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded">
-                        +{applicant.skills.length - 4}
-                      </span>
-                    )}
+                    </div>
+
+                    {/* Applied For */}
+                    <p className="text-sm text-gray-600 mb-2">
+                      {data.appliedFor}
+                    </p>
+
+                    {/* College, CGPA, Email, Date */}
+                    <div className="grid grid-cols-2 gap-2 mb-2">
+                      <div className="flex items-center space-x-1.5 text-xs text-gray-500">
+                        <GraduationCap className="w-3.5 h-3.5" />
+                        <span>{data.college}</span>
+                      </div>
+
+                      <div className="flex items-center space-x-1.5 text-xs text-gray-500">
+                        <Award className="w-3.5 h-3.5" />
+                        <span>CGPA: {data.cgpa}</span>
+                      </div>
+
+                      <div className="flex items-center space-x-1.5 text-xs text-gray-500">
+                        <Mail className="w-3.5 h-3.5" />
+                        <span className="truncate">{data.email}</span>
+                      </div>
+
+                      <div className="flex items-center space-x-1.5 text-xs text-gray-500">
+                        <Clock className="w-3.5 h-3.5" />
+                        <span>Applied {data.appliedDate || "N/A"}</span>
+                      </div>
+                    </div>
+
+                    {/* Skills Badges */}
+                    <div className="flex flex-wrap gap-1.5">
+                      {data.skills?.slice(0, 4).map((skill, i) => (
+                        <span
+                          key={i}
+                          className="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded"
+                        >
+                          {skill}
+                        </span>
+                      ))}
+
+                      {data.skills?.length > 4 && (
+                        <span className="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded">
+                          +{data.skills.length - 4}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="flex flex-col space-y-2 ml-4">
-                <button className="px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded hover:bg-gray-800">
-                  View Profile
-                </button>
-                <button className="px-3 py-1.5 border border-gray-300 text-gray-700 text-xs font-medium rounded hover:bg-gray-50">
-                  Download Resume
-                </button>
+
+                {/* Right Buttons */}
+                <div className="flex flex-col space-y-2 ml-4">
+                  <button className="px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded hover:bg-gray-800">
+                    View Profile
+                  </button>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      window.open(data.resumeUrl, "_blank");
+                    }}
+                    className="px-3 py-1.5 border border-gray-300 text-gray-700 text-xs font-medium rounded hover:bg-gray-50"
+                  >
+                    Download Resume
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -940,9 +1130,13 @@ const RecruiterDashboard = (id: { id: string }) => {
   const ApplicantModal = ({ applicant, onClose }) => {
     if (!applicant) return null;
 
+    // Extract resumeData safely
+    const data = applicant.resumeData || {};
+
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+          {/* Header */}
           <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between">
             <h2 className="text-xl font-bold text-gray-900">
               Applicant Details
@@ -956,60 +1150,73 @@ const RecruiterDashboard = (id: { id: string }) => {
           </div>
 
           <div className="p-6 space-y-6">
+            {/* Profile Summary */}
             <div className="flex items-start space-x-4">
               <div className="w-20 h-20 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
                 <User className="w-10 h-10 text-gray-600" />
               </div>
+
               <div className="flex-1">
                 <h3 className="text-2xl font-bold text-gray-900 mb-1">
-                  {applicant.name}
+                  {data.name}
                 </h3>
+
                 <p className="text-gray-600 mb-2">
-                  {applicant.course} • {applicant.year}
+                  {data.course} • {data.year}
                 </p>
+
                 <div className="flex flex-wrap gap-2 mb-3">
                   <span className="flex items-center space-x-1 text-sm text-gray-600">
                     <GraduationCap className="w-4 h-4" />
-                    <span>{applicant.college}</span>
+                    <span>{data.college}</span>
                   </span>
+
                   <span className="flex items-center space-x-1 text-sm text-gray-600">
                     <Award className="w-4 h-4" />
-                    <span>CGPA: {applicant.cgpa}</span>
+                    <span>CGPA: {data.cgpa}</span>
                   </span>
                 </div>
+
                 <div className="flex flex-wrap gap-3 text-sm">
-                  <a
-                    href={`mailto:${applicant.email}`}
-                    className="flex items-center space-x-1 text-blue-600 hover:underline"
-                  >
-                    <Mail className="w-4 h-4" />
-                    <span>{applicant.email}</span>
-                  </a>
-                  <a
-                    href={`tel:${applicant.phone}`}
-                    className="flex items-center space-x-1 text-blue-600 hover:underline"
-                  >
-                    <Phone className="w-4 h-4" />
-                    <span>{applicant.phone}</span>
-                  </a>
+                  {data.email && (
+                    <a
+                      href={`mailto:${data.email}`}
+                      className="flex items-center space-x-1 text-blue-600 hover:underline"
+                    >
+                      <Mail className="w-4 h-4" />
+                      <span>{data.email}</span>
+                    </a>
+                  )}
+
+                  {data.phone && (
+                    <a
+                      href={`tel:${data.phone}`}
+                      className="flex items-center space-x-1 text-blue-600 hover:underline"
+                    >
+                      <Phone className="w-4 h-4" />
+                      <span>{data.phone}</span>
+                    </a>
+                  )}
                 </div>
               </div>
             </div>
 
+            {/* Applied For Section */}
             <div>
               <h4 className="font-semibold text-gray-900 mb-2">Applied For</h4>
-              <p className="text-gray-700">{applicant.appliedFor}</p>
+              <p className="text-gray-700">{data.appliedFor}</p>
               <p className="text-sm text-gray-500 mt-1">
-                Applied on {applicant.appliedDate}
+                Applied on {data.appliedDate || "Not Provided"}
               </p>
             </div>
 
+            {/* Skills */}
             <div>
               <h4 className="font-semibold text-gray-900 mb-2">Skills</h4>
               <div className="flex flex-wrap gap-2">
-                {applicant.skills.map((skill, idx) => (
+                {data.skills?.map((skill, i) => (
                   <span
-                    key={idx}
+                    key={i}
                     className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full"
                   >
                     {skill}
@@ -1018,22 +1225,24 @@ const RecruiterDashboard = (id: { id: string }) => {
               </div>
             </div>
 
+            {/* Experience */}
             <div>
               <h4 className="font-semibold text-gray-900 mb-2">Experience</h4>
-              <p className="text-gray-700">{applicant.experience}</p>
+              <p className="text-gray-700">{data.experience}</p>
             </div>
 
+            {/* Status */}
             <div>
               <h4 className="font-semibold text-gray-900 mb-2">
                 Current Status
               </h4>
               <span
                 className={`inline-block px-3 py-1 text-sm font-medium rounded-full ${
-                  applicant.status === "Shortlisted"
+                  data.status === "Shortlisted"
                     ? "bg-blue-100 text-blue-700"
-                    : applicant.status === "Interview"
+                    : data.status === "Interview"
                     ? "bg-purple-100 text-purple-700"
-                    : applicant.status === "Applied"
+                    : data.status === "Applied"
                     ? "bg-gray-100 text-gray-700"
                     : "bg-red-100 text-red-700"
                 }`}
@@ -1042,22 +1251,51 @@ const RecruiterDashboard = (id: { id: string }) => {
               </span>
             </div>
 
+            {/* Action Buttons */}
             <div className="flex items-center space-x-2 pt-4 border-t border-gray-200">
-              <button className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center justify-center space-x-2">
+              <button 
+              onClick={(e) => {
+                  updateStatus(applicant.id, "Shortlisted");
+                }}
+              className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center justify-center space-x-2">
                 <CheckCircle className="w-4 h-4" />
                 <span>Shortlist</span>
               </button>
-              <button className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center justify-center space-x-2">
+
+              <button 
+              onClick={(e) => {
+                  updateStatus(applicant.id, "Interview");
+                }}
+              className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center justify-center space-x-2">
                 <Calendar className="w-4 h-4" />
                 <span>Schedule Interview</span>
               </button>
-              <button className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center justify-center space-x-2">
+
+              <button 
+              onClick={(e) => {
+                  updateStatus(applicant.id, "Hire");
+                }}
+              className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center justify-center space-x-2">
+                <CheckCircle className="w-4 h-4" />
+                <span>Hire</span>
+              </button>
+
+              <button
+                onClick={(e) => {
+                  updateStatus(applicant.id, "Reject");
+                }}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center justify-center space-x-2"
+              >
                 <XCircle className="w-4 h-4" />
                 <span>Reject</span>
               </button>
             </div>
 
-            <button className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 flex items-center justify-center space-x-2">
+            {/* Resume Download */}
+            <button
+              onClick={() => window.open(data.resumeUrl, "_blank")}
+              className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 flex items-center justify-center space-x-2"
+            >
               <FileText className="w-4 h-4" />
               <span>Download Resume</span>
             </button>

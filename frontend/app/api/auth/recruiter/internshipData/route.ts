@@ -11,6 +11,7 @@ export async function GET(req: Request) {
     if (!recruitersId) {
       return NextResponse.json({ error: "Missing recruiterId" }, { status: 400 });
     }
+
     const recruiter = await prisma.recruiter.findUnique({
       where: { userId: recruitersId },
     });
@@ -20,7 +21,7 @@ export async function GET(req: Request) {
     const startOfThisWeek = new Date(now);
     startOfThisWeek.setDate(now.getDate() - now.getDay());
     const startOfLastWeek = new Date(startOfThisWeek);
-    startOfLastWeek.setDate(startOfLastWeek.getDate() - 7);
+    startOfLastWeek.setDate(startOfLastWeek.getDate() - 120);
     const endOfLastWeek = new Date(startOfThisWeek);
 
     // Helper to compute % change + trend
@@ -35,7 +36,7 @@ export async function GET(req: Request) {
       };
     };
 
-    // 1️⃣ Active internships
+    // Active internships
     const activeThisWeek = await prisma.internship.count({
       where: {
         recruiterId,
@@ -54,7 +55,7 @@ export async function GET(req: Request) {
       },
     });
 
-    // 2️⃣ Total applicants
+    // Total applicants
     const internships = await prisma.internship.findMany({
       where: { recruiterId },
       select: { id: true },
@@ -75,11 +76,11 @@ export async function GET(req: Request) {
       },
     });
 
-    // 3️⃣ Accepted applications
+    // Accepted applications
     const acceptedThisWeek = await prisma.internshipApplication.count({
       where: {
         internshipId: { in: internshipIds },
-        status: "ACCEPTED",
+        status: "Hire",
         createdAt: { gte: startOfThisWeek },
       },
     });
@@ -87,16 +88,16 @@ export async function GET(req: Request) {
     const acceptedLastWeek = await prisma.internshipApplication.count({
       where: {
         internshipId: { in: internshipIds },
-        status: "ACCEPTED",
+        status: "Hire",
         createdAt: { gte: startOfLastWeek, lt: endOfLastWeek },
       },
     });
 
-    // 4️⃣ Rejected applications
+    // Rejected applications
     const rejectedThisWeek = await prisma.internshipApplication.count({
       where: {
         internshipId: { in: internshipIds },
-        status: "REJECTED",
+        status: "Reject",
         createdAt: { gte: startOfThisWeek },
       },
     });
@@ -104,7 +105,7 @@ export async function GET(req: Request) {
     const rejectedLastWeek = await prisma.internshipApplication.count({
       where: {
         internshipId: { in: internshipIds },
-        status: "REJECTED",
+        status: "Reject",
         createdAt: { gte: startOfLastWeek, lt: endOfLastWeek },
       },
     });
@@ -118,7 +119,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json(stats, { status: 200 });
   } catch (err) {
-    console.error("❌ Error in dashboard stats:", err);
+    console.error("Error in dashboard stats:", err);
     return NextResponse.json({ error: "Failed to fetch stats" }, { status: 500 });
   }
 }
