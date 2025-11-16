@@ -7,6 +7,11 @@ import React from "react";
 // const RecruiterDashboard = dynamic(() => import("@/components/recruiter/RecruiterDashboard"), { ssr: false });
 import RecruiterDashboard from "@/components/RecruiterDashboard";
 
-export default function Page() {
-  return <RecruiterDashboard />;
+interface RecruiterDashboardProps {
+  params: { id: string };
+}
+
+
+export default function Page({ params }: RecruiterDashboardProps) {
+  return <RecruiterDashboard id={params.id}/>;
 }

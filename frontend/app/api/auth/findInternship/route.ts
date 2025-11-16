@@ -82,7 +82,7 @@ export async function GET(req: NextRequest) {
 }
 
 // ---------------- POST: Apply to Internship ----------------
-export async function POST(req: NextRequest) {
+export async function POST(req:NextRequest) {
   try {
     const body = await req.json();
     const { internshipId, userId, coverLetter, resumeUrl } = body;
@@ -105,7 +105,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if the user already applied
     const existingApp = await prisma.internshipApplication.findUnique({
       where: {
         internshipId_applicantId: {
@@ -129,11 +128,29 @@ export async function POST(req: NextRequest) {
         coverLetter,
         resumeUrl,
       },
-      include: {
-        internship: true,
+    });
+
+    // Call FastAPI resume parser
+    const response = await fetch(
+      "http://127.0.0.1:8000/api/v1/parse-resume",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: resumeUrl }),
+      }
+    );
+
+    const parsedData = await response.json();
+    console.log(parsedData)
+    // Save parsed data into DB column 'resumeData' (modify as per your Prisma schema)
+    await prisma.internshipApplication.update({
+      where: { id: application.id },
+      data: {
+        resumeData: parsedData,
       },
     });
 
+    // Update internship application count
     await prisma.internship.update({
       where: { id: internshipId },
       data: { applicationsCount: { increment: 1 } },
@@ -141,8 +158,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(
       {
-        message: "Application submitted successfully",
+        message: "Application submitted and resume parsed successfully",
         application,
+        resumeData: parsedData,
       },
       { status: 201 }
     );

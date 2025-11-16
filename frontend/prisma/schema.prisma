@@ -20,6 +20,12 @@ enum Role {
   RECRUITER
 }
 
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
 enum InternshipCategory {
   ENGINEERING
   DESIGN
@@ -31,6 +37,7 @@ enum InternshipCategory {
   CONTENT_WRITING
   PRODUCT_MANAGEMENT
   DATA_SCIENCE
+  SOFTWARE_DEVLOPMENT
   OTHER
 }
 
@@ -67,6 +74,10 @@ enum ApplicationStatus {
   REJECTED
   WITHDRAWN
 }
+enum Stipendtype{
+  PAID
+  UNPAID
+}
 
 // -----------------------------------------------------
 // MODELS
@@ -74,6 +85,7 @@ enum ApplicationStatus {
 model User {
   id            String    @id @default(cuid())
   name          String?
+  gender        Gender    @default(OTHER)
   email         String?   @unique
   password      String?
   emailVerified DateTime?
@@ -141,11 +153,12 @@ model Internship {
   type                InternshipType      @default(ONSITE)
   mode                InternshipMode      @default(FULL_TIME)
   stipend             Int?
-  currency            String?
+  stipendType         Stipendtype?
   durationWeeks       Int?
   openings            Int?
   skillsRequired      String[]
   perks               String[]
+  question            String[]
   eligibility         String?
   userType            UserType?
   startDate           DateTime?
@@ -175,6 +188,7 @@ model InternshipApplication {
   applicantId  String
   coverLetter  String?
   resumeUrl    String?
+  resumeData   Json?
   status       ApplicationStatus @default(PENDING)
   createdAt    DateTime          @default(now())
 
@@ -213,9 +227,7 @@ model Session {
 }
 
 model VerificationToken {
+  token      String   @id
   identifier String
-  token      String   @unique
   expires    DateTime
-
-  @@unique([identifier, token])
 }

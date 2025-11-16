@@ -83,7 +83,7 @@ export default function AddProjectButton({ userId, initialProjects }: { userId: 
               type="text"
               value={formData.skills}
               onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
-              placeholder="Skills (comma separated, optional)"
+              placeholder="Skills (comma separated)"
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md text-sm bg-white/80 dark:bg-gray-800 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100"
             />
 

@@ -68,9 +68,14 @@ const Login: React.FC = () => {
       console.log(data)
       if (!res.ok) throw new Error(data.message || data.error || "Sign in failed.");
 
-      toast.success("Sign in successful! Redirecting...");
+      toast.success("Sign in successful");
 
-      router.push(`/student_dashboard/${data.user.id}`);
+      if(formData.role === "recruiter"){
+        router.push(`/recruiter_dashboard/${data.user.id}`);
+      }
+      else{
+        router.push(`/student_dashboard/${data.user.id}`);
+      }
 
     } catch (err: any) {
       toast.error(err.message || "Something went wrong.");

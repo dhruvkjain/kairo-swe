@@ -1,20 +1,28 @@
 import React, { useState } from 'react';
 import { X, CheckCircle } from 'lucide-react';
 
-const Recruiter_PostInternshipModal = ({ isOpen, onClose }) => {
+interface RecruiterPostInternshipModelProps {
+  id: string;
+  onClose: () => void;
+}
+
+const Recruiter_PostInternshipModal = ({ id, onClose }: RecruiterPostInternshipModelProps) => {
   const [postStep, setPostStep] = useState(1);
+  const [IsSubmitting ,setIsSubmitting] = useState(false);
   const [internshipForm, setInternshipForm] = useState({
     title: '',
     category: '',
     location: '',
-    workMode: 'Remote',
+    Mode: '',
+    Type: 'REMOTE',
+    userType:'',
     duration: '',
     openings: 1,
     description: '',
     responsibilities: '',
     requirements: '',
     skills: [],
-    stipendType: 'Fixed',
+    stipendType: 'PAID',
     stipendAmount: '',
     perks: [],
     applicationDeadline: '',
@@ -36,19 +44,66 @@ const Recruiter_PostInternshipModal = ({ isOpen, onClose }) => {
   const handleClose = () => {
     setPostStep(1);
     setInternshipForm({
-      title: '', category: '', location: '', workMode: 'Remote', duration: '', openings: 1,
+      title: '', category: '', location: '', Mode: '', Type:'REMOTE', userType:'', duration: '', openings: 1,
       description: '', responsibilities: '', requirements: '', skills: [],
-      stipendType: 'Fixed', stipendAmount: '', perks: [], applicationDeadline: '', startDate: '',
+      stipendType: 'PAID', stipendAmount: '', perks: [], applicationDeadline: '', startDate: '',
       questionsRequired: false, customQuestions: []
     });
     onClose();
   };
 
-  const handlePublish = () => {
-    // Here you would send the data to your backend
-    console.log('Publishing internship:', internshipForm);
-    alert('Internship published successfully!');
-    handleClose();
+  const handlePublish = async () => {
+    if (!internshipForm.title || !internshipForm.category) {
+      alert('Please fill in all required fields before publishing.');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const payload = {
+        title: internshipForm.title,
+        slug: internshipForm.title.toLowerCase().replace(/\s+/g, '-'),
+        category: internshipForm.category,
+        description: internshipForm.description,
+        location: internshipForm.location,
+        mode: internshipForm.Mode || 'FULL_TIME',
+        type: internshipForm.Type || 'REMOTE',
+        userType: internshipForm.userType || 'STUDENT',
+        durationWeeks: parseInt(internshipForm.duration) || null,
+        openings: internshipForm.openings,
+        stipend: internshipForm.stipendAmount ? parseInt(internshipForm.stipendAmount) : null,
+        stipendType: internshipForm.stipendType || 'FIXED',
+        perks: internshipForm.perks,
+        skillsRequired: internshipForm.skills,
+        question: internshipForm.customQuestions,
+        applicationDeadline: internshipForm.applicationDeadline || null,
+        startDate: internshipForm.startDate || null,
+        companyId : "comp1",
+        recruiterId : id.id,
+      };
+
+      const res = await fetch('/api/auth/uploadInternship', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        console.error('❌ Error creating internship:', data);
+        alert(`Failed to publish internship: ${data.error || 'Unknown error'}`);
+      } else {
+        alert('✅ Internship published successfully!');
+        handleClose();
+      }
+    } catch (error) {
+      console.error('❌ Network error:', error);
+      alert('Something went wrong while publishing internship.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const addSkill = () => {
@@ -131,25 +186,49 @@ const Recruiter_PostInternshipModal = ({ isOpen, onClose }) => {
                   onChange={(e) => setInternshipForm({...internshipForm, category: e.target.value})}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900">
                   <option value="">Select Category</option>
-                  <option value="Software Development">Software Development</option>
-                  <option value="Design">Design</option>
-                  <option value="Marketing">Marketing</option>
-                  <option value="Sales">Sales</option>
-                  <option value="Content Writing">Content Writing</option>
-                  <option value="Data Science">Data Science</option>
-                  <option value="Finance">Finance</option>
-                  <option value="HR">Human Resources</option>
+                  <option value="SOFTWARE_DEVLOPMENT">Software Development</option>
+                  <option value="DESIGN">Design</option>
+                  <option value="MARKETING">Marketing</option>
+                  <option value="SALSE">Sales</option>
+                  <option value="CONTENT_WRITING">Content Writing</option>
+                  <option value="DATA_SCIENCE">Data Science</option>
+                  <option value="FINANCE">Finance</option>
+                  <option value="HUMAN_RESOURCES">Human Resources</option>
+                  <option value="ENGINEERING">Engineering</option>
+                  <option value="OPERATIONS">Operations</option>
+                  <option value="PRODUCT_MANAGEMENT">Product Management</option>
+                  <option value="OTHER">other</option>
                 </select>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Work Mode *</label>
-                  <select value={internshipForm.workMode}
-                    onChange={(e) => setInternshipForm({...internshipForm, workMode: e.target.value})}
+                  <label className="block text-sm font-medium text-gray-700 mb-1">User Type *</label>
+                  <select value={internshipForm.userType}
+                    onChange={(e) => setInternshipForm({...internshipForm, userType: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900">
-                    <option value="Remote">Remote</option>
-                    <option value="On-site">On-site</option>
-                    <option value="Hybrid">Hybrid</option>
+                    <option value="STUDENT">Student</option>
+                    <option value="GRADUATE">Graduate</option>
+                    <option value="PROFESSIONAL">Professional</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Work Mode *</label>
+                  <select value={internshipForm.Mode}
+                    onChange={(e) => setInternshipForm({...internshipForm, Mode: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900">
+                    <option value="ALL">ALL</option>
+                    <option value="FULL_TIME">FULL_TIME</option>
+                    <option value="PART_TIME">PART_TIME</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">type *</label>
+                  <select value={internshipForm.Type}
+                    onChange={(e) => setInternshipForm({...internshipForm, Type: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900">
+                    <option value="REMOTE">Remote</option>
+                    <option value="ONSITE">Onsite</option>
+                    <option value="HYBRID">Hybrid</option>
                   </select>
                 </div>
                 <div>
@@ -240,12 +319,12 @@ const Recruiter_PostInternshipModal = ({ isOpen, onClose }) => {
                 <select value={internshipForm.stipendType}
                   onChange={(e) => setInternshipForm({...internshipForm, stipendType: e.target.value})}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900">
-                  <option value="Fixed">Fixed</option>
-                  <option value="Performance Based">Performance Based</option>
-                  <option value="Unpaid">Unpaid</option>
+                  <option value="PAID">Paid</option>
+                  <option value="UNPAID">Unpaid</option>
+                  <option value="PB">Performance Based</option>
                 </select>
               </div>
-              {internshipForm.stipendType !== 'Unpaid' && (
+              {internshipForm.stipendType !== 'UNPAID' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Stipend Amount {internshipForm.stipendType === 'Fixed' ? '(per month)' : '(range)'} *
@@ -342,7 +421,7 @@ const Recruiter_PostInternshipModal = ({ isOpen, onClose }) => {
                   <div className="space-y-1 text-sm">
                     <p><span className="font-medium">Title:</span> {internshipForm.title}</p>
                     <p><span className="font-medium">Category:</span> {internshipForm.category}</p>
-                    <p><span className="font-medium">Work Mode:</span> {internshipForm.workMode}</p>
+                    <p><span className="font-medium">Work Mode:</span> {internshipForm.Mode}</p>
                     <p><span className="font-medium">Location:</span> {internshipForm.location || 'N/A'}</p>
                     <p><span className="font-medium">Duration:</span> {internshipForm.duration}</p>
                     <p><span className="font-medium">Openings:</span> {internshipForm.openings}</p>

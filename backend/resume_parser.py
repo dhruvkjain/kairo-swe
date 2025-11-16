@@ -23,13 +23,12 @@ router = APIRouter()
 
 # --- Pydantic Model ---
 class ResumeUrlRequest(BaseModel):
-    """Defines the request body, expects a 'url' field."""
     url: str
 
-# --- Helper Functions---
+# --- HELPERS ---
 
 def extract_text_from_file(file_path: str, file_type: str) -> str:
-    """Extracts raw text from PDF or DOCX."""
+    """Extract raw text from PDF or DOCX."""
     text = ""
     try:
         if file_type == 'pdf':
@@ -38,133 +37,147 @@ def extract_text_from_file(file_path: str, file_type: str) -> str:
                     page_text = page.extract_text()
                     if page_text:
                         text += page_text + "\n"
+
         elif file_type == 'docx':
             doc = docx.Document(file_path)
             for para in doc.paragraphs:
                 text += para.text + "\n"
+
     except Exception as e:
         print(f"Error extracting text from {file_path}: {e}")
         return ""
+
     return text
+
 
 def get_gemini_prompt(resume_text: str) -> str:
     json_schema = {
         "name": STRING_OR_NULL,
-        "contact_info": {
-            "email": STRING_OR_NULL,
-            "phone_primary": STRING_OR_NULL,
-            "phone_secondary": STRING_OR_NULL
-        },
-        "skills": ["list", "of", "skill", "strings"],
-        "projects": [
-            {
-                "title": "string",
-                "description": "string",
-                "skills_used": ["list", "of", "strings"]
-            }
-        ],
-        "experience": [
-            {
-                "job_title": STRING_OR_NULL,
-                "company": STRING_OR_NULL,
-                "description": STRING_OR_NULL
-            }
-        ]
-    }
-    
-    return f"""
-    You are an expert resume parsing API. 
-    Analyze the following resume text and extract the information into a single, valid JSON object.
-    Adhere strictly to this JSON schema: {json.dumps(json_schema)}
-    
-    Rules:
-    - If a field is not found, return null (for strings) or an empty list [] (for lists).
-    - Do not include any text, explanations, or markdown formatting (like ```json) outside of the JSON object itself.
-    - For 'phone_primary', try to find the 'Primary' number. If not specified, use the first one found.
-    - For 'phone_secondary', use the 'Secondary' number if available.
+        "gender": STRING_OR_NULL,
+        "source": STRING_OR_NULL,
+        "appliedFor": STRING_OR_NULL,
+        "appliedDate": STRING_OR_NULL,
+        "status": STRING_OR_NULL,
 
-    Resume Text:
-    ---
-    {resume_text}
-    ---
-    """
+        "email": STRING_OR_NULL,
+        "phone": STRING_OR_NULL,
+
+        "college": STRING_OR_NULL,
+        "course": STRING_OR_NULL,
+        "year": STRING_OR_NULL,
+        "cgpa": STRING_OR_NULL,
+
+        "skills": ["list", "of", "strings"],
+        "experience": STRING_OR_NULL,
+
+        "resumeUrl": STRING_OR_NULL
+    }
+
+    return f"""
+You are an expert resume parsing API. 
+Analyze the following resume text and extract the information into a single, valid JSON object.
+
+Adhere strictly to this JSON schema: {json.dumps(json_schema)}
+
+Rules:
+- If a field is missing, return null (for strings) or [] (for lists).
+- Do NOT include explanations or markdown formatting like ```json.
+- Extract phone numbers, email, education, skills, gender (if deducible), and experience.
+- appliedFor = The job role mentioned in the resume.
+- appliedDate = null unless a date is actually found.
+- source = "Company Website" unless otherwise stated.
+- resumeUrl = Leave as null (backend will fill it).
+
+Resume Text:
+---
+{resume_text}
+---
+"""
+
 
 def _parse_resume_blocking_tasks(url: str) -> str:
     """
-    Runs all blocking I/O (network, disk) and CPU-bound (parsing)
-    tasks in one synchronous function. This will be run in a threadpool.
+    All blocking I/O and CPU parsing happens here.
+    Runs inside threadpool.
     """
     temp_file_path = None
     try:
-        # 1. Blocking Network I/O
         response = requests.get(url)
         response.raise_for_status()
-        
+
         if ".pdf" in url.lower():
             file_suffix, file_type = ".pdf", "pdf"
         elif ".docx" in url.lower():
             file_suffix, file_type = ".docx", "docx"
         else:
-            # Raise exception, will be caught by the main async function
-            raise HTTPException(status_code=400, detail="File type not supported. Please upload a .pdf or .docx file.")
+            raise HTTPException(status_code=400, detail="Unsupported file type. Upload only .pdf or .docx")
 
-        # 2. Blocking Disk I/O
         with tempfile.NamedTemporaryFile(delete=False, suffix=file_suffix) as temp_file:
             temp_file.write(response.content)
             temp_file_path = temp_file.name
 
-        # 3. Blocking CPU/Disk I/O
         raw_text = extract_text_from_file(temp_file_path, file_type)
         if not raw_text.strip():
-            raise HTTPException(status_code=400, detail="Could not extract any text from the file.")
-        
+            raise HTTPException(status_code=400, detail="Could not extract any text from the resume.")
+
         return raw_text
 
     except Exception as e:
-        # Re-raise so the threadpool can send it to the main async function
         if isinstance(e, HTTPException):
             raise e
-        raise HTTPException(status_code=500, detail=f"Error during file processing: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"File processing error: {str(e)}")
+
     finally:
-        # 4. Blocking Disk I/O (Cleanup)
         if temp_file_path and os.path.exists(temp_file_path):
             os.unlink(temp_file_path)
 
-# --- MODIFIED CORE ASYNC FUNCTION ---
 
+# --- MAIN PARSER ---
 async def parse_resume_from_url(url: str) -> dict:
-    """
-    Main non-blocking function. It delegates all blocking work
-    to the threadpool.
-    """
     try:
-        # 1. Run ALL blocking tasks in the threadpool
         raw_text = await run_in_threadpool(_parse_resume_blocking_tasks, url=url)
 
-        # 2. Generate Prompt and call Gemini
         model = genai.GenerativeModel('gemini-2.5-pro')
         prompt = get_gemini_prompt(raw_text)
-        
+
         gemini_response = await model.generate_content_async(prompt)
-        
-        # 3. Clean and parse the response
-        response_text = gemini_response.text.strip().replace("```json\n", "").replace("\n```", "")
-        
+
+        response_text = (
+            gemini_response.text
+            .strip()
+            .replace("```json", "")
+            .replace("```", "")
+        )
+
         parsed_json = json.loads(response_text)
         return parsed_json
 
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=500, detail="Gemini returned invalid JSON")
+
     except Exception as e:
-        # Catch errors from the threadpool or Gemini
         if isinstance(e, HTTPException):
             raise e
-        # Handle potential JSON parsing errors
-        if isinstance(e, json.JSONDecodeError):
-            return HTTPException(status_code=500, detail=f"Error parsing AI response: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-# --- API Endpoint Definition (No change) ---
 
+# --- API ENDPOINT ---
 @router.post("/parse-resume")
 async def handle_resume_parsing(request: ResumeUrlRequest):
     data = await parse_resume_from_url(request.url)
+    
+    # Add resume URL
+    data["resumeUrl"] = request.url
+    
+    # Default values if Gemini misses fields
+    defaults = {
+        "source": "Company Website",
+        "status": "Applied",
+        "appliedDate": None
+    }
+
+    for key, value in defaults.items():
+        if key not in data or data[key] is None:
+            data[key] = value
+
     return data

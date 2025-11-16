@@ -29,6 +29,7 @@ interface RegistrationFormData {
   password: string;
   confirmPassword: string;
   role: "applicant" | "recruiter";
+  gender: "MALE" | "FEMALE" | "OTHER";
   termsAccepted: boolean;
 }
 
@@ -41,6 +42,7 @@ const Registration: React.FC = () => {
     password: "",
     confirmPassword: "",
     role: "applicant",
+    gender: "MALE",
     termsAccepted: false,
   });
 
@@ -83,7 +85,7 @@ const Registration: React.FC = () => {
       if (!res.ok) throw new Error(data.message || "Signup failed.");
 
       toast.success("Signup successful! Please verify your email before logging in.");
-      
+
       router.push("/verify-email");
 
     } catch (err: any) {
@@ -138,6 +140,26 @@ const Registration: React.FC = () => {
                   className="pl-10"
                 />
               </div>
+            </div>
+
+            {/* Gender */}
+            <div className="space-y-2 w-full">
+              <Label htmlFor="gender">Gender *</Label>
+              <Select
+                value={formData.gender}
+                onValueChange={(value: "MALE" | "FEMALE" | "OTHER") =>
+                  handleInputChange("gender", value)
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select your gender" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="MALE">Male</SelectItem>
+                  <SelectItem value="FEMALE">Female</SelectItem>
+                  <SelectItem value="OTHER">Other</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Role */}

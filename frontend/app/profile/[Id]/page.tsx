@@ -10,8 +10,7 @@ import ContactSection from "@/components/profile/ContactSection"
 import GitHubSection from "@/components/profile/GitHubSection"
 import LinkedInSection from "@/components/profile/LinkedInSection"
 import ResumeSection from "@/components/profile/ResumeSection"
-import { is } from "date-fns/locale"
-import { RecruiterProfile } from "@/components/RecruiterDashboard"
+import RecruiterDashboard from "@/components/RecruiterDashboard"
 
 export default async function ProfilePage({ params }: { params: { Id: string } }) {
   const loggedInUser = await getCurrentUser()
@@ -145,7 +144,7 @@ export default async function ProfilePage({ params }: { params: { Id: string } }
   )
   } else {
     return (
-      <RecruiterProfile profileUser={profileUser} isOwner={isOwner} recruiter={profileUser.recruiter} />
+      <RecruiterDashboard  />
     )
   }
 }
