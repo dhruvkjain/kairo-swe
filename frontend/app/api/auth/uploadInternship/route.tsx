@@ -102,7 +102,7 @@ export async function POST(req: Request) {
 
     const internship = await prisma.internship.create({
       data: {
-        category: body.category ?? null,
+        category: body.category || null,
         title: body.title,
         slug,
         description: body.description,
