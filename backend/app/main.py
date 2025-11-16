@@ -1,7 +1,8 @@
 from fastapi import FastAPI, Depends, HTTPException, Query
-from resume_parser import router as resume_router
 from contextlib import asynccontextmanager
 
+from resume_parser import router as resume_router
+from skill_verifier import router as verifier_router
 from ai_shortlister import router as shortlist_router
 from ai_shortlister import load_model
 
@@ -25,6 +26,12 @@ app.include_router(
     resume_router, 
     prefix="/api/v1", 
     tags=["Resume Parser"]
+)
+
+app.include_router(
+    verifier_router, 
+    prefix="/api/v1", 
+    tags=["Skill Verifier"]  # <-- 2. ADD THIS ROUTER
 )
 
 @app.get("/")
