@@ -4,14 +4,18 @@ import prisma from "@/lib/prisma";
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const recruiterId = searchParams.get("recruiterId");
+    const recruitersId = searchParams.get("recruiterId");
 
-    if (!recruiterId) {
+    if (!recruitersId) {
       return NextResponse.json(
         { error: "Missing recruiterId" },
         { status: 400 }
       );
     }
+    const recruiter = await prisma.recruiter.findUnique({
+      where: {userId :recruitersId},
+    })
+    const recruiterId = recruiter.id
 
     // Step 1: Get all internships posted by this recruiter
     const internships = await prisma.internship.findMany({
