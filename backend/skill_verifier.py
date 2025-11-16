@@ -20,7 +20,6 @@ g = Github(GITHUB_TOKEN)
 
 
 class SkillMastery(BaseModel):
-    """Defines the AI's analysis of a single skill."""
     skill: str = Field(..., description="The name of the verified skill (e.g., 'Python', 'React').")
     mastery_level: float = Field(..., description="A 0-10 score of proficiency based on the code.", ge=0.0, le=10.0)
     evidence: str = Field(..., description="A 1-sentence justification for the score, citing evidence from the code.")
