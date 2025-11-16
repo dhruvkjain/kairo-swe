@@ -99,7 +99,7 @@ const Recruiter_PostInternshipModal = ({ id, onClose }: RecruiterPostInternshipM
         handleClose();
       }
     } catch (error) {
-      console.error('❌ Network error:', error);
+      console.error(' Network error:', error);
       alert('Something went wrong while publishing internship.');
     } finally {
       setIsSubmitting(false);
