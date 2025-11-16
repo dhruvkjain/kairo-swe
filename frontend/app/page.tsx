@@ -124,9 +124,7 @@ const LandingPage: React.FC = () => {
           </div>
         ))}
       </div>
-      {/* ============================================= */}
-      {/*      ⭐ ADDED “HOW IT WORKS” SECTION BELOW ⭐    */}
-      {/* ============================================= */}
+   
 
       <section className="py-24 px-4 bg-white/60 backdrop-blur-md mt-28 w-full">
         <div className="max-w-6xl mx-auto">
@@ -186,7 +184,7 @@ const LandingPage: React.FC = () => {
 
         </div>
       </section>
-       {/* ⭐⭐⭐ ADDED: GRAPH SECTION ⭐⭐⭐ */}
+       {/*  ADDED: GRAPH SECTION  */}
       <div className="mt-32 w-full max-w-6xl px-4 animate-fadeInUp">
 
         <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center">
@@ -275,7 +273,7 @@ const LandingPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ⭐ User Reviews */}
+      {/*  User Reviews */}
       <div className="mt-32 w-full max-w-6xl px-4 animate-fadeInUp">
         <h2 className="text-3xl font-bold text-gray-800 mb-10">What Our Users Say</h2>
 
@@ -315,7 +313,7 @@ const LandingPage: React.FC = () => {
         </div>
       </div>
 
-      {/* -------------------- ORIGINAL FOOTER -------------------- */}
+      {/* -------------------- FOOTER -------------------- */}
 
       <footer className="mt-20 w-full bg-slate-900 text-gray-300 py-10 px-6 animate-fadeInUp delay-300">
         <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-10">
