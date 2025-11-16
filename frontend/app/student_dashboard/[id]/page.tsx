@@ -127,7 +127,7 @@ const StudentDashboard = ({ params }: StudentDashboardProps) => {
       setLoading(true);
       setMessage(null);
 
-      const res = await fetch("/api/auth/findInternship", {
+      const res = await fetch("/api/auth/applyInternship", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

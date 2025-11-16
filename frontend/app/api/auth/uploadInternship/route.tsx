@@ -63,7 +63,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(internship, { status: 200 });
 
   } catch (error) {
-    console.error("❌ GET internship (single) error:", error);
+    console.error("GET internship (single) error:", error);
     return NextResponse.json(
       { error: "Failed to fetch internship" },
       { status: 500 }
@@ -128,7 +128,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json(internship, { status: 201 });
   } catch (error: any) {
-    console.error("❌ POST internship error:", error);
+    console.error("POST internship error:", error);
 
     if (error.code === "P2002" && error.meta?.target?.includes("slug")) {
       return NextResponse.json(
@@ -186,7 +186,7 @@ export async function PUT(req: Request) {
 
     return NextResponse.json(internship, { status: 200 });
   } catch (error) {
-    console.error("❌ PUT internship error:", error);
+    console.error("PUT internship error:", error);
     return NextResponse.json({ error: "Failed to update internship" }, { status: 500 });
   }
 }
@@ -219,7 +219,7 @@ export async function DELETE(req: Request) {
       );
     }
 
-    // 🔥 Delete related records first using a transaction
+    //  Delete related records first using a transaction
     await prisma.$transaction([
       prisma.internshipApplication.deleteMany({
         where: { internshipId },
@@ -235,7 +235,7 @@ export async function DELETE(req: Request) {
     );
 
   } catch (error) {
-    console.error("❌ DELETE internship error:", error);
+    console.error("DELETE internship error:", error);
     return NextResponse.json(
       { error: "Failed to delete internship" },
       { status: 500 }
