@@ -9,7 +9,6 @@ from github import Github, GithubException
 import google.generativeai as genai
 from dotenv import load_dotenv
 
-# --- Config and Router Setup ---
 load_dotenv()
 router = APIRouter()
 
@@ -19,7 +18,6 @@ if not GITHUB_TOKEN:
 
 g = Github(GITHUB_TOKEN)
 
-# --- Pydantic Models (UPDATED) ---
 
 class SkillMastery(BaseModel):
     """Defines the AI's analysis of a single skill."""
@@ -28,18 +26,15 @@ class SkillMastery(BaseModel):
     evidence: str = Field(..., description="A 1-sentence justification for the score, citing evidence from the code.")
 
 class VerificationResponse(BaseModel):
-    """Defines the JSON response for a verified project."""
     project_level: str  # e.g., "Beginner", "Intermediate", "Advanced"
-    verified_skills: list[SkillMastery] # <-- This line is UPDATED
+    verified_skills: list[SkillMastery]
     analysis: str       # The AI's 2-3 sentence summary
     code_quality_score: float # Score from 0.0 to 10.0
 
 class RepoUrlRequest(BaseModel):
-    """Defines the request body, expects a 'url' field."""
     url: str
 
 def _parse_github_url(url: str) -> tuple[str, str]:
-    """Extracts 'owner/repo' from various GitHub URL formats."""
     match = re.search(r"github\.com/([\w\-\.]+)/([\w\-\.]+)", url)
     if not match:
         raise HTTPException(status_code=400, detail="Invalid GitHub URL format.")
@@ -48,13 +43,7 @@ def _parse_github_url(url: str) -> tuple[str, str]:
     repo_name = repo_name.removesuffix('.git')    
     return owner, repo_name
 
-# --- The AI "High-End" Prompt (UPDATED) ---
 def _get_code_review_prompt(code_context: str) -> str:
-    """
-    Creates the prompt for the Gemini AI Technical Reviewer,
-    asking for the 0-10 mastery score.
-    """
-    # This prompt is now much more detailed, as per your suggestion.
     return f"""
     [INST]
     You are a Senior Software Engineer and a strict, high-standards technical reviewer.
@@ -93,12 +82,7 @@ def _get_code_review_prompt(code_context: str) -> str:
     [/INST]
     """
 
-# --- The "Busboy" Function (UPDATED) ---
 def _verify_repo_blocking_tasks(repo_url: str) -> dict:
-    """
-    Runs all blocking I/O (GitHub API) and AI (Gemini) tasks.
-    This is designed to be run in a threadpool.
-    """
     try:
         # 1. Parse URL and get repo object
         owner, repo_name = _parse_github_url(repo_url)
@@ -106,9 +90,7 @@ def _verify_repo_blocking_tasks(repo_url: str) -> dict:
         
         all_code_context = ""
         files_to_fetch = []
-        
-        # --- Priority File Fetching (UPDATED LOGIC) ---
-        
+                
         # 2A. Always fetch metadata files
         metadata_files = ["README.md", "requirements.txt", "package.json", "pom.xml", "build.gradle"]
         for file_path in metadata_files:
@@ -159,12 +141,10 @@ def _verify_repo_blocking_tasks(repo_url: str) -> dict:
             except Exception:
                 pass # File might be too large, binary, or other issue
 
-        # --- End of Updated Logic ---
-
         if not all_code_context.strip():
             raise HTTPException(status_code=400, detail="This repository is empty or has no readable code.")
 
-        # 3. Call Gemini 1.5 Pro (The AI Engine)
+        # 3. Call Gemini 2.5 Pro
         prompt = _get_code_review_prompt(all_code_context)
         
         model = genai.GenerativeModel('gemini-2.5-pro') 
