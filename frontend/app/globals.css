@@ -233,6 +233,17 @@
   }
 }
 
+/* Updated scrolling animation for logo*/
+@keyframes scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-scroll {
+  animation: scroll 25s linear infinite;
+}
+
+
 .animate-float-slow {
   animation: float-slow 6s ease-in-out infinite;
 }

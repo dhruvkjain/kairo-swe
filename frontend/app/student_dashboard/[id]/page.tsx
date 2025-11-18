@@ -15,6 +15,9 @@ import {
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
+
+import logoImage from "@/components/Kairo_logo.jpg";
+import HeroImage from "@/public/hero-student.jpg";
 import {
   Dialog,
   DialogContent,
@@ -201,19 +204,20 @@ const StudentDashboard = ({ params }: StudentDashboardProps) => {
       <header className="sticky top-0 bg-white/80 backdrop-blur-lg shadow-sm border-b border-gray-200 z-50">
         <div className="max-w-7xl mx-auto flex justify-between items-center py-4 px-6">
           <Link href="/">
-          <div className="flex items-center gap-3">
-            <div className="bg-gray-900 p-2 rounded-xl">
-              <Briefcase className="text-white w-6 h-6" />
+            <div className="flex items-center gap-3">
+              <img
+                src={logoImage.src}
+                alt="Kairo Internships Logo"
+                className="h-10 w-auto rounded-xl"
+              />
+              <h1 className="text-2xl font-semibold text-gray-800 tracking-tight">
+              </h1>
             </div>
-            <h1 className="text-2xl font-semibold text-gray-800 tracking-tight">
-              Kairo Internships
-            </h1>
-          </div>
           </Link>
 
           <div className="flex items-center gap-4">
             <button
-              onClick={() => router.push(`/profile/${Id}`)} 
+              onClick={() => router.push(`/profile/${Id}`)}
               className="relative"
             >
               <img
@@ -235,6 +239,36 @@ const StudentDashboard = ({ params }: StudentDashboardProps) => {
         </div>
       </header>
 
+      {/* -------------------- HERO SECTION (Your future starts here) -------------------- */}
+      <section className="w-full bg-gradient-to-br from-blue-50 via-white to-blue-100 py-16">
+        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between px-6">
+
+          {/* LEFT TEXT AREA */}
+          <div className="flex-1 text-center lg:text-left">
+            <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
+              Your <span className="text-black-700">future</span> starts here
+            </h1>
+
+            <p className="text-gray-600 mt-3 text-lg">
+              25k+ Internships for freshers, students & graduates!
+            </p>
+
+          </div>
+
+          {/* RIGHT IMAGE AREA */}
+          <div className="flex-1 mt-10 lg:mt-0 flex justify-center relative">
+
+            {/* Background decorative circles */}
+            <div className="absolute -top-5 -right-5 w-40 h-40 bg-blue-100 rounded-full blur-2xl opacity-60"></div>
+            <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-blue-200 rounded-full blur-xl opacity-40"></div>
+
+          </div>
+
+        </div>
+      </section>
+
+
+
       {/* Main */}
       <main className="max-w-7xl mx-auto px-6 py-8">
         {/* Alert */}
@@ -242,11 +276,10 @@ const StudentDashboard = ({ params }: StudentDashboardProps) => {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`p-3 rounded-lg text-sm flex items-center gap-2 ${
-              message.type === "success"
-                ? "bg-green-50 text-green-700 border border-green-200"
-                : "bg-red-50 text-red-700 border border-red-200"
-            }`}
+            className={`p-3 rounded-lg text-sm flex items-center gap-2 ${message.type === "success"
+              ? "bg-green-50 text-green-700 border border-green-200"
+              : "bg-red-50 text-red-700 border border-red-200"
+              }`}
           >
             {message.type === "success" ? (
               <CheckCircle2 className="w-4 h-4" />
@@ -360,9 +393,8 @@ const StudentDashboard = ({ params }: StudentDashboardProps) => {
                 <p className="text-gray-600 text-sm">
                   {loading
                     ? "Loading internships..."
-                    : `${internships.length} internship${
-                        internships.length !== 1 ? "s" : ""
-                      } found`}
+                    : `${internships.length} internship${internships.length !== 1 ? "s" : ""
+                    } found`}
                 </p>
                 <button
                   onClick={clearFilters}
@@ -515,6 +547,103 @@ const StudentDashboard = ({ params }: StudentDashboardProps) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+
+      {/* -------------------- TOP COMPANIES AUTO-SCROLLING SECTION -------------------- */}
+      <section className="mt-10 w-full overflow-hidden">
+        <h2 className="text-center text-3xl font-semibold text-gray-900">
+          Top Companies Listing on <span className="text-black-600">KAIRO</span>
+        </h2>
+        <p className="text-center text-gray-600 mt-2">
+          Find jobs that fit your career aspirations.
+        </p>
+
+        {/* Scrolling container */}
+        <div className="relative w-full overflow-hidden mt-10">
+          <div className="flex w-max animate-scroll whitespace-nowrap gap-8">
+
+
+            {/* Duplicate logos for seamless infinite scroll */}
+            {[
+              "/comapnies/Apple.png",
+              "/comapnies/Amazon.png",
+              "/comapnies/mahindra.png",
+              "/comapnies/Tata.png",
+              "/comapnies/Reliance.png",
+              "/comapnies/google.png",
+              "/comapnies/TCS.png",
+              "/comapnies/LT.png",
+              "/comapnies/Adani.png",
+              "/comapnies/INFOSYS.png",
+            ].map((logo, idx) => (
+              <div
+                key={`dup-${idx}`}
+                className="min-w-[160px] h-[90px] bg-white rounded-xl shadow-md flex items-center justify-center border border-gray-200 p-4 hover:shadow-lg transition"
+              >
+                <img
+                  src={logo}
+                  alt="Company Logo"
+                  className="object-contain"
+                  style={{ width: "80px", height: "60px" }}
+                />
+
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <style jsx>{`
+        .animate-scroll {
+          animation: scroll 20s linear infinite;
+        }
+
+        @keyframes scroll {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-50%);
+          }
+        }
+      `}</style>
+
+      {/* -------------------- FOOTER -------------------- */}
+
+      <footer className="mt-20 w-full bg-slate-900 text-gray-300 py-10 px-6 animate-fadeInUp delay-300">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-10">
+
+          {/* About Section */}
+          <div>
+            <h3 className="text-lg font-semibold mb-3 text-white">About Kairo</h3>
+            <p className="text-sm leading-relaxed">
+              Kairo connects applicants and recruiters with intelligent matching,
+              helping both sides grow faster and smarter.
+            </p>
+          </div>
+
+          {/* Quick Links */}
+          <div>
+            <h3 className="text-lg font-semibold mb-3 text-white">Quick Links</h3>
+            <ul className="space-y-2 text-sm">
+              <li><Link href="/signin" className="hover:text-white">Sign In</Link></li>
+              <li><Link href="/signup" className="hover:text-white">Sign Up</Link></li>
+              <li><Link href="/contact" className="hover:text-white">Contact</Link></li>
+            </ul>
+          </div>
+
+          {/* Contact */}
+          <div>
+            <h3 className="text-lg font-semibold mb-3 text-white">Contact</h3>
+            <p className="text-sm">Email: support@kairo.com</p>
+            <p className="text-sm">Phone: +1 234 567 890</p>
+          </div>
+        </div>
+
+        <div className="mt-10 text-center text-gray-400 text-xs">
+          © {new Date().getFullYear()} <span className="font-semibold text-gray-200">Kairo</span> — All rights reserved.
+        </div>
+      </footer>
     </div>
   );
 };

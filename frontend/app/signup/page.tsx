@@ -77,6 +77,7 @@ const Registration: React.FC = () => {
           email: formData.email.toLowerCase(),
           password: formData.password,
           role: formData.role,
+          gender: formData.gender,
         }),
       });
 
