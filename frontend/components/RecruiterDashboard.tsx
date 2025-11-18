@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import React, { useEffect, useState } from "react";
 import Recruiter_PostInternshipModel from "./Recruiter_PostInternshipModel";
@@ -51,6 +51,7 @@ import {
 } from "recharts";
 import type { InternshipApplication } from "@prisma/client";
 import InterviewSchedule from "./internview";
+ import * as XLSX from "xlsx";
 
 const RecruiterDashboard = (id: { id: string }) => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -64,16 +65,20 @@ const RecruiterDashboard = (id: { id: string }) => {
   const [openUpdate, setOpenUpdate] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
   const [Delete, setDelete] = useState(false);
-  const [filteredApplicants, setFilteredApplicants] = useState<InternshipApplication[]>([]);
+  const [filteredApplicants, setFilteredApplicants] = useState<
+    InternshipApplication[]
+  >([]);
   const [monthlyStats, setMonthlyStats] = useState([]);
   const [stagesData, setStagesData] = useState([]);
   const [schedule, setSchedule] = useState(null);
   const [showinterviewModal, setShowInterviewModal] = useState(false);
   const [interviews, setInterviews] = useState([]);
-  const [statusFilter, setStatusFilter] = useState("All Status");
+  const [statusFilter, setStatusFilter] = useState<string>("All Status");
+  const [internshipFilter, setInternshipFilter] =
+    useState<string>("All Category");
   const [applicants, setApplicants] = useState<InternshipApplication[]>([]);
 
-  const recruiterId = id.id;
+  const recruiterId: string = id.id;
 
   useEffect(() => {
     const loadStats = async () => {
@@ -107,7 +112,7 @@ const RecruiterDashboard = (id: { id: string }) => {
         const result = await response.json();
         setInterviews(result.data);
       } catch (err) {
-        console.log(err.message);
+        console.log(err);
       }
     };
 
@@ -247,6 +252,103 @@ const RecruiterDashboard = (id: { id: string }) => {
     }
   };
 
+  const filteredInternships = internships.filter(
+    (internship) =>
+      internshipFilter === "All Category" ||
+      internship.category === internshipFilter 
+  );
+
+  const exportData = filteredInternships.map((i) => ({
+    Internship: i.title,
+    Category: i.category,
+    Location: i.location,
+    Stipend: i.stipend,
+    Applicants: `${i.applicationsCount} applied`,
+    Status: i.status,
+  }));
+
+  const handleExport = () => {
+  // Create worksheet data (header + rows)
+  const worksheetData = [
+    ["Internship", "Category", "Location", "Stipend", "Applicants", "Status"], // header
+    ...exportData.map((item) => [
+      item.Internship,
+      item.Category,
+      item.Location,
+      item.Stipend,
+      item.Applicants,
+      item.Status,
+    ]),
+  ];
+
+  // Create worksheet
+  const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+
+  // Auto column width
+  const columnWidths = worksheetData[0].map((_, colIndex) => ({
+    wch: Math.max(
+      ...worksheetData.map((row) =>
+        row[colIndex] ? row[colIndex].toString().length : 10
+      )
+    ),
+  }));
+  worksheet["!cols"] = columnWidths;
+
+  // Create workbook
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Internships");
+
+  // Save file
+  XLSX.writeFile(workbook, `${internshipFilter}_internships.xlsx`);
+};
+
+
+  const filteredApplicant = applicants.filter(
+  (applicant) =>
+    statusFilter === "All Status" ||
+    applicant.status === statusFilter
+);
+
+const exportApplicant = filteredApplicant.map((i) => ({
+  name: i.resumeData.name || "",
+  email: i.resumeData.email || "",
+  status: i.status || "",      // normalized
+  cgpa: i.resumeData.cgpa || "",
+  university: i.resumeData.university || "",
+  appliedDate: i.resumeData.appliedDate || ""  // NEW FIELD
+}));
+
+const handleApplicantExport = () => {
+  // Create worksheet data (header + rows)
+  const worksheetData = [
+    ["Name", "Email", "Status", "CGPA", "University", "Applied Date"], // header
+    ...exportApplicant.map((item) => [
+      item.name,
+      item.email,
+      item.status,
+      item.cgpa,
+      item.university,
+      item.appliedDate,
+    ]),
+  ];
+
+  // Create worksheet
+  const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+
+  // Create workbook
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Applicants");
+
+  // File name (same as PDF logic)
+  const internshipName =
+    internships.find((i) => i.id === selectedInternship)?.title ||
+    "Internship";
+
+  // Export to .xlsx
+  XLSX.writeFile(workbook, `${internshipName}_applicants.xlsx`);
+};
+
+
   const updateStatus = async (id: string, status: string) => {
     if (!id) return;
 
@@ -273,29 +375,12 @@ const RecruiterDashboard = (id: { id: string }) => {
     }
   };
 
-  const notifications = [
-    {
-      id: 1,
-      text: "New application for Frontend Developer Intern",
-      time: "5 min ago",
-      unread: true,
-    },
-    {
-      id: 2,
-      text: "Interview scheduled with Priya Sharma",
-      time: "1 hour ago",
-      unread: true,
-    },
-    {
-      id: 3,
-      text: "Deadline approaching for Backend Developer Intern",
-      time: "2 hours ago",
-      unread: false,
-    },
-  ];
-
-  const COLORS = ["#6b8cff", "#a3b3ff", "#dbe1ff", "#fbbf24", "#34d399"];
-
+  const uniqueCategories = internships
+    .filter(
+      (internship, index, self) =>
+        index === self.findIndex((i) => i.category === internship.category)
+    )
+    .map((i) => i.category);
   // Demographics & hires-from-kairo calculations
   const genderCounts = applicants.reduce((acc, a) => {
     const g = (a.gender || "other").toLowerCase();
@@ -545,30 +630,6 @@ const RecruiterDashboard = (id: { id: string }) => {
           </button>
         </div>
       </div>
-
-      {showNotifications && (
-        <div className="absolute right-6 top-16 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
-          <div className="p-3 border-b border-gray-200 flex items-center justify-between">
-            <h3 className="font-semibold text-gray-900">Notifications</h3>
-            <button onClick={() => setShowNotifications(false)}>
-              <X className="w-4 h-4 text-gray-500" />
-            </button>
-          </div>
-          <div className="max-h-96 overflow-y-auto">
-            {notifications.map((notif) => (
-              <div
-                key={notif.id}
-                className={`p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${
-                  notif.unread ? "bg-blue-50" : ""
-                }`}
-              >
-                <p className="text-sm text-gray-900">{notif.text}</p>
-                <p className="text-xs text-gray-500 mt-1">{notif.time}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 
@@ -670,31 +731,29 @@ const RecruiterDashboard = (id: { id: string }) => {
               </h3>
 
               <div className="space-y-3">
-                {internships
-                  .filter((i) => i.isActive === true) // show only active-type items
-                  .map((internship) => (
-                    <div
-                      key={internship.id}
-                      className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer"
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <h4 className="font-medium text-gray-900 text-sm">
-                          {internship.title}
-                        </h4>
+                {internships.map((internship) => (
+                  <div
+                    key={internship.id}
+                    className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer"
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <h4 className="font-medium text-gray-900 text-sm">
+                        {internship.title}
+                      </h4>
 
-                        <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">
-                          {internship.status}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center space-x-3 text-xs text-gray-500">
-                        <span className="flex items-center space-x-1">
-                          <Users className="w-3 h-3" />
-                          <span>{internship.applicationsCount} applicants</span>
-                        </span>
-                      </div>
+                      <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+                        {internship.status}
+                      </span>
                     </div>
-                  ))}
+
+                    <div className="flex items-center space-x-3 text-xs text-gray-500">
+                      <span className="flex items-center space-x-1">
+                        <Users className="w-3 h-3" />
+                        <span>{internship.applicationsCount} applicants</span>
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -713,14 +772,24 @@ const RecruiterDashboard = (id: { id: string }) => {
           </h2>
 
           <div className="flex items-center space-x-2">
-            <button className="flex items-center space-x-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-              <Filter className="w-4 h-4" />
-              <span className="text-sm">Filter</span>
-            </button>
+            <select
+              value={internshipFilter}
+              onChange={(e) => setInternshipFilter(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+            >
+              <option value={"All Category"}>All Category</option>
+              {uniqueCategories.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
 
             <button className="flex items-center space-x-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
               <Download className="w-4 h-4" />
-              <span className="text-sm">Export</span>
+              <span onClick={handleExport} className="text-sm">
+                Export
+              </span>
             </button>
           </div>
         </div>
@@ -751,88 +820,95 @@ const RecruiterDashboard = (id: { id: string }) => {
             </thead>
 
             <tbody className="divide-y divide-gray-200">
-              {internships.map((internship) => (
-                <tr
-                  key={internship.id}
-                  className="hover:bg-gray-50 cursor-pointer"
-                  onClick={() => setSelectedInternship(internship.id)}
-                >
-                  <td className="px-4 py-3">
-                    <p className="font-medium text-gray-900 text-sm">
-                      {internship.title}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {internship.duration} • {internship.type}
-                    </p>
-                  </td>
+              {internships
+                .filter((internship) => {
+                  if (internshipFilter === "All Category") {
+                    return true;
+                  }
+                  return internship.category === internshipFilter;
+                })
+                .map((internship) => (
+                  <tr
+                    key={internship.id}
+                    className="hover:bg-gray-50 cursor-pointer"
+                    onClick={() => setSelectedInternship(internship.id)}
+                  >
+                    <td className="px-4 py-3">
+                      <p className="font-medium text-gray-900 text-sm">
+                        {internship.title}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {internship.duration} • {internship.type}
+                      </p>
+                    </td>
 
-                  <td className="px-4 py-3">
-                    <div className="flex items-center space-x-1 text-sm text-gray-600">
-                      <MapPin className="w-3.5 h-3.5" />
-                      <span>{internship.location}</span>
-                    </div>
-                  </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center space-x-1 text-sm text-gray-600">
+                        <MapPin className="w-3.5 h-3.5" />
+                        <span>{internship.location}</span>
+                      </div>
+                    </td>
 
-                  <td className="px-4 py-3">
-                    <div className="flex items-center space-x-1 text-sm text-gray-600">
-                      <DollarSign className="w-3.5 h-3.5" />
-                      <span>{internship.stipend}</span>
-                    </div>
-                  </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center space-x-1 text-sm text-gray-600">
+                        <DollarSign className="w-3.5 h-3.5" />
+                        <span>{internship.stipend}</span>
+                      </div>
+                    </td>
 
-                  <td className="px-4 py-3">
-                    <div className="flex items-center space-x-2">
-                      <span className="font-medium text-gray-900">
-                        {internship.applicants}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        ({internship.applicationsCount} applied)
-                      </span>
-                    </div>
-                  </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-medium text-gray-900">
+                          {internship.applicants}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          ({internship.applicationsCount} applied)
+                        </span>
+                      </div>
+                    </td>
 
-                  <td className="px-4 py-3">
-                    <span
-                      className={`px-2 py-1 text-xs font-medium rounded-full ${
-                        internship.status === "DRAFT"
-                          ? "bg-green-100 text-green-700"
-                          : internship.status === "Paused"
-                          ? "bg-yellow-100 text-yellow-700"
-                          : "bg-gray-100 text-gray-700"
-                      }`}
-                    >
-                      {internship.status}
-                    </span>
-                  </td>
-
-                  <td className="px-4 py-3">
-                    <div className="flex items-center space-x-1">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedId(internship.id);
-                          setOpenUpdate(true);
-                        }}
-                        className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                    <td className="px-4 py-3">
+                      <span
+                        className={`px-2 py-1 text-xs font-medium rounded-full ${
+                          internship.status === "DRAFT"
+                            ? "bg-green-100 text-green-700"
+                            : internship.status === "Paused"
+                            ? "bg-yellow-100 text-yellow-700"
+                            : "bg-gray-100 text-gray-700"
+                        }`}
                       >
-                        <Edit2 className="w-5 h-5 text-blue-600" />
-                      </button>
+                        {internship.status}
+                      </span>
+                    </td>
 
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteHandle(internship.id);
-                        }}
-                        className="p-1.5 hover:bg-gray-100 rounded transition-colors"
-                      >
-                        <Trash2 className="w-5 h-5 text-red-600" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                    <td className="px-4 py-3">
+                      <div className="flex items-center space-x-1">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedId(internship.id);
+                            setOpenUpdate(true);
+                          }}
+                          className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                        >
+                          <Edit2 className="w-5 h-5 text-blue-600" />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteHandle(internship.id);
+                          }}
+                          className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                        >
+                          <Trash2 className="w-5 h-5 text-red-600" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         </div>
@@ -860,12 +936,14 @@ const RecruiterDashboard = (id: { id: string }) => {
                   <option>Shortlisted</option>
                   <option>Interview</option>
                   <option>Hire</option>
-                  <option>Rejected</option>
+                  <option>Reject</option>
                 </select>
 
                 <button className="flex items-center space-x-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
                   <Download className="w-4 h-4" />
-                  <span className="text-sm">Export</span>
+                  <span 
+                  onClick={handleApplicantExport}
+                  className="text-sm">Export</span>
                 </button>
               </div>
             </div>
@@ -1272,7 +1350,10 @@ const RecruiterDashboard = (id: { id: string }) => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="email"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       Email
                     </label>
                     <input
@@ -1283,7 +1364,10 @@ const RecruiterDashboard = (id: { id: string }) => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="url" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="url"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       Website
                     </label>
                     <input
@@ -1294,7 +1378,10 @@ const RecruiterDashboard = (id: { id: string }) => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="about" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="about"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       About Company
                     </label>
                     <textarea
