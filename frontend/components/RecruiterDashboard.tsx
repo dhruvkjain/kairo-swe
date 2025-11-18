@@ -1,4 +1,5 @@
-"use client";
+"use client"
+
 import React, { useEffect, useState } from "react";
 import Recruiter_PostInternshipModel from "./Recruiter_PostInternshipModel";
 import UpdateInternshipModal from "./UpdateInternship";
@@ -6,38 +7,30 @@ import {
   LayoutDashboard,
   Briefcase,
   Users,
-  MessageSquare,
   Calendar,
   BarChart3,
   Settings,
-  Bell,
   Search,
   Plus,
   Filter,
   Download,
-  Eye,
   Edit2,
   Trash2,
-  MoreVertical,
   TrendingUp,
   TrendingDown,
   Clock,
   MapPin,
   DollarSign,
   X,
-  ChevronDown,
   FileText,
   Mail,
   Phone,
-  Linkedin,
-  ExternalLink,
   CheckCircle,
   XCircle,
   User,
   Building2,
   GraduationCap,
   Award,
-  Edit2Icon,
 } from "lucide-react";
 
 // new imports for charts
@@ -56,7 +49,7 @@ import {
   BarChart,
   Bar,
 } from "recharts";
-import { error } from "console";
+import type { InternshipApplication } from "@prisma/client";
 import InterviewSchedule from "./internview";
 
 const RecruiterDashboard = (id: { id: string }) => {
@@ -71,14 +64,14 @@ const RecruiterDashboard = (id: { id: string }) => {
   const [openUpdate, setOpenUpdate] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
   const [Delete, setDelete] = useState(false);
-  const [filteredApplicants, setFilteredApplicants] = useState([]);
+  const [filteredApplicants, setFilteredApplicants] = useState<InternshipApplication[]>([]);
   const [monthlyStats, setMonthlyStats] = useState([]);
   const [stagesData, setStagesData] = useState([]);
   const [schedule, setSchedule] = useState(null);
   const [showinterviewModal, setShowInterviewModal] = useState(false);
   const [interviews, setInterviews] = useState([]);
   const [statusFilter, setStatusFilter] = useState("All Status");
-  const [applicants, setApplicants] = useState([]);
+  const [applicants, setApplicants] = useState<InternshipApplication[]>([]);
 
   const recruiterId = id.id;
 
@@ -308,23 +301,13 @@ const RecruiterDashboard = (id: { id: string }) => {
     const g = (a.gender || "other").toLowerCase();
     acc[g] = (acc[g] || 0) + 1;
     return acc;
-  }, {});
+  }, {} as Record<string, number>);
   const totalApplicants = applicants.length;
   const genderPieData = [
     { name: "Male", value: genderCounts.male || 0 },
     { name: "Female", value: genderCounts.female || 0 },
     { name: "Other", value: genderCounts.other || 0 },
   ];
-
-  // Count hires coming from KAIRO
-  const hiresFromKairoCount = applicants.filter(
-    (a) =>
-      (a.source || "").toLowerCase() === "company website" &&
-      a.status === "Hired"
-  ).length;
-  const hiresFromKairoTotalSource = applicants.filter(
-    (a) => (a.source || "").toLowerCase() === "company website"
-  ).length;
 
   // Analytics view component
   const AnalyticsView = () => (
@@ -375,34 +358,6 @@ const RecruiterDashboard = (id: { id: string }) => {
                 );
               })}
             </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <h4 className="text-sm font-medium text-gray-700">
-            Hires from KAIRO
-          </h4>
-          <div className="mt-4 flex items-center justify-between">
-            <div>
-              <div className="text-2xl font-bold text-gray-900">
-                {hiresFromKairoCount}
-              </div>
-              <div className="text-sm text-gray-600">
-                Confirmed hires from KAIRO
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="text-lg font-semibold text-gray-900">
-                {hiresFromKairoTotalSource}
-              </div>
-              <div className="text-sm text-gray-600">
-                Total applicants who applied via KAIRO
-              </div>
-            </div>
-          </div>
-          <div className="mt-3 text-xs text-gray-500">
-            Note: 'Confirmed hires' counts applicants with status 'Hired'. Mock
-            data may show 0; replace with backend data for true numbers.
           </div>
         </div>
 
@@ -1317,30 +1272,33 @@ const RecruiterDashboard = (id: { id: string }) => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                       Email
                     </label>
                     <input
+                      id="email"
                       type="email"
                       defaultValue="recruiter@techcorp.com"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="url" className="block text-sm font-medium text-gray-700 mb-1">
                       Website
                     </label>
                     <input
+                      id="url"
                       type="url"
                       defaultValue="https://techcorp.com"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="about" className="block text-sm font-medium text-gray-700 mb-1">
                       About Company
                     </label>
                     <textarea
+                      id="about"
                       rows="4"
                       defaultValue="Tech Corp Inc. is a leading technology company..."
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"

@@ -15,6 +15,12 @@ export async function GET(req: Request) {
     const recruiter = await prisma.recruiter.findUnique({
       where: {userId :recruitersId},
     })
+    if (!recruiter) {
+        return NextResponse.json(
+            { error: "Recruiter not found" },
+            { status: 404 }
+        );
+    }
     const recruiterId = recruiter.id
 
     // Step 1: Get all internships posted by this recruiter
