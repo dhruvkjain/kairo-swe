@@ -1,7 +1,3 @@
-// =====================================================
-// KAIRO - FINAL HYBRID SCHEMA (Frontend + AI Compatible)
-// =====================================================
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -12,16 +8,202 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// --- ENUMS ---
-enum Role {
-  APPLICANT
-  RECRUITER
+model User {
+  id            String                  @id
+  name          String?
+  email         String?                 @unique
+  password      String?
+  emailVerified DateTime?
+  image         String?
+  role          Role                    @default(APPLICANT)
+  gender        Gender                  @default(OTHER)
+  accounts      Account[]
+  applicant     Applicant?
+  applications  InternshipApplication[]
+  recruiter     Recruiter?
+  sessions      Session[]
+}
+
+model Applicant {
+  id                String          @id
+  userId            String          @unique
+  linkedInLink      String?
+  resumeLink        String?
+  githubLink        String?
+  portfolioLink     String?
+  about             String?
+  skills            String[]
+  projects          String[]
+  education         Json?
+  rawResumeText     String?
+  resumeProjectText String?
+  experience        Json?
+  phoneNumber       String[]
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Project           Project[]
+  VerifiedSkill     VerifiedSkill[]
+}
+
+model Recruiter {
+  id           String       @id
+  userId       String       @unique
+  companyId    String?
+  position     String?
+  website      String?
+  contactEmail String?
+  about        String?
+  internships  Internship[]
+  company      Company?     @relation(fields: [companyId], references: [id])
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+model Company {
+  id          String       @id @default(uuid())
+  name        String
+  industry    String?
+  website     String?
+  description String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  internships Internship[]
+  recruiters  Recruiter[]
+  companyAuth CompanyAuth?
+}
+
+model CompanyAuth {
+  id        String   @id @default(uuid())
+  companyId String   @unique
+  loginId   String   @unique
+  password  String
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+}
+
+
+model Internship {
+  id                  String                  @id
+  category            InternshipCategory?
+  title               String
+  slug                String                  @unique
+  description         String
+  location            String
+  type                InternshipType          @default(ONSITE)
+  mode                InternshipMode          @default(FULL_TIME)
+  stipend             Int?
+  durationWeeks       Int?
+  openings            Int?
+  skillsRequired      String[]
+  perks               String[]
+  eligibility         String?
+  userType            UserType?
+  startDate           DateTime?
+  applicationDeadline DateTime?
+  isActive            Boolean                 @default(true)
+  status              InternshipStatus        @default(DRAFT)
+  viewsCount          Int                     @default(0)
+  applicationsCount   Int                     @default(0)
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
+  companyId           String
+  recruiterId         String
+  question            String[]
+  stipendType         Stipendtype?
+  company             Company                 @relation(fields: [companyId], references: [id])
+  recruiter           Recruiter               @relation(fields: [recruiterId], references: [id])
+  applications        InternshipApplication[]
+
+  @@index([companyId])
+  @@index([status])
+  @@index([title])
+}
+
+model InternshipApplication {
+  id                String            @id
+  internshipId      String
+  applicantId       String
+  coverLetter       String?
+  resumeUrl         String?
+  status            ApplicationStatus @default(Applied)
+  createdAt         DateTime          @default(now())
+  interviewDate     String?
+  interviewLocation String?
+  interviewMode     InterviewMode?    @default(online)
+  interviewTime     String?
+  isApplied         Boolean?          @default(true)
+  isHire            Boolean?
+  isReject          Boolean?
+  isShortlisted     Boolean?
+  resumeData        Json?
+  selectInterview   Boolean?
+  gender            Gender            @default(OTHER)
+  applicant         User              @relation(fields: [applicantId], references: [id])
+  internship        Internship        @relation(fields: [internshipId], references: [id])
+
+  @@unique([internshipId, applicantId])
+}
+
+model Account {
+  id                String  @id
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @id
+  expires    DateTime
+}
+
+model Project {
+  id               String    @id
+  title            String
+  description      String?
+  githubUrl        String?
+  projectLevel     String?
+  analysis         String?
+  codeQualityScore Float?
+  applicantId      String
+  Applicant        Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+}
+
+model VerifiedSkill {
+  id                  String    @id
+  skillName           String
+  skillNameNormalized String
+  masteryLevel        Float
+  applicantId         String
+  Applicant           Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+
+  @@unique([applicantId, skillNameNormalized])
 }
 
 enum Gender {
   MALE
   FEMALE
   OTHER
+}
+
+enum Role {
+  APPLICANT
+  RECRUITER
 }
 
 enum InternshipCategory {
@@ -35,8 +217,8 @@ enum InternshipCategory {
   CONTENT_WRITING
   PRODUCT_MANAGEMENT
   DATA_SCIENCE
-  SOFTWARE_DEVLOPMENT
   OTHER
+  SOFTWARE_DEVLOPMENT
 }
 
 enum InternshipType {
@@ -76,224 +258,11 @@ enum ApplicationStatus {
 enum Stipendtype {
   PAID
   UNPAID
-  PB    // Performance Based
-  FIXED // Fixed Amount
+  PB
+  FIXED
 }
-enum InterviewMode{
+
+enum InterviewMode {
   online
   offline
-}
-
-// --- MODELS ---
-
-model User {
-  id            String    @id @default(cuid())
-  name          String?
-  gender        Gender    @default(OTHER)
-  email         String?   @unique
-  password      String?
-  emailVerified DateTime?
-  image         String?
-  role          Role      @default(APPLICANT)
-
-  accounts      Account[]
-  sessions      Session[]
-  
-  applicant     Applicant?
-  recruiter     Recruiter?
-  applications  InternshipApplication[]
-}
-
-// --- APPLICANT MODEL (The Critical Fix) ---
-model Applicant {
-  id            String  @id @default(cuid())
-  userId        String  @unique
-  
-  // Profile Links
-  linkedInLink  String?
-  resumeLink    String?
-  githubLink    String?
-  portfolioLink String?
-  
-  about         String? @db.Text
-  phoneNumber   String[]
-  
-  // --- LEGACY FIELDS (Keeps Frontend Happy) ---
-  // These are simple arrays. Your current UI reads these.
-  experience    Json?
-  education     Json?
-  skills        String[] 
-  projects      String[] 
-
-  // --- NEW AI FIELDS (Powering the Backend) ---
-  // The Frontend ignores these for now, but Python writes to them.
-  rawResumeText     String? @db.Text 
-  resumeProjectText String? @db.Text
-  
-  // --- AI RELATIONS ---
-  // We renamed these relations so they don't conflict with the arrays above.
-  aiProjects     Project[] 
-  verifiedSkills VerifiedSkill[] 
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-// --- NEW TABLE: Project (Rich AI Data) ---
-model Project {
-  id               String  @id @default(cuid())
-  title            String
-  description      String? @db.Text
-  githubUrl        String?  
-  
-  // AI Analysis Data
-  projectLevel     String? // "Advanced", "Beginner"
-  analysis         String? @db.Text
-  codeQualityScore Float?  
-
-  applicantId String
-  applicant   Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
-}
-
-// --- NEW TABLE: VerifiedSkill (Rich AI Data) ---
-model VerifiedSkill {
-  id                  String @id @default(cuid())
-  skillName           String 
-  skillNameNormalized String 
-  masteryLevel        Float  
-
-  applicantId String
-  applicant   Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
-
-  @@unique([applicantId, skillNameNormalized])
-}
-
-// --- RECRUITER & COMPANY ---
-model Recruiter {
-  id           String  @id @default(cuid())
-  userId       String  @unique
-  companyId    String?
-  position     String?
-  website      String?
-  contactEmail String?
-  about        String? @db.Text
-
-  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  company      Company?     @relation(fields: [companyId], references: [id], onDelete: SetNull)
-  internships  Internship[]
-}
-
-model Company {
-  id          String      @id @default(cuid())
-  name        String
-  industry    String?
-  website     String?
-  description String?     @db.Text
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  recruiters  Recruiter[]
-  internships Internship[]
-}
-
-// --- INTERNSHIP MODEL ---
-model Internship {
-  id                  String    @id @default(uuid())
-  
-  title               String
-  slug                String    @unique
-  description         String
-  category            InternshipCategory?
-  
-  location            String
-  type                InternshipType    @default(ONSITE)
-  mode                InternshipMode    @default(FULL_TIME)
-  durationWeeks       Int?
-  startDate           DateTime?
-  
-  openings            Int?
-  skillsRequired      String[]
-  perks               String[]
-  question            String[]
-  eligibility         String?
-  userType            UserType?
-  
-  stipend             Int?
-  stipendType         Stipendtype?
-
-  isActive            Boolean           @default(true)
-  status              InternshipStatus  @default(DRAFT)
-  applicationDeadline DateTime?
-  viewsCount          Int               @default(0)
-  applicationsCount   Int               @default(0)
-  
-  createdAt           DateTime          @default(now())
-  updatedAt           DateTime          @updatedAt
-
-  companyId           String
-  recruiterId         String
-  company             Company                 @relation(fields: [companyId], references: [id])
-  recruiter           Recruiter               @relation(fields: [recruiterId], references: [id])
-  applications        InternshipApplication[]
-
-  @@index([companyId])
-  @@index([status])
-  @@index([title])
-}
-
-// --- APPLICATION MODEL ---
-model InternshipApplication {
-  id                  String            @id @default(uuid())
-  internshipId        String
-  applicantId         String
-  coverLetter         String?
-  resumeUrl           String?
-  resumeData          Json?
-  isApplied           Boolean?          @default(true)
-  isShortlisted       Boolean?
-  selectInterview     Boolean?
-  isHire              Boolean?
-  isReject            Boolean?
-  interviewMode       InterviewMode?    @default(online)
-  interviewLocation   String?
-  interviewDate       String?
-  interviewTime       String?
-  gender              Gender            @default(OTHER)
-  status              ApplicationStatus @default(Applied)
-  createdAt           DateTime          @default(now())
-
-  internship      Internship @relation(fields: [internshipId], references: [id])
-  applicant       User       @relation(fields: [applicantId], references: [id])
-
-  @@unique([internshipId, applicantId])
-}
-
-// --- AUTH MODELS ---
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.Text
-  session_state     String?
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  @@unique([provider, providerAccountId])
-}
-
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model VerificationToken {
-  token      String   @id
-  identifier String
-  expires    DateTime
 }
