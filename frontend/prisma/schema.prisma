@@ -256,6 +256,7 @@ model InternshipApplication {
   interviewLocation   String?
   interviewDate       String?
   interviewTime       String?
+  gender              Gender            @default(OTHER)
   status              ApplicationStatus @default(Applied)
   createdAt           DateTime          @default(now())
 

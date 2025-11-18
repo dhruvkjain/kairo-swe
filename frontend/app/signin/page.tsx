@@ -69,7 +69,7 @@ const Login: React.FC = () => {
 
       toast.success("Sign in successful");
 
-      if(formData.role === "recruiter"){
+      if(data.user.role.toLowerCase() === "recruiter"){
         router.push(`/recruiter_dashboard/${data.user.id}`);
       }
       else{

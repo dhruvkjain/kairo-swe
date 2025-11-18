@@ -23,6 +23,45 @@ cd ./frontend
 npm i
 ```
 
+- setup .env file (format given below)
+```text
+NODE_ENV="development"
+
+# NextAuth Configuration
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=
+
+# Connect to Supabase via connection pooling
+DATABASE_URL=
+# Direct connection to the database. Used for migrations
+DIRECT_URL=
+
+EMAIL_USER=
+EMAIL_PASSWORD=
+NEXT_PUBLIC_URL=http://localhost:3000
+GITHUB_TOKEN=
+
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+
+UPLOADCARE_PUBLIC_KEY=
+UPLOADCARE_SECRET_KEY=
+
+LINKEDIN_CLIENT_ID=
+LINKEDIN_CLIENT_SECRET=
+```
+
+- generate a prisma client
+```shell
+npx prisma generate
+```
+
+- push the db tables generated to supabase
+```shell
+npx prisma db push
+```
+
 - start a local server at 3000 port
 ```shell
 npm run dev

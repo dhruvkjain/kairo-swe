@@ -15,6 +15,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { role: true, gender: true }
+    });
+
+    if (!user) {
+        return NextResponse.json(
+            { error: "Applicant user not found" },
+            { status: 404 }
+        );
+    }
+
     const internship = await prisma.internship.findUnique({
       where: { id: internshipId },
     });
@@ -48,6 +60,7 @@ export async function POST(req: NextRequest) {
         applicantId: userId,
         coverLetter,
         resumeUrl,
+        gender: user.gender
       },
     });
 
