@@ -40,7 +40,12 @@ export async function GET(req: Request) {
     const activeThisWeek = await prisma.internship.count({
       where: {
         recruiterId,
-        isActive: true,
+        startDate : {
+          lte: new Date()
+        },
+        applicationDeadline:{
+          gte: new Date()
+        },
         status: "DRAFT",
         createdAt: { gte: startOfThisWeek },
       },
@@ -49,7 +54,12 @@ export async function GET(req: Request) {
     const activeLastWeek = await prisma.internship.count({
       where: {
         recruiterId,
-        isActive: true,
+        startDate : {
+          lte: new Date()
+        },
+        applicationDeadline:{
+          gte: new Date()
+        },
         status: "DRAFT",
         createdAt: { gte: startOfLastWeek, lt: endOfLastWeek },
       },

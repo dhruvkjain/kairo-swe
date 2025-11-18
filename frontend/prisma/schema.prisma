@@ -78,6 +78,10 @@ enum Stipendtype{
   PAID
   UNPAID
 }
+enum InterviewMode{
+  online
+  offline
+}
 
 // -----------------------------------------------------
 // MODELS
@@ -193,6 +197,11 @@ model InternshipApplication {
   isShortlisted       Boolean?
   selectInterview     Boolean?
   isHire              Boolean?
+  isReject            Boolean?
+  interviewMode       InterviewMode?    @default(online)
+  interviewLocation   String?
+  interviewDate       String?
+  interviewTime       String?
   status              ApplicationStatus @default(Applied)
   createdAt           DateTime          @default(now())
 
