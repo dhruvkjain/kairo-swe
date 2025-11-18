@@ -1,7 +1,11 @@
 import React, { useState } from "react";
 import { X } from "lucide-react";
 
-export default function InterviewSchedule({ id, onClose }) {
+interface interviewProps {
+  id: string;
+  onClose: () => void;
+}
+export default function InterviewSchedule({ id, onClose }: interviewProps) {
   const [scheduleForm, setScheduleForm] = useState({
     mode: "online",
     location: "",

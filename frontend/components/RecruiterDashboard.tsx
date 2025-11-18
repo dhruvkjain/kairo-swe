@@ -3,6 +3,9 @@
 import React, { useEffect, useState } from "react";
 import Recruiter_PostInternshipModel from "./Recruiter_PostInternshipModel";
 import UpdateInternshipModal from "./UpdateInternship";
+import InterviewSchedule from "./interview"; 
+import * as XLSX from "xlsx"; 
+
 import {
   LayoutDashboard,
   Briefcase,
@@ -33,7 +36,6 @@ import {
   Award,
 } from "lucide-react";
 
-// new imports for charts
 import {
   LineChart,
   Line,
@@ -49,44 +51,130 @@ import {
   BarChart,
   Bar,
 } from "recharts";
-import type { InternshipApplication } from "@prisma/client";
-import InterviewSchedule from "./internview";
- import * as XLSX from "xlsx";
+import { InternshipApplication, ApplicationStatus, InterviewMode, Gender } from "@prisma/client";
 
-const RecruiterDashboard = (id: { id: string }) => {
+// --- INTERFACES ---
+
+// 1. ApplicantResumeData
+interface ApplicantResumeData {
+  name: string;
+  email: string;
+  phone: string;
+  appliedFor: string;
+  appliedDate: string; 
+  college: string; 
+  cgpa: number; 
+  course: string; 
+  year: number; 
+  experience: string; 
+  skills: string[]; 
+  resumeUrl: string; 
+  status: string;
+  university: string; 
+  [key: string]: any; // Added index signature for compatibility with Json type in Prisma
+}
+
+// 2. Application
+type ApplicationBase = Omit<InternshipApplication, 'resumeData' | 'gender' | 'status'>;
+
+interface Application extends ApplicationBase {
+    resumeData: ApplicantResumeData; 
+    gender: Gender; 
+    status: ApplicationStatus; 
+}
+
+// 3. InterviewItem
+interface InterviewItem extends Application {
+    interviewMode: InterviewMode | null; 
+    interviewLocation: string | null;
+    interviewDate: string | null;
+    interviewTime: string | null;
+}
+
+// 4. DashboardStat: Added 'icon' property to fix errors 2353/2339.
+interface DashboardStat {
+    value: number;
+    change: string;
+    trend: "up" | "down";
+    label: string; 
+    icon: any; // Added icon property
+}
+
+// 5. DashboardStats: Uses Omit since the 'label' is added manually in the cards array.
+interface DashboardStats {
+    activeInternships: Omit<DashboardStat, 'label' | 'icon'>; 
+    totalApplicants: Omit<DashboardStat, 'label' | 'icon'>;
+    acceptedApplicants: Omit<DashboardStat, 'label' | 'icon'>;
+    rejectedApplicants: Omit<DashboardStat, 'label' | 'icon'>;
+}
+
+// 6. InternshipSummary: No change.
+interface InternshipSummary {
+  id: string;
+  title: string;
+  category: string;
+  location: string;
+  stipend: string;
+  duration: string;
+  type: string;
+  status: string; 
+  applicationsCount: number;
+  applicants: number;
+}
+
+// 7. MonthlyStat: No change.
+interface MonthlyStat {
+  month: string;
+  applications: number;
+  shortlisted: number;
+  hired: number;
+  interviews: number;
+}
+
+// 8. StageData: No change.
+interface StageData {
+  stage: string;
+  count: number;
+}
+
+// 9. ApplicantModalProps: No change.
+interface ApplicantModalProps {
+    applicant: Application;
+    onClose: () => void;
+}
+
+
+const RecruiterDashboard = ({ id }: { id: string }) => {
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [selectedInternship, setSelectedInternship] = useState(null);
-  const [selectedApplicant, setSelectedApplicant] = useState(null);
+  const [selectedInternship, setSelectedInternship] = useState<string | null>(null);
+  const [selectedApplicant, setSelectedApplicant] = useState<Application | null>(null);
   const [showPostModal, setShowPostModal] = useState(false);
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [internships, setInternships] = useState([]);
+  const [internships, setInternships] = useState<InternshipSummary[]>([]);
   const [openUpdate, setOpenUpdate] = useState(false);
-  const [selectedId, setSelectedId] = useState(null);
-  const [Delete, setDelete] = useState(false);
-  const [filteredApplicants, setFilteredApplicants] = useState<
-    InternshipApplication[]
-  >([]);
-  const [monthlyStats, setMonthlyStats] = useState([]);
-  const [stagesData, setStagesData] = useState([]);
-  const [schedule, setSchedule] = useState(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [monthlyStats, setMonthlyStats] = useState<MonthlyStat[]>([]);
+  const [stagesData, setStagesData] = useState<StageData[]>([]);
+  const [schedule, setSchedule] = useState<string | null>(null);
   const [showinterviewModal, setShowInterviewModal] = useState(false);
-  const [interviews, setInterviews] = useState([]);
+  const [interviews, setInterviews] = useState<InterviewItem[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>("All Status");
-  const [internshipFilter, setInternshipFilter] =
-    useState<string>("All Category");
-  const [applicants, setApplicants] = useState<InternshipApplication[]>([]);
+  const [internshipFilter, setInternshipFilter] = useState<string>("All Category");
+  const [applicants, setApplicants] = useState<Application[]>([]);
+  
+  const recruiterId: string = id;
 
-  const recruiterId: string = id.id;
+  // --- Data Fetching Effects ---
 
+  // 1. Fetch Dashboard Stats
   useEffect(() => {
     const loadStats = async () => {
       try {
         const res1 = await fetch(
           `/api/auth/recruiter/internshipData?recruiterId=${recruiterId}`
         );
-        const data1 = await res1.json();
+        const data1: DashboardStats = await res1.json();
         setStats(data1);
       } catch (e) {
         console.error(e);
@@ -97,8 +185,9 @@ const RecruiterDashboard = (id: { id: string }) => {
     loadStats();
   }, [recruiterId]);
 
+  // 2. Fetch Interviews
   useEffect(() => {
-    if (!recruiterId) return; // Do nothing if no applicantId
+    if (!recruiterId) return;
 
     const fetchData = async () => {
       try {
@@ -109,7 +198,7 @@ const RecruiterDashboard = (id: { id: string }) => {
           const errorData = await response.json();
           throw new Error(errorData.error || "Failed to fetch");
         }
-        const result = await response.json();
+        const result: { data: InterviewItem[] } = await response.json();
         setInterviews(result.data);
       } catch (err) {
         console.log(err);
@@ -119,36 +208,35 @@ const RecruiterDashboard = (id: { id: string }) => {
     fetchData();
   }, [recruiterId]);
 
+  // 3. Fetch Monthly Analytics
   useEffect(() => {
     const fetchStats = async () => {
       const res = await fetch(`/api/auth/recruiter/analytics`);
       if (res.ok) {
-        const data = await res.json();
-        console.log(data);
+        const data: MonthlyStat[] = await res.json();
         setMonthlyStats(data);
       } else {
         console.error("Failed to fetch monthly stats");
       }
     };
-
     fetchStats();
   }, []);
 
+  // 4. Fetch Hiring Funnel Data
   useEffect(() => {
     const fetchStats = async () => {
       const res = await fetch(`/api/auth/recruiter/hiringFunnel`);
       if (res.ok) {
-        const data = await res.json();
-        console.log(data);
+        const data: StageData[] = await res.json();
         setStagesData(data);
       } else {
         console.error("Failed to fetch monthly stats");
       }
     };
-
     fetchStats();
   }, []);
 
+  // 5. Fetch Internships List
   useEffect(() => {
     if (!recruiterId) return;
 
@@ -161,23 +249,23 @@ const RecruiterDashboard = (id: { id: string }) => {
           console.error("Fetch error:", await response.text());
           return;
         }
-        const internshipsData = await response.json();
+        const internshipsData: InternshipSummary[] = await response.json();
         setInternships(internshipsData);
       } catch (error) {
         console.error("Network error:", error);
       }
     };
-
     loadInternships();
   }, [recruiterId]);
 
+  // 6. Fetch Applicants List
   useEffect(() => {
     const fetchApplicants = async () => {
       try {
         const res = await fetch(
           `/api/auth/recruiter/recentApplicant?recruiterId=${recruiterId}`
         );
-        const data = await res.json();
+        const data: Application[] = await res.json();
         setApplicants(data);
       } catch (error) {
         console.error("Error fetching applicants:", error);
@@ -186,30 +274,31 @@ const RecruiterDashboard = (id: { id: string }) => {
     fetchApplicants();
   }, [recruiterId]);
 
-  useEffect(() => {
-    if (!selectedInternship) {
-      setFilteredApplicants([]);
-      return;
-    }
-    let apps = applicants;
-
-    if (selectedInternship) {
-      apps = apps.filter(
-        (applicant) => applicant.internshipId === selectedInternship
-      );
-    }
-
-    if (statusFilter !== "All Status") {
-      apps = apps.filter((applicant) => applicant.status === statusFilter);
-    }
-
-    setFilteredApplicants(apps);
-  }, [applicants, selectedInternship, statusFilter]);
-
   if (loading) return <p>Loading dashboard...</p>;
   if (!stats) return <p>No data found</p>;
 
-  const cards = [
+  // --- Derived State & Logic ---
+
+  // Filter Applicants for the Applicants pane based on selected Internship AND Status
+  const filteredApplicants = applicants
+    .filter(
+      (applicant) =>
+        !selectedInternship || applicant.internshipId === selectedInternship
+    )
+    .filter(
+      (applicant) =>
+        statusFilter === "All Status" || applicant.status === statusFilter
+    );
+
+  // Filter Internships for the main table
+  const filteredInternships = internships.filter(
+    (internship) =>
+      internshipFilter === "All Category" ||
+      internship.category === internshipFilter
+  );
+  
+  // Corrected cards type and structure
+  const cards: DashboardStat[] = [
     {
       label: "Active Internships",
       ...stats.activeInternships,
@@ -228,7 +317,7 @@ const RecruiterDashboard = (id: { id: string }) => {
     },
   ];
 
-  const deleteHandle = async (id: String) => {
+  const deleteHandle = async (id: string) => {
     if (!id) return;
 
     try {
@@ -244,19 +333,18 @@ const RecruiterDashboard = (id: { id: string }) => {
       }
 
       alert("Deleted Successfully!");
-      setDelete(false);
-      // If needed, refresh page or data
-      // router.refresh();
+      
+      // Update UI state directly
+      setInternships((prev) => prev.filter((i) => i.id !== id));
+      if (selectedInternship === id) {
+        setSelectedInternship(null);
+      }
     } catch (err) {
       console.log("Delete error:", err);
     }
   };
 
-  const filteredInternships = internships.filter(
-    (internship) =>
-      internshipFilter === "All Category" ||
-      internship.category === internshipFilter 
-  );
+  // --- Export Logic ---
 
   const exportData = filteredInternships.map((i) => ({
     Internship: i.title,
@@ -268,86 +356,65 @@ const RecruiterDashboard = (id: { id: string }) => {
   }));
 
   const handleExport = () => {
-  // Create worksheet data (header + rows)
-  const worksheetData = [
-    ["Internship", "Category", "Location", "Stipend", "Applicants", "Status"], // header
-    ...exportData.map((item) => [
-      item.Internship,
-      item.Category,
-      item.Location,
-      item.Stipend,
-      item.Applicants,
-      item.Status,
-    ]),
-  ];
+    const worksheetData = [
+      ["Internship", "Category", "Location", "Stipend", "Applicants", "Status"],
+      ...exportData.map((item) => [
+        item.Internship,
+        item.Category,
+        item.Location,
+        item.Stipend,
+        item.Applicants,
+        item.Status,
+      ]),
+    ];
 
-  // Create worksheet
-  const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+    const columnWidths = worksheetData[0].map((_, colIndex) => ({
+      wch: Math.max(
+        ...worksheetData.map((row) =>
+          row[colIndex] ? row[colIndex].toString().length : 10
+        )
+      ),
+    }));
+    worksheet["!cols"] = columnWidths;
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Internships");
+    XLSX.writeFile(workbook, `${internshipFilter}_internships.xlsx`);
+  };
 
-  // Auto column width
-  const columnWidths = worksheetData[0].map((_, colIndex) => ({
-    wch: Math.max(
-      ...worksheetData.map((row) =>
-        row[colIndex] ? row[colIndex].toString().length : 10
-      )
-    ),
+  const exportApplicant = filteredApplicants.map((i) => ({
+    name: i.resumeData.name || "",
+    email: i.resumeData.email || "",
+    status: i.status || "",
+    cgpa: i.resumeData.cgpa || "",
+    university: i.resumeData.university || "",
+    appliedDate: i.resumeData.appliedDate || ""
   }));
-  worksheet["!cols"] = columnWidths;
 
-  // Create workbook
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Internships");
+  const handleApplicantExport = () => {
+    const worksheetData = [
+      ["Name", "Email", "Status", "CGPA", "University", "Applied Date"],
+      ...exportApplicant.map((item) => [
+        item.name,
+        item.email,
+        item.status,
+        item.cgpa,
+        item.university,
+        item.appliedDate,
+      ]),
+    ];
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Applicants");
 
-  // Save file
-  XLSX.writeFile(workbook, `${internshipFilter}_internships.xlsx`);
-};
+    const internshipName =
+      internships.find((i) => i.id === selectedInternship)?.title ||
+      "Internship";
 
+    XLSX.writeFile(workbook, `${internshipName}_applicants.xlsx`);
+  };
 
-  const filteredApplicant = applicants.filter(
-  (applicant) =>
-    statusFilter === "All Status" ||
-    applicant.status === statusFilter
-);
-
-const exportApplicant = filteredApplicant.map((i) => ({
-  name: i.resumeData.name || "",
-  email: i.resumeData.email || "",
-  status: i.status || "",      // normalized
-  cgpa: i.resumeData.cgpa || "",
-  university: i.resumeData.university || "",
-  appliedDate: i.resumeData.appliedDate || ""  // NEW FIELD
-}));
-
-const handleApplicantExport = () => {
-  // Create worksheet data (header + rows)
-  const worksheetData = [
-    ["Name", "Email", "Status", "CGPA", "University", "Applied Date"], // header
-    ...exportApplicant.map((item) => [
-      item.name,
-      item.email,
-      item.status,
-      item.cgpa,
-      item.university,
-      item.appliedDate,
-    ]),
-  ];
-
-  // Create worksheet
-  const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-
-  // Create workbook
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Applicants");
-
-  // File name (same as PDF logic)
-  const internshipName =
-    internships.find((i) => i.id === selectedInternship)?.title ||
-    "Internship";
-
-  // Export to .xlsx
-  XLSX.writeFile(workbook, `${internshipName}_applicants.xlsx`);
-};
-
+  // --- Status Update Logic ---
 
   const updateStatus = async (id: string, status: string) => {
     if (!id) return;
@@ -369,7 +436,13 @@ const handleApplicantExport = () => {
       }
 
       alert(`${status} Successfully`);
-      // Optionally refresh data or UI here
+      
+      // Update UI state directly
+      setApplicants(prevApplicants => prevApplicants.map(app => 
+          app.id === id ? { ...app, status: status as ApplicationStatus } : app
+      ));
+      setSelectedApplicant(null);
+      
     } catch (err) {
       console.log("Update error:", err);
     }
@@ -381,9 +454,10 @@ const handleApplicantExport = () => {
         index === self.findIndex((i) => i.category === internship.category)
     )
     .map((i) => i.category);
-  // Demographics & hires-from-kairo calculations
+
+  // Demographics calculation
   const genderCounts = applicants.reduce((acc, a) => {
-    const g = (a.gender || "other").toLowerCase();
+    const g = (a.gender || Gender.OTHER).toLowerCase();
     acc[g] = (acc[g] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
@@ -394,7 +468,8 @@ const handleApplicantExport = () => {
     { name: "Other", value: genderCounts.other || 0 },
   ];
 
-  // Analytics view component
+  // --- Components ---
+
   const AnalyticsView = () => (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -403,16 +478,16 @@ const handleApplicantExport = () => {
           Overview of key recruiting metrics
         </div>
       </div>
-
-      {/* Demographics + hires-from-kairo summary row */}
+      
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Applicants by Gender Pie Chart */}
         <div className="bg-white p-4 rounded-lg border border-gray-200">
           <h4 className="text-sm font-medium text-gray-700">
             Applicants by Gender
           </h4>
           <div className="mt-3 flex items-center gap-4">
             <div style={{ width: 120, height: 120 }}>
-              <ResponsiveContainer>
+              <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={genderPieData}
@@ -445,9 +520,10 @@ const handleApplicantExport = () => {
             </div>
           </div>
         </div>
-
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <h4 className="text-sm font-medium text-gray-700">Gender Ratio</h4>
+        
+        {/* Gender Ratio Bar */}
+        <div className="bg-white p-4 rounded-lg border border-gray-200 col-span-1 md:col-span-2">
+          <h4 className="text-sm font-medium text-gray-700">Gender Ratio Progress</h4>
           <div className="mt-3">
             {genderPieData.map((g, idx) => {
               const pct = totalApplicants
@@ -477,7 +553,7 @@ const handleApplicantExport = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols gap-6">
+      <div className="grid grid-cols-1 gap-6">
         {/* Line chart: Applications vs Hired */}
         <div className="bg-white p-4 rounded-lg border border-gray-200">
           <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -524,12 +600,10 @@ const handleApplicantExport = () => {
             </ResponsiveContainer>
           </div>
         </div>
-
-        {/* Pie chart: Source of hires */}
       </div>
 
       {/* Bar chart: Funnel / Stages (full width) */}
-      <div className="col-span-1 lg:col-span-2 bg-white p-4 rounded-lg border border-gray-200">
+      <div className="bg-white p-4 rounded-lg border border-gray-200">
         <h3 className="text-lg font-medium text-gray-900 mb-2">
           Hiring Funnel (counts)
         </h3>
@@ -725,37 +799,29 @@ const handleApplicantExport = () => {
             Active Internships
           </h3>
           <div className="space-y-3">
-            <div className="bg-white p-4 rounded-lg border border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Active Internships
-              </h3>
+            {internships.map((internship) => (
+              <div
+                key={internship.id}
+                className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer"
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <h4 className="font-medium text-gray-900 text-sm">
+                    {internship.title}
+                  </h4>
 
-              <div className="space-y-3">
-                {internships.map((internship) => (
-                  <div
-                    key={internship.id}
-                    className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer"
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <h4 className="font-medium text-gray-900 text-sm">
-                        {internship.title}
-                      </h4>
+                  <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+                    {internship.status}
+                  </span>
+                </div>
 
-                      <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">
-                        {internship.status}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center space-x-3 text-xs text-gray-500">
-                      <span className="flex items-center space-x-1">
-                        <Users className="w-3 h-3" />
-                        <span>{internship.applicationsCount} applicants</span>
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                <div className="flex items-center space-x-3 text-xs text-gray-500">
+                  <span className="flex items-center space-x-1">
+                    <Users className="w-3 h-3" />
+                    <span>{internship.applicationsCount} applicants</span>
+                  </span>
+                </div>
               </div>
-            </div>
+            ))}
           </div>
         </div>
       </div>
@@ -785,9 +851,12 @@ const handleApplicantExport = () => {
               ))}
             </select>
 
-            <button className="flex items-center space-x-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+            <button
+              onClick={handleExport}
+              className="flex items-center space-x-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+            >
               <Download className="w-4 h-4" />
-              <span onClick={handleExport} className="text-sm">
+              <span className="text-sm">
                 Export
               </span>
             </button>
@@ -859,10 +928,10 @@ const handleApplicantExport = () => {
                     <td className="px-4 py-3">
                       <div className="flex items-center space-x-2">
                         <span className="font-medium text-gray-900">
-                          {internship.applicants}
+                          {internship.applicationsCount}
                         </span>
                         <span className="text-xs text-gray-500">
-                          ({internship.applicationsCount} applied)
+                          (applied)
                         </span>
                       </div>
                     </td>
@@ -870,9 +939,9 @@ const handleApplicantExport = () => {
                     <td className="px-4 py-3">
                       <span
                         className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          internship.status === "DRAFT"
+                          internship.status === "PUBLISHED"
                             ? "bg-green-100 text-green-700"
-                            : internship.status === "Paused"
+                            : internship.status === "CLOSED"
                             ? "bg-yellow-100 text-yellow-700"
                             : "bg-gray-100 text-gray-700"
                         }`}
@@ -939,11 +1008,12 @@ const handleApplicantExport = () => {
                   <option>Reject</option>
                 </select>
 
-                <button className="flex items-center space-x-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                  <Download className="w-4 h-4" />
-                  <span 
+                <button
                   onClick={handleApplicantExport}
-                  className="text-sm">Export</span>
+                  className="flex items-center space-x-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  <Download className="w-4 h-4" />
+                  <span className="text-sm">Export</span>
                 </button>
               </div>
             </div>
@@ -977,11 +1047,11 @@ const handleApplicantExport = () => {
 
                               <span
                                 className={`px-2 py-0.5 text-xs font-medium rounded-full ${
-                                  data.status === "Shortlisted"
+                                  applicant.status === "Shortlisted"
                                     ? "bg-blue-100 text-blue-700"
-                                    : data.status === "Interview"
+                                    : applicant.status === "Interview"
                                     ? "bg-purple-100 text-purple-700"
-                                    : data.status === "Applied"
+                                    : applicant.status === "Applied"
                                     ? "bg-gray-100 text-gray-700"
                                     : "bg-red-100 text-red-700"
                                 }`}
@@ -1029,7 +1099,7 @@ const handleApplicantExport = () => {
                                 </span>
                               ))}
 
-                              {data.skills?.length > 4 && (
+                              {data.skills && data.skills.length > 4 && (
                                 <span className="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded">
                                   +{data.skills.length - 4}
                                 </span>
@@ -1070,10 +1140,9 @@ const handleApplicantExport = () => {
     </div>
   );
 
-  const ApplicantModal = ({ applicant, onClose }) => {
+  const ApplicantModal = ({ applicant, onClose }: ApplicantModalProps) => {
     if (!applicant) return null;
 
-    // Extract resumeData safely
     const data = applicant.resumeData || {};
 
     return (
@@ -1181,11 +1250,11 @@ const handleApplicantExport = () => {
               </h4>
               <span
                 className={`inline-block px-3 py-1 text-sm font-medium rounded-full ${
-                  data.status === "Shortlisted"
+                  applicant.status === "Shortlisted"
                     ? "bg-blue-100 text-blue-700"
-                    : data.status === "Interview"
+                    : applicant.status === "Interview"
                     ? "bg-purple-100 text-purple-700"
-                    : data.status === "Applied"
+                    : applicant.status === "Applied"
                     ? "bg-gray-100 text-gray-700"
                     : "bg-red-100 text-red-700"
                 }`}
@@ -1386,7 +1455,7 @@ const handleApplicantExport = () => {
                     </label>
                     <textarea
                       id="about"
-                      rows="4"
+                      rows={4}
                       defaultValue="Tech Corp Inc. is a leading technology company..."
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
                     ></textarea>
@@ -1416,11 +1485,12 @@ const handleApplicantExport = () => {
         />
       )}
 
-      {schedule && (
+      {showinterviewModal && schedule && (
         <InterviewSchedule
           id={schedule}
           onClose={() => {
-            setShowInterviewModal(false), setSchedule(null);
+            setShowInterviewModal(false);
+            setSchedule(null);
           }}
         />
       )}
