@@ -57,7 +57,7 @@ import {
   Bar,
 } from "recharts";
 import { error } from "console";
-
+import InterviewSchedule from "./internview";
 
 const RecruiterDashboard = (id: { id: string }) => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -72,8 +72,12 @@ const RecruiterDashboard = (id: { id: string }) => {
   const [selectedId, setSelectedId] = useState(null);
   const [Delete, setDelete] = useState(false);
   const [filteredApplicants, setFilteredApplicants] = useState([]);
-  const [monthlyStats ,setMonthlyStats] = useState([])
+  const [monthlyStats, setMonthlyStats] = useState([]);
   const [stagesData, setStagesData] = useState([]);
+  const [schedule, setSchedule] = useState(null);
+  const [showinterviewModal, setShowInterviewModal] = useState(false);
+  const [interviews, setInterviews] = useState([]);
+  const [statusFilter, setStatusFilter] = useState("All Status");
   const [applicants, setApplicants] = useState([]);
 
   const recruiterId = id.id;
@@ -96,11 +100,33 @@ const RecruiterDashboard = (id: { id: string }) => {
   }, [recruiterId]);
 
   useEffect(() => {
+    if (!recruiterId) return; // Do nothing if no applicantId
+
+    const fetchData = async () => {
+      try {
+        const response = await fetch(
+          `/api/auth/recruiter/interviewSchedule?recruiterId=${recruiterId}`
+        );
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to fetch");
+        }
+        const result = await response.json();
+        setInterviews(result.data);
+      } catch (err) {
+        console.log(err.message);
+      }
+    };
+
+    fetchData();
+  }, [recruiterId]);
+
+  useEffect(() => {
     const fetchStats = async () => {
       const res = await fetch(`/api/auth/recruiter/analytics`);
       if (res.ok) {
         const data = await res.json();
-        console.log(data)
+        console.log(data);
         setMonthlyStats(data);
       } else {
         console.error("Failed to fetch monthly stats");
@@ -115,7 +141,7 @@ const RecruiterDashboard = (id: { id: string }) => {
       const res = await fetch(`/api/auth/recruiter/hiringFunnel`);
       if (res.ok) {
         const data = await res.json();
-        console.log(data)
+        console.log(data);
         setStagesData(data);
       } else {
         console.error("Failed to fetch monthly stats");
@@ -167,14 +193,20 @@ const RecruiterDashboard = (id: { id: string }) => {
       setFilteredApplicants([]);
       return;
     }
+    let apps = applicants;
 
-    const filtered = applicants.filter(
-      (a) => a.internshipId === selectedInternship
-    );
+    if (selectedInternship) {
+      apps = apps.filter(
+        (applicant) => applicant.internshipId === selectedInternship
+      );
+    }
 
-    setFilteredApplicants(filtered);
-  }, [selectedInternship, applicants]);
+    if (statusFilter !== "All Status") {
+      apps = apps.filter((applicant) => applicant.status === statusFilter);
+    }
 
+    setFilteredApplicants(apps);
+  }, [applicants, selectedInternship, statusFilter]);
 
   if (loading) return <p>Loading dashboard...</p>;
   if (!stats) return <p>No data found</p>;
@@ -497,8 +529,6 @@ const RecruiterDashboard = (id: { id: string }) => {
         {[
           { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
           { id: "internships", label: "Internships", icon: Briefcase },
-          { id: "applicants", label: "Applicants", icon: Users },
-          { id: "messages", label: "Messages", icon: MessageSquare },
           { id: "interviews", label: "Interviews", icon: Calendar },
           { id: "analytics", label: "Analytics", icon: BarChart3 },
           { id: "settings", label: "Settings", icon: Settings },
@@ -551,13 +581,6 @@ const RecruiterDashboard = (id: { id: string }) => {
         </div>
 
         <div className="flex items-center space-x-3 ml-4">
-          <button
-            className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            onClick={() => setShowNotifications(!showNotifications)}
-          >
-            <Bell className="w-5 h-5 text-gray-700" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-          </button>
           <button
             onClick={() => setShowPostModal(true)}
             className="flex items-center space-x-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
@@ -864,11 +887,33 @@ const RecruiterDashboard = (id: { id: string }) => {
       <div className="col-span-1 bg-white border border-gray-200 rounded-lg p-4 h-full overflow-y-auto">
         {selectedInternship ? (
           <>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Applicants for{" "}
-              {internships.find((i) => i.id === selectedInternship)?.title ||
-                "Internship"}
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Applicants for{" "}
+                {internships.find((i) => i.id === selectedInternship)?.title ||
+                  "Internship"}
+              </h3>
+
+              <div className="flex items-center space-x-2">
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                >
+                  <option>All Status</option>
+                  <option>Applied</option>
+                  <option>Shortlisted</option>
+                  <option>Interview</option>
+                  <option>Hire</option>
+                  <option>Rejected</option>
+                </select>
+
+                <button className="flex items-center space-x-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                  <Download className="w-4 h-4" />
+                  <span className="text-sm">Export</span>
+                </button>
+              </div>
+            </div>
 
             {filteredApplicants.length === 0 ? (
               <p className="text-gray-600 text-sm">No applicants found.</p>
@@ -988,141 +1033,6 @@ const RecruiterDashboard = (id: { id: string }) => {
             Select an internship to view applicants
           </div>
         )}
-      </div>
-    </div>
-  );
-
-  const ApplicantsView = () => (
-    <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900">Applicants</h2>
-
-        <div className="flex items-center space-x-2">
-          <select className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900">
-            <option>All Internships</option>
-            <option>Frontend Developer Intern</option>
-            <option>Backend Developer Intern</option>
-          </select>
-
-          <select className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900">
-            <option>All Status</option>
-            <option>Applied</option>
-            <option>Shortlisted</option>
-            <option>Interview</option>
-            <option>Rejected</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Applicants List */}
-      <div className="grid grid-cols-1 gap-4">
-        {applicants.map((applicant) => {
-          const data = applicant.resumeData || {};
-
-          return (
-            <div
-              key={applicant.id}
-              className="bg-white p-4 rounded-lg border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => setSelectedApplicant(applicant)}
-            >
-              <div className="flex items-start justify-between">
-                {/* Left Section */}
-                <div className="flex items-start space-x-4 flex-1">
-                  <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
-                    <User className="w-6 h-6 text-gray-600" />
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    {/* Name + Status */}
-                    <div className="flex items-center space-x-2 mb-1">
-                      <h3 className="font-semibold text-gray-900">
-                        {data.name}
-                      </h3>
-
-                      <span
-                        className={`px-2 py-0.5 text-xs font-medium rounded-full ${
-                          data.status === "Shortlisted"
-                            ? "bg-blue-100 text-blue-700"
-                            : data.status === "Interview"
-                            ? "bg-purple-100 text-purple-700"
-                            : data.status === "Applied"
-                            ? "bg-gray-100 text-gray-700"
-                            : "bg-red-100 text-red-700"
-                        }`}
-                      >
-                        {applicant.status}
-                      </span>
-                    </div>
-
-                    {/* Applied For */}
-                    <p className="text-sm text-gray-600 mb-2">
-                      {data.appliedFor}
-                    </p>
-
-                    {/* College, CGPA, Email, Date */}
-                    <div className="grid grid-cols-2 gap-2 mb-2">
-                      <div className="flex items-center space-x-1.5 text-xs text-gray-500">
-                        <GraduationCap className="w-3.5 h-3.5" />
-                        <span>{data.college}</span>
-                      </div>
-
-                      <div className="flex items-center space-x-1.5 text-xs text-gray-500">
-                        <Award className="w-3.5 h-3.5" />
-                        <span>CGPA: {data.cgpa}</span>
-                      </div>
-
-                      <div className="flex items-center space-x-1.5 text-xs text-gray-500">
-                        <Mail className="w-3.5 h-3.5" />
-                        <span className="truncate">{data.email}</span>
-                      </div>
-
-                      <div className="flex items-center space-x-1.5 text-xs text-gray-500">
-                        <Clock className="w-3.5 h-3.5" />
-                        <span>Applied {data.appliedDate || "N/A"}</span>
-                      </div>
-                    </div>
-
-                    {/* Skills Badges */}
-                    <div className="flex flex-wrap gap-1.5">
-                      {data.skills?.slice(0, 4).map((skill, i) => (
-                        <span
-                          key={i}
-                          className="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded"
-                        >
-                          {skill}
-                        </span>
-                      ))}
-
-                      {data.skills?.length > 4 && (
-                        <span className="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded">
-                          +{data.skills.length - 4}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right Buttons */}
-                <div className="flex flex-col space-y-2 ml-4">
-                  <button className="px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded hover:bg-gray-800">
-                    View Profile
-                  </button>
-
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      window.open(data.resumeUrl, "_blank");
-                    }}
-                    className="px-3 py-1.5 border border-gray-300 text-gray-700 text-xs font-medium rounded hover:bg-gray-50"
-                  >
-                    Download Resume
-                  </button>
-                </div>
-              </div>
-            </div>
-          );
-        })}
       </div>
     </div>
   );
@@ -1253,29 +1163,33 @@ const RecruiterDashboard = (id: { id: string }) => {
 
             {/* Action Buttons */}
             <div className="flex items-center space-x-2 pt-4 border-t border-gray-200">
-              <button 
-              onClick={(e) => {
+              <button
+                onClick={(e) => {
                   updateStatus(applicant.id, "Shortlisted");
                 }}
-              className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center justify-center space-x-2">
+                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center justify-center space-x-2"
+              >
                 <CheckCircle className="w-4 h-4" />
                 <span>Shortlist</span>
               </button>
 
-              <button 
-              onClick={(e) => {
-                  updateStatus(applicant.id, "Interview");
+              <button
+                onClick={() => {
+                  setShowInterviewModal(true);
+                  setSchedule(applicant.id);
                 }}
-              className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center justify-center space-x-2">
+                className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center justify-center space-x-2"
+              >
                 <Calendar className="w-4 h-4" />
                 <span>Schedule Interview</span>
               </button>
 
-              <button 
-              onClick={(e) => {
+              <button
+                onClick={(e) => {
                   updateStatus(applicant.id, "Hire");
                 }}
-              className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center justify-center space-x-2">
+                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center justify-center space-x-2"
+              >
                 <CheckCircle className="w-4 h-4" />
                 <span>Hire</span>
               </button>
@@ -1313,25 +1227,74 @@ const RecruiterDashboard = (id: { id: string }) => {
         <main className="p-6">
           {activeTab === "dashboard" && <DashboardView />}
           {activeTab === "internships" && <InternshipsView />}
-          {activeTab === "applicants" && <ApplicantsView />}
-          {activeTab === "messages" && (
-            <div className="bg-white p-8 rounded-lg border border-gray-200 text-center">
-              <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Messages
-              </h3>
-              <p className="text-gray-600">Communication module coming soon</p>
-            </div>
-          )}
           {activeTab === "interviews" && (
-            <div className="bg-white p-8 rounded-lg border border-gray-200 text-center">
-              <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <div className="overflow-x-auto bg-white p-6 rounded-lg border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">
                 Interviews
               </h3>
-              <p className="text-gray-600">
-                Interview scheduling module coming soon
-              </p>
+              <table className="min-w-full divide-y divide-gray-200 text-left">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Name
+                    </th>
+                    <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Mode
+                    </th>
+                    <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Location
+                    </th>
+                    <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Time
+                    </th>
+                    <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {interviews.map((item, index) => (
+                    <tr key={index} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {item.resumeData.name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {item.interviewMode}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {item.interviewLocation}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {item.interviewDate}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {item.interviewTime}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap space-x-2">
+                        <button
+                          onClick={(e) => {
+                            updateStatus(item.id, "Hire");
+                          }}
+                          className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
+                        >
+                          Hire
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            updateStatus(item.id, "Reject");
+                          }}
+                          className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
+                        >
+                          Reject
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
           {activeTab === "analytics" && <AnalyticsView />}
@@ -1405,6 +1368,15 @@ const RecruiterDashboard = (id: { id: string }) => {
         <UpdateInternshipModal
           id={selectedId}
           onClose={() => setOpenUpdate(false)}
+        />
+      )}
+
+      {schedule && (
+        <InterviewSchedule
+          id={schedule}
+          onClose={() => {
+            setShowInterviewModal(false), setSchedule(null);
+          }}
         />
       )}
 

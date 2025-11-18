@@ -46,6 +46,8 @@ export async function PUT(req: NextRequest) {
       updateData.isHire = true;
     } else if (status === "Interview") {
       updateData.selectInterview = true;
+    } else if (status === "Reject") {
+      updateData.isReject = true;
     } 
 
     // Perform the update with partial data. Other booleans are unchanged.

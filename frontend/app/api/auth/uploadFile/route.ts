@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
       store: true,
     });
 
-    const cdnUrl = `https://4skqvn8fb2.ucarecd.net/${uploadedFile.uuid}/${fileName || "file.pdf"}`;
+    const cdnUrl = `https://720nna3ivj.ucarecd.net/${uploadedFile.uuid}/${fileName || "file.pdf"}`;
 
     // Update the applicant's resume link using the session user's applicant record
     await prisma.applicant.update({

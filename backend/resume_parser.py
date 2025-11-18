@@ -28,7 +28,6 @@ class ResumeUrlRequest(BaseModel):
 # --- HELPERS ---
 
 def extract_text_from_file(file_path: str, file_type: str) -> str:
-    """Extract raw text from PDF or DOCX."""
     text = ""
     try:
         if file_type == 'pdf':
@@ -96,10 +95,6 @@ Resume Text:
 
 
 def _parse_resume_blocking_tasks(url: str) -> str:
-    """
-    All blocking I/O and CPU parsing happens here.
-    Runs inside threadpool.
-    """
     temp_file_path = None
     try:
         response = requests.get(url)
@@ -137,7 +132,7 @@ async def parse_resume_from_url(url: str) -> dict:
     try:
         raw_text = await run_in_threadpool(_parse_resume_blocking_tasks, url=url)
 
-        model = genai.GenerativeModel('gemini-2.5-pro')
+        model = genai.GenerativeModel('gemini-2.5-flash')
         prompt = get_gemini_prompt(raw_text)
 
         gemini_response = await model.generate_content_async(prompt)
@@ -150,7 +145,7 @@ async def parse_resume_from_url(url: str) -> dict:
         )
 
         parsed_json = json.loads(response_text)
-        return parsed_json
+        return parsed_json, raw_text
 
     except json.JSONDecodeError:
         raise HTTPException(status_code=500, detail="Gemini returned invalid JSON")
@@ -164,7 +159,7 @@ async def parse_resume_from_url(url: str) -> dict:
 # --- API ENDPOINT ---
 @router.post("/parse-resume")
 async def handle_resume_parsing(request: ResumeUrlRequest):
-    data = await parse_resume_from_url(request.url)
+    data, raw_text = await parse_resume_from_url(request.url)
     
     # Add resume URL
     data["resumeUrl"] = request.url
@@ -179,5 +174,5 @@ async def handle_resume_parsing(request: ResumeUrlRequest):
     for key, value in defaults.items():
         if key not in data or data[key] is None:
             data[key] = value
-
+    data["rawResumeText"] = raw_text
     return data
