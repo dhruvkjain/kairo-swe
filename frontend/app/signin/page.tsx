@@ -59,7 +59,6 @@ const Login: React.FC = () => {
         body: JSON.stringify({
           email: formData.email.toLowerCase(),
           password: formData.password,
-          role: formData.role,
         }),
         credentials: "include",
       });
@@ -112,25 +111,6 @@ const Login: React.FC = () => {
                   className="pl-10"
                 />
               </div>
-            </div>
-
-            {/* Role */}
-            <div className="space-y-2 w-full">
-              <Label htmlFor="role">I am a *</Label>
-              <Select
-                value={formData.role}
-                onValueChange={(value: "applicant" | "recruiter") =>
-                  handleInputChange("role", value)
-                }
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select your role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="applicant">Applicant</SelectItem>
-                  <SelectItem value="recruiter">Recruiter</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
 
             {/* Password */}
