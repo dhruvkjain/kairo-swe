@@ -1,5 +1,5 @@
 // =====================================================
-// PRISMA SCHEMA — FINAL MERGED VERSION
+// KAIRO - FINAL HYBRID SCHEMA (Frontend + AI Compatible)
 // =====================================================
 
 generator client {
@@ -12,9 +12,7 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// -----------------------------------------------------
-// ENUMS
-// -----------------------------------------------------
+// --- ENUMS ---
 enum Role {
   APPLICANT
   RECRUITER
@@ -74,18 +72,20 @@ enum ApplicationStatus {
   Hire
   Reject
 }
-enum Stipendtype{
+
+enum Stipendtype {
   PAID
   UNPAID
+  PB    // Performance Based
+  FIXED // Fixed Amount
 }
 enum InterviewMode{
   online
   offline
 }
 
-// -----------------------------------------------------
-// MODELS
-// -----------------------------------------------------
+// --- MODELS ---
+
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -96,31 +96,78 @@ model User {
   image         String?
   role          Role      @default(APPLICANT)
 
-  accounts Account[]
-  sessions Session[]
-
-  applicant    Applicant?
-  recruiter    Recruiter?
-  applications InternshipApplication[]
+  accounts      Account[]
+  sessions      Session[]
+  
+  applicant     Applicant?
+  recruiter     Recruiter?
+  applications  InternshipApplication[]
 }
 
+// --- APPLICANT MODEL (The Critical Fix) ---
 model Applicant {
-  id            String   @id @default(cuid())
-  userId        String   @unique
+  id            String  @id @default(cuid())
+  userId        String  @unique
+  
+  // Profile Links
   linkedInLink  String?
   resumeLink    String?
   githubLink    String?
   portfolioLink String?
-  about         String?  @db.Text
-  skills        String[]
+  
+  about         String? @db.Text
+  phoneNumber   String[]
+  
+  // --- LEGACY FIELDS (Keeps Frontend Happy) ---
+  // These are simple arrays. Your current UI reads these.
   experience    Json?
   education     Json?
-  projects      String[]
-  phoneNumber   String[]
+  skills        String[] 
+  projects      String[] 
+
+  // --- NEW AI FIELDS (Powering the Backend) ---
+  // The Frontend ignores these for now, but Python writes to them.
+  rawResumeText     String? @db.Text 
+  resumeProjectText String? @db.Text
+  
+  // --- AI RELATIONS ---
+  // We renamed these relations so they don't conflict with the arrays above.
+  aiProjects     Project[] 
+  verifiedSkills VerifiedSkill[] 
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+// --- NEW TABLE: Project (Rich AI Data) ---
+model Project {
+  id               String  @id @default(cuid())
+  title            String
+  description      String? @db.Text
+  githubUrl        String?  
+  
+  // AI Analysis Data
+  projectLevel     String? // "Advanced", "Beginner"
+  analysis         String? @db.Text
+  codeQualityScore Float?  
+
+  applicantId String
+  applicant   Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+}
+
+// --- NEW TABLE: VerifiedSkill (Rich AI Data) ---
+model VerifiedSkill {
+  id                  String @id @default(cuid())
+  skillName           String 
+  skillNameNormalized String 
+  masteryLevel        Float  
+
+  applicantId String
+  applicant   Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+
+  @@unique([applicantId, skillNameNormalized])
+}
+
+// --- RECRUITER & COMPANY ---
 model Recruiter {
   id           String  @id @default(cuid())
   userId       String  @unique
@@ -130,62 +177,69 @@ model Recruiter {
   contactEmail String?
   about        String? @db.Text
 
-  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  company     Company?     @relation(fields: [companyId], references: [id], onDelete: SetNull)
-  internships Internship[]
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company      Company?     @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  internships  Internship[]
 }
 
 model Company {
-  id          String       @id @default(cuid())
+  id          String      @id @default(cuid())
   name        String
   industry    String?
   website     String?
-  description String?      @db.Text
+  description String?     @db.Text
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
   recruiters  Recruiter[]
   internships Internship[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
 }
 
+// --- INTERNSHIP MODEL ---
 model Internship {
-  id                  String              @id @default(uuid())
-  category            InternshipCategory?
+  id                  String    @id @default(uuid())
+  
   title               String
-  slug                String              @unique
+  slug                String    @unique
   description         String
+  category            InternshipCategory?
+  
   location            String
-  type                InternshipType      @default(ONSITE)
-  mode                InternshipMode      @default(FULL_TIME)
-  stipend             Int?
-  stipendType         Stipendtype?
+  type                InternshipType    @default(ONSITE)
+  mode                InternshipMode    @default(FULL_TIME)
   durationWeeks       Int?
+  startDate           DateTime?
+  
   openings            Int?
   skillsRequired      String[]
   perks               String[]
   question            String[]
   eligibility         String?
   userType            UserType?
-  startDate           DateTime?
+  
+  stipend             Int?
+  stipendType         Stipendtype?
+
+  isActive            Boolean           @default(true)
+  status              InternshipStatus  @default(DRAFT)
   applicationDeadline DateTime?
-  isActive            Boolean             @default(true)
-  status              InternshipStatus    @default(DRAFT)
-  viewsCount          Int                 @default(0)
-  applicationsCount   Int                 @default(0)
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @updatedAt
+  viewsCount          Int               @default(0)
+  applicationsCount   Int               @default(0)
+  
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
 
-  companyId   String
-  recruiterId String
-
-  company      Company                 @relation(fields: [companyId], references: [id])
-  recruiter    Recruiter               @relation(fields: [recruiterId], references: [id])
-  applications InternshipApplication[]
+  companyId           String
+  recruiterId         String
+  company             Company                 @relation(fields: [companyId], references: [id])
+  recruiter           Recruiter               @relation(fields: [recruiterId], references: [id])
+  applications        InternshipApplication[]
 
   @@index([companyId])
   @@index([status])
   @@index([title])
 }
 
+// --- APPLICATION MODEL ---
 model InternshipApplication {
   id                  String            @id @default(uuid())
   internshipId        String
@@ -205,12 +259,13 @@ model InternshipApplication {
   status              ApplicationStatus @default(Applied)
   createdAt           DateTime          @default(now())
 
-  internship Internship @relation(fields: [internshipId], references: [id])
-  applicant  User       @relation(fields: [applicantId], references: [id])
+  internship      Internship @relation(fields: [internshipId], references: [id])
+  applicant       User       @relation(fields: [applicantId], references: [id])
 
   @@unique([internshipId, applicantId])
 }
 
+// --- AUTH MODELS ---
 model Account {
   id                String  @id @default(cuid())
   userId            String
@@ -224,9 +279,7 @@ model Account {
   scope             String?
   id_token          String? @db.Text
   session_state     String?
-
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
   @@unique([provider, providerAccountId])
 }
 
@@ -235,7 +288,6 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
-
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
