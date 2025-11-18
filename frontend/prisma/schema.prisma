@@ -79,6 +79,10 @@ enum Stipendtype {
   PB    // Performance Based
   FIXED // Fixed Amount
 }
+enum InterviewMode{
+  online
+  offline
+}
 
 // --- MODELS ---
 
@@ -237,21 +241,23 @@ model Internship {
 
 // --- APPLICATION MODEL ---
 model InternshipApplication {
-  id              String            @id @default(uuid())
-  internshipId    String
-  applicantId     String
-  
-  coverLetter     String?
-  resumeUrl       String?
-  resumeData      Json? 
-  
-  isApplied       Boolean?          @default(true)
-  isShortlisted   Boolean?
-  selectInterview Boolean?
-  isHire          Boolean?
-  status          ApplicationStatus @default(Applied)
-  
-  createdAt       DateTime          @default(now())
+  id                  String            @id @default(uuid())
+  internshipId        String
+  applicantId         String
+  coverLetter         String?
+  resumeUrl           String?
+  resumeData          Json?
+  isApplied           Boolean?          @default(true)
+  isShortlisted       Boolean?
+  selectInterview     Boolean?
+  isHire              Boolean?
+  isReject            Boolean?
+  interviewMode       InterviewMode?    @default(online)
+  interviewLocation   String?
+  interviewDate       String?
+  interviewTime       String?
+  status              ApplicationStatus @default(Applied)
+  createdAt           DateTime          @default(now())
 
   internship      Internship @relation(fields: [internshipId], references: [id])
   applicant       User       @relation(fields: [applicantId], references: [id])

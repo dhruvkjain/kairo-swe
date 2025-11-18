@@ -132,7 +132,7 @@ async def parse_resume_from_url(url: str) -> dict:
     try:
         raw_text = await run_in_threadpool(_parse_resume_blocking_tasks, url=url)
 
-        model = genai.GenerativeModel('gemini-2.5-pro')
+        model = genai.GenerativeModel('gemini-2.5-flash')
         prompt = get_gemini_prompt(raw_text)
 
         gemini_response = await model.generate_content_async(prompt)
