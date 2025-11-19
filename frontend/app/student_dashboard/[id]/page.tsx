@@ -210,12 +210,18 @@ const StudentDashboard = ({ params }: StudentDashboardProps) => {
                 alt="Kairo Internships Logo"
                 className="h-10 w-auto rounded-xl"
               />
-              <h1 className="text-2xl font-semibold text-gray-800 tracking-tight">
-              </h1>
+              <h1 className="text-2xl font-semibold text-gray-800 tracking-tight"></h1>
             </div>
           </Link>
 
           <div className="flex items-center gap-4">
+            <button
+              onClick={() => router.push(`/student_dashboard/${Id}/appliedInternship`)}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg border border-gray-300 transition"
+            >
+              <Briefcase className="w-4 h-4" /> {/* Optional: Add an icon */}
+              Applied Internships
+            </button>
             <button
               onClick={() => router.push(`/profile/${Id}`)}
               className="relative"
@@ -242,7 +248,6 @@ const StudentDashboard = ({ params }: StudentDashboardProps) => {
       {/* -------------------- HERO SECTION (Your future starts here) -------------------- */}
       <section className="w-full bg-gradient-to-br from-blue-50 via-white to-blue-100 py-16">
         <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between px-6">
-
           {/* LEFT TEXT AREA */}
           <div className="flex-1 text-center lg:text-left">
             <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
@@ -252,22 +257,16 @@ const StudentDashboard = ({ params }: StudentDashboardProps) => {
             <p className="text-gray-600 mt-3 text-lg">
               25k+ Internships for freshers, students & graduates!
             </p>
-
           </div>
 
           {/* RIGHT IMAGE AREA */}
           <div className="flex-1 mt-10 lg:mt-0 flex justify-center relative">
-
             {/* Background decorative circles */}
             <div className="absolute -top-5 -right-5 w-40 h-40 bg-blue-100 rounded-full blur-2xl opacity-60"></div>
             <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-blue-200 rounded-full blur-xl opacity-40"></div>
-
           </div>
-
         </div>
       </section>
-
-
 
       {/* Main */}
       <main className="max-w-7xl mx-auto px-6 py-8">
@@ -276,10 +275,11 @@ const StudentDashboard = ({ params }: StudentDashboardProps) => {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`p-3 rounded-lg text-sm flex items-center gap-2 ${message.type === "success"
-              ? "bg-green-50 text-green-700 border border-green-200"
-              : "bg-red-50 text-red-700 border border-red-200"
-              }`}
+            className={`p-3 rounded-lg text-sm flex items-center gap-2 ${
+              message.type === "success"
+                ? "bg-green-50 text-green-700 border border-green-200"
+                : "bg-red-50 text-red-700 border border-red-200"
+            }`}
           >
             {message.type === "success" ? (
               <CheckCircle2 className="w-4 h-4" />
@@ -393,8 +393,9 @@ const StudentDashboard = ({ params }: StudentDashboardProps) => {
                 <p className="text-gray-600 text-sm">
                   {loading
                     ? "Loading internships..."
-                    : `${internships.length} internship${internships.length !== 1 ? "s" : ""
-                    } found`}
+                    : `${internships.length} internship${
+                        internships.length !== 1 ? "s" : ""
+                      } found`}
                 </p>
                 <button
                   onClick={clearFilters}
@@ -548,7 +549,6 @@ const StudentDashboard = ({ params }: StudentDashboardProps) => {
         </DialogContent>
       </Dialog>
 
-
       {/* -------------------- TOP COMPANIES AUTO-SCROLLING SECTION -------------------- */}
       <section className="mt-10 w-full overflow-hidden">
         <h2 className="text-center text-3xl font-semibold text-gray-900">
@@ -561,8 +561,6 @@ const StudentDashboard = ({ params }: StudentDashboardProps) => {
         {/* Scrolling container */}
         <div className="relative w-full overflow-hidden mt-10">
           <div className="flex w-max animate-scroll whitespace-nowrap gap-8">
-
-
             {/* Duplicate logos for seamless infinite scroll */}
             {[
               "/comapnies/Apple.png",
@@ -586,7 +584,6 @@ const StudentDashboard = ({ params }: StudentDashboardProps) => {
                   className="object-contain"
                   style={{ width: "80px", height: "60px" }}
                 />
-
               </div>
             ))}
           </div>
@@ -612,23 +609,38 @@ const StudentDashboard = ({ params }: StudentDashboardProps) => {
 
       <footer className="mt-20 w-full bg-slate-900 text-gray-300 py-10 px-6 animate-fadeInUp delay-300">
         <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-10">
-
           {/* About Section */}
           <div>
-            <h3 className="text-lg font-semibold mb-3 text-white">About Kairo</h3>
+            <h3 className="text-lg font-semibold mb-3 text-white">
+              About Kairo
+            </h3>
             <p className="text-sm leading-relaxed">
-              Kairo connects applicants and recruiters with intelligent matching,
-              helping both sides grow faster and smarter.
+              Kairo connects applicants and recruiters with intelligent
+              matching, helping both sides grow faster and smarter.
             </p>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-lg font-semibold mb-3 text-white">Quick Links</h3>
+            <h3 className="text-lg font-semibold mb-3 text-white">
+              Quick Links
+            </h3>
             <ul className="space-y-2 text-sm">
-              <li><Link href="/signin" className="hover:text-white">Sign In</Link></li>
-              <li><Link href="/signup" className="hover:text-white">Sign Up</Link></li>
-              <li><Link href="/contact" className="hover:text-white">Contact</Link></li>
+              <li>
+                <Link href="/signin" className="hover:text-white">
+                  Sign In
+                </Link>
+              </li>
+              <li>
+                <Link href="/signup" className="hover:text-white">
+                  Sign Up
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" className="hover:text-white">
+                  Contact
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -641,7 +653,9 @@ const StudentDashboard = ({ params }: StudentDashboardProps) => {
         </div>
 
         <div className="mt-10 text-center text-gray-400 text-xs">
-          © {new Date().getFullYear()} <span className="font-semibold text-gray-200">Kairo</span> — All rights reserved.
+          © {new Date().getFullYear()}{" "}
+          <span className="font-semibold text-gray-200">Kairo</span> — All
+          rights reserved.
         </div>
       </footer>
     </div>
