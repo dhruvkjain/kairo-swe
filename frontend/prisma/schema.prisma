@@ -30,6 +30,8 @@ model Applicant {
   linkedInLink      String?
   resumeLink        String?
   githubLink        String?
+  leetcodeLink      String?
+  codeforcesLink    String?
   portfolioLink     String?
   about             String?
   skills            String[]
