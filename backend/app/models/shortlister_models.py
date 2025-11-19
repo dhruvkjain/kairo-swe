@@ -1,47 +1,79 @@
 import dspy
 from pydantic import BaseModel, Field
-from typing import Literal
+from typing import List, Dict, Optional, Any
 
-# --- 1. Project Level Assessment Signature ---
+# --- Pydantic Models for Data Structures ---
+
+class VerifiedSkill(BaseModel):
+    """Represents a skill and its assessed mastery level."""
+    skill: str = Field(..., alias="skillName")
+    mastery_level: float = Field(..., alias="masteryLevel")
+    
+    class Config:
+        allow_population_by_field_name = True
+
+class JobDetails(BaseModel):
+    """Represents the details of the internship job."""
+    id: str
+    description: str
+    required_skills: List[str] = Field(..., alias="skillsRequired")
+    preferred_skills: List[str] = Field(default_factory=list, alias="perks")
+    
+    class Config:
+        allow_population_by_field_name = True
+
+class ApplicantProfile(BaseModel):
+    """Represents an applicant's aggregated profile data."""
+    id: str
+    name: str
+    raw_resume_text: str = Field(..., alias="rawResumeText")
+    ocr_skills: List[str] = Field(default_factory=list) 
+    ocr_projects_text: str = Field(default_factory=str, alias="resumeProjectText")
+    verified_skills_data: List[VerifiedSkill] = Field(default_factory=list)
+    best_project_level: Optional[str] = None 
+    
+    # Fields to store the fetched embeddings (Lists of floats)
+    resume_embedding: List[float] = Field(default_factory=list)
+    project_embedding: List[float] = Field(default_factory=list)
+    
+    class Config:
+        allow_population_by_field_name = True
+
+class ApplicantScore(BaseModel):
+    """Represents the final score and breakdown for a single applicant."""
+    applicant_id: str
+    name: str
+    final_score: float
+    breakdown: Dict[str, float]
+
+# --- DSPy Module for LLM Assessment ---
+
 class ProjectLevelAssessment(dspy.Signature):
     """
-    Assess the complexity and quality of an applicant's project based on its text description, 
-    and assign a mastery level. The output must strictly be one of the specified levels.
+    Assesses the complexity and level (Beginner, Intermediate, Advanced) of 
+    an applicant's project description based on the provided text.
     """
-    project_text: str = dspy.InputField(desc="The text description of the applicant's best project or project summary.")
-    
-    # The output field uses a Pydantic model for structured, reliable JSON output
-    class Output(BaseModel):
-        level: Literal["Beginner", "Intermediate", "Advanced"] = Field(
-            description="The best fit project level: Beginner, Intermediate, or Advanced."
-        )
-        reasoning: str = Field(
-            description="A concise reason for the assigned project level."
-        )
-    
-    assessment: Output = dspy.OutputField(desc="The structured assessment output.")
+    project_text = dspy.InputField(desc="The full project description text from the resume.")
+    project_level = dspy.OutputField(
+        desc="One of: 'Beginner', 'Intermediate', or 'Advanced'. Ensure the response is exactly one of these words."
+    )
 
-# --- 2. Project Level Assessor Module ---
 class ProjectLevelAssessor(dspy.Module):
     """
-    A dspy module that uses the ProjectLevelAssessment signature to get a structured 
-    assessment of a project's level.
+    A DSPy module that uses the LLM to classify project complexity.
     """
     def __init__(self):
         super().__init__()
-        # Use dspy.Predict with the structured output signature
-        self.predictor = dspy.Predict(ProjectLevelAssessment, output_structure=ProjectLevelAssessment.Output)
+        self.predictor = dspy.Predict(ProjectLevelAssessment)
 
     def forward(self, project_text: str) -> str:
-        """
-        Runs the predictor and returns only the 'level' string.
-        
-        NOTE: The dspy.context for the LM will be set externally for this function call.
-        """
-        try:
-            prediction = self.predictor(project_text=project_text)
-            return prediction.assessment.level
-        except Exception as e:
-            # Note: This error handling is critical because LLM calls can fail
-            print(f"DSPy/LLM Project Level Assessment failed: {e}. Defaulting to Beginner.")
-            return "Beginner"
+        """Runs the LLM prediction and returns the assessment."""
+        if len(project_text) < 20:
+            return "Beginner" # Default for minimal text
+            
+        result = self.predictor(project_text=project_text)
+        # Clean and validate the output to ensure it matches expected levels
+        level = result.project_level.strip().capitalize()
+        if level not in ["Beginner", "Intermediate", "Advanced"]:
+            return "Intermediate" # Fallback if LLM gives a strange response
+        return level

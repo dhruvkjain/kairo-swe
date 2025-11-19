@@ -25,24 +25,25 @@ model User {
 }
 
 model Applicant {
-  id                String          @id @default(uuid())
-  userId            String          @unique
-  linkedInLink      String?
-  resumeLink        String?
-  githubLink        String?
-  leetcodeLink      String?
-  codeforcesLink    String?
-  portfolioLink     String?
-  about             String?
-  skills            String[]
-  education         Json?
-  rawResumeText     String?
-  resumeProjectText String?
-  experience        Json?
-  phoneNumber       String[]
-  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  projects          Project[]
-  verifiedSkills    VerifiedSkill[]
+  id                     String                  @id @default(uuid())
+  userId                 String                  @unique
+  linkedInLink           String?
+  resumeLink             String?
+  githubLink             String?
+  leetcodeLink           String?
+  codeforcesLink         String?
+  portfolioLink          String?
+  about                  String?
+  skills                 String[]
+  education              Json?
+  rawResumeText          String?
+  resumeProjectText      String?
+  experience             Json?
+  phoneNumber            String[]
+  user                   User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projects               Project[]
+  verifiedSkills         VerifiedSkill[]
+  internshipApplications InternshipApplication[]
 }
 
 model Recruiter {
@@ -72,11 +73,11 @@ model Company {
 }
 
 model CompanyAuth {
-  id        String   @id @default(uuid())
-  companyId String   @unique
-  loginId   String   @unique
+  id        String  @id @default(uuid())
+  companyId String  @unique
+  loginId   String  @unique
   password  String
-  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 }
 
 model Internship {
@@ -136,8 +137,10 @@ model InternshipApplication {
   selectInterview   Boolean?
   gender            Gender            @default(OTHER)
 
-  applicant         Applicant         @relation(fields: [applicantId], references: [id], onDelete: Cascade)
-  internship        Internship        @relation(fields: [internshipId], references: [id], onDelete: Cascade)
+  applicant  Applicant  @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  internship Internship @relation(fields: [internshipId], references: [id], onDelete: Cascade)
+  user       User?      @relation(fields: [userId], references: [id])
+  userId     String?
 
   @@unique([internshipId, applicantId])
   @@index([internshipId])

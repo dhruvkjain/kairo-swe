@@ -2,6 +2,7 @@ import json
 import dspy
 from fastapi import APIRouter, HTTPException
 from fastapi.concurrency import run_in_threadpool
+import re # Import the regular expression module
 
 from app.config.config import OPEN_ROUTER_API_KEY
 from app.models.resume_parser_models import ResumeUrlRequest
@@ -39,15 +40,17 @@ class ResumeParser(dspy.Module):
             "resumeUrl": "string or null"
         }
 
+        # IMPORTANT: Reinforce the single-output instruction in the prompt
         prompt = f"""
         You are an expert resume parsing API. 
-        Analyze the following resume text and extract the information into a single, valid JSON object. 
+        Analyze the following resume text and extract the information into a single, raw JSON object. 
         
         Adhere strictly to this JSON schema: {json.dumps(schema)} 
         
         Rules: 
+        - Your output MUST be ONLY the raw JSON object, starting with '{{' and ending with '}}'.
+        - Do NOT include markdown code blocks, preambles, or explanations.
         - If a field is missing, return null (for strings) or [] (for lists). 
-        - Do NOT include explanations or markdown formatting like json.
         - Extract phone numbers, email, education, skills, gender (if deducible), and experience.
         - appliedFor = The job role mentioned in the resume.
         - appliedDate = null unless a date is actually found.
@@ -91,20 +94,38 @@ async def parse_resume(req: ResumeUrlRequest):
     # ---------------------------
     try:
         with dspy.context(lm=qwen_lm):
-            json_str = ai_model(raw_text=raw_text)
+            # Step 1: Get the raw, potentially messy output from the LLM
+            llm_raw_output = ai_model(raw_text=raw_text)
+            
+            # Step 2: Use regex to find and extract the valid JSON object
+            # This looks for the content between the first '{' and the last '}'
+            # This is the most robust way to handle LLM preamble/postamble text.
+            match = re.search(r'\{.*\}', llm_raw_output, re.DOTALL)
+            
+            if match:
+                json_str = match.group(0)
+            else:
+                # If regex fails, assume the whole string is the JSON (less safe)
+                json_str = llm_raw_output.strip()
+
+            # Step 3: Attempt to load the cleaned string
             data = json.loads(json_str)
+
+    except json.JSONDecodeError as e:
+        # Catch specific JSON error and log the raw output for better debugging
+        print(f"JSON DECODE ERROR: {e}. Raw LLM output was: \n{llm_raw_output}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"AI Error: Failed to parse valid JSON from LLM. (Error: {e})"
+        )
     except Exception as e:
-        print("ERROR:", type(e).__name__, str(e))
+        print("OTHER ERROR:", type(e).__name__, str(e))
         raise HTTPException(500, f"AI Error: {e}")
 
     # ---------------------------
     # 3. Add additional fields
     # ---------------------------
-    data["resumeUrl"] = req.url
-    data["links"] = links
-    data["rawResumeText"] = raw_text
-
-    # defaults
+    # Set default values and inject backend-controlled fields
     data["resumeUrl"] = req.url
     data["links"] = links
     data["rawResumeText"] = raw_text
