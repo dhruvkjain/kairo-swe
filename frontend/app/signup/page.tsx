@@ -16,7 +16,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Eye, EyeOff, Lock, Mail, User, UserCheck } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail, User, UserCheck, Building2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -30,6 +30,7 @@ interface RegistrationFormData {
   confirmPassword: string;
   role: "applicant" | "recruiter";
   gender: "MALE" | "FEMALE" | "OTHER";
+  companyId?: string; // Added companyId
   termsAccepted: boolean;
 }
 
@@ -43,6 +44,7 @@ const Registration: React.FC = () => {
     confirmPassword: "",
     role: "applicant",
     gender: "MALE",
+    companyId: "", // Initialize companyId
     termsAccepted: false,
   });
 
@@ -66,6 +68,11 @@ const Registration: React.FC = () => {
     if (formData.password !== formData.confirmPassword)
       return toast.error("Passwords do not match.");
 
+    // Validation for recruiter
+    if (formData.role === "recruiter" && !formData.companyId) {
+      return toast.error("Company ID is required for recruiters.");
+    }
+
     try {
       setIsLoading(true);
 
@@ -78,6 +85,7 @@ const Registration: React.FC = () => {
           password: formData.password,
           role: formData.role,
           gender: formData.gender,
+          companyId: formData.role === "recruiter" ? formData.companyId : undefined, // Send ID only if recruiter
         }),
       });
 
@@ -182,6 +190,25 @@ const Registration: React.FC = () => {
               </Select>
             </div>
 
+            {/* Company ID - Conditionally Rendered */}
+            {formData.role === "recruiter" && (
+              <div className="space-y-2 slide-in-from-top-2 animate-in duration-300">
+                <Label htmlFor="companyId">Company ID *</Label>
+                <div className="relative">
+                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="companyId"
+                    type="text"
+                    placeholder="Enter your Company ID"
+                    required={formData.role === "recruiter"}
+                    value={formData.companyId}
+                    onChange={(e) => handleInputChange("companyId", e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Password */}
             <div className="space-y-2">
               <Label htmlFor="password">Password *</Label>
@@ -254,7 +281,7 @@ const Registration: React.FC = () => {
                 onChange={(e) =>
                   handleInputChange("termsAccepted", e.target.checked)
                 }
-                className="rounded border-gray-300"
+                className="rounded border-gray-300 accent-primary"
                 required
               />
               <Label htmlFor="terms" className="text-sm text-muted-foreground">
