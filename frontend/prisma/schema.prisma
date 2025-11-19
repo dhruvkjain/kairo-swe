@@ -9,7 +9,7 @@ datasource db {
 }
 
 model User {
-  id            String                  @id
+  id            String                  @id @default(uuid())
   name          String?
   email         String?                 @unique
   password      String?
@@ -25,7 +25,7 @@ model User {
 }
 
 model Applicant {
-  id                String          @id
+  id                String          @id @default(uuid())
   userId            String          @unique
   linkedInLink      String?
   resumeLink        String?
@@ -47,7 +47,7 @@ model Applicant {
 }
 
 model Recruiter {
-  id           String       @id
+  id           String       @id @default(uuid())
   userId       String       @unique
   companyId    String?
   position     String?
@@ -81,7 +81,7 @@ model CompanyAuth {
 
 
 model Internship {
-  id                  String                  @id
+  id                  String                  @id @default(uuid())
   category            InternshipCategory?
   title               String
   slug                String                  @unique
@@ -118,7 +118,7 @@ model Internship {
 }
 
 model InternshipApplication {
-  id                String            @id
+  id                String            @id @default(uuid())
   internshipId      String
   applicantId       String
   coverLetter       String?
@@ -143,7 +143,7 @@ model InternshipApplication {
 }
 
 model Account {
-  id                String  @id
+  id                String  @id @default(uuid())
   userId            String
   type              String
   provider          String
@@ -161,7 +161,7 @@ model Account {
 }
 
 model Session {
-  id           String   @id
+  id           String   @id @default(uuid())
   sessionToken String   @unique
   userId       String
   expires      DateTime
@@ -175,7 +175,7 @@ model VerificationToken {
 }
 
 model Project {
-  id               String    @id
+  id               String    @id @default(uuid())
   title            String
   description      String?
   githubUrl        String?
@@ -187,7 +187,7 @@ model Project {
 }
 
 model VerifiedSkill {
-  id                  String    @id
+  id                  String    @id @default(uuid())
   skillName           String
   skillNameNormalized String
   masteryLevel        Float
