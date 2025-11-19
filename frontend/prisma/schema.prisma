@@ -9,7 +9,7 @@ datasource db {
 }
 
 model User {
-  id            String                  @id
+  id            String                  @id @default(uuid())
   name          String?
   email         String?                 @unique
   password      String?
@@ -25,7 +25,7 @@ model User {
 }
 
 model Applicant {
-  id                String          @id
+  id                String          @id @default(uuid())
   userId            String          @unique
   linkedInLink      String?
   resumeLink        String?
@@ -33,19 +33,18 @@ model Applicant {
   portfolioLink     String?
   about             String?
   skills            String[]
-  projects          String[]
   education         Json?
   rawResumeText     String?
   resumeProjectText String?
   experience        Json?
   phoneNumber       String[]
   user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  Project           Project[]
-  VerifiedSkill     VerifiedSkill[]
+  projects          Project[]
+  verifiedSkills    VerifiedSkill[]
 }
 
 model Recruiter {
-  id           String       @id
+  id           String       @id @default(uuid())
   userId       String       @unique
   companyId    String?
   position     String?
@@ -56,6 +55,7 @@ model Recruiter {
   company      Company?     @relation(fields: [companyId], references: [id])
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+
 model Company {
   id          String       @id @default(uuid())
   name        String
@@ -77,9 +77,8 @@ model CompanyAuth {
   company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
 }
 
-
 model Internship {
-  id                  String                  @id
+  id                  String                  @id @default(uuid())
   category            InternshipCategory?
   title               String
   slug                String                  @unique
@@ -116,7 +115,7 @@ model Internship {
 }
 
 model InternshipApplication {
-  id                String            @id
+  id                String            @id @default(uuid())
   internshipId      String
   applicantId       String
   coverLetter       String?
@@ -134,14 +133,17 @@ model InternshipApplication {
   resumeData        Json?
   selectInterview   Boolean?
   gender            Gender            @default(OTHER)
-  applicant         User              @relation(fields: [applicantId], references: [id])
-  internship        Internship        @relation(fields: [internshipId], references: [id])
+
+  applicant         Applicant         @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  internship        Internship        @relation(fields: [internshipId], references: [id], onDelete: Cascade)
 
   @@unique([internshipId, applicantId])
+  @@index([internshipId])
+  @@index([applicantId])
 }
 
 model Account {
-  id                String  @id
+  id                String  @id @default(uuid())
   userId            String
   type              String
   provider          String
@@ -159,7 +161,7 @@ model Account {
 }
 
 model Session {
-  id           String   @id
+  id           String   @id @default(uuid())
   sessionToken String   @unique
   userId       String
   expires      DateTime
@@ -168,12 +170,12 @@ model Session {
 
 model VerificationToken {
   identifier String
-  token      String   @id
+  token      String   @id @default(uuid())
   expires    DateTime
 }
 
 model Project {
-  id               String    @id
+  id               String    @id @default(uuid())
   title            String
   description      String?
   githubUrl        String?
@@ -181,16 +183,16 @@ model Project {
   analysis         String?
   codeQualityScore Float?
   applicantId      String
-  Applicant        Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  applicant        Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
 }
 
 model VerifiedSkill {
-  id                  String    @id
+  id                  String    @id @default(uuid())
   skillName           String
   skillNameNormalized String
   masteryLevel        Float
   applicantId         String
-  Applicant           Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  applicant           Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
 
   @@unique([applicantId, skillNameNormalized])
 }

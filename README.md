@@ -80,9 +80,14 @@ cd ./backend
 python3 -m venv .venv
 ```
 
-- activate venv
+- activate venv (Linux)
 ```shell
 source .venv/bin/activate
+```
+
+- activate venv (Windows)
+```shell
+source .venv/Scripts/activate
 ```
 
 - install dependecies
