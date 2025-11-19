@@ -1088,34 +1088,34 @@ const RecruiterDashboard = ({ id }: { id: string }) => {
             Active Internships
           </h3>
           <div className="space-y-3">
-            {/* --- MODIFIED: Using searchInternships for this list --- */}
-            {searchInternships
-              .filter((internship) =>
-                internship.title
-                  .toLowerCase()
-                  .includes(searchQuery.toLowerCase())
-              )
-              .map((internship) => (
-                <div
-                  key={internship.id}
-                  className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer"
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <h4 className="font-medium text-gray-900 text-sm">
-                      {internship.title}
-                    </h4>
-                    <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">
-                      {internship.status}
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-3 text-xs text-gray-500">
-                    <span className="flex items-center space-x-1">
-                      <Users className="w-3 h-3" />
-                      <span>{internship.applicationsCount} applicants</span>
-                    </span>
-                  </div>
+            {(searchQuery
+              ? searchInternships.filter((internship) =>
+                  internship.title
+                    .toLowerCase()
+                    .includes(searchQuery.toLowerCase())
+                )
+              : internships
+            ).map((internship) => (
+              <div
+                key={internship.id}
+                className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer"
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <h4 className="font-medium text-gray-900 text-sm">
+                    {internship.title}
+                  </h4>
+                  <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+                    {internship.status}
+                  </span>
                 </div>
-              ))}
+                <div className="flex items-center space-x-3 text-xs text-gray-500">
+                  <span className="flex items-center space-x-1">
+                    <Users className="w-3 h-3" />
+                    <span>{internship.applicationsCount} applicants</span>
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
