@@ -120,6 +120,7 @@ interface InternshipSummary {
   status: string; 
   applicationsCount: number;
   applicants: number;
+  applicationDeadline: string; 
 }
 
 // 7. MonthlyStat: No change.
@@ -143,6 +144,8 @@ interface ApplicantModalProps {
     onClose: () => void;
 }
 
+type InternshipStatusFilter = "All" | "Active" | "Closed";
+
 
 const RecruiterDashboard = ({ id }: { id: string }) => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -152,6 +155,7 @@ const RecruiterDashboard = ({ id }: { id: string }) => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [internships, setInternships] = useState<InternshipSummary[]>([]);
+  const [allInternships, setAllInternships] = useState<InternshipSummary[]>([]);
   const [openUpdate, setOpenUpdate] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [monthlyStats, setMonthlyStats] = useState<MonthlyStat[]>([]);
@@ -160,6 +164,7 @@ const RecruiterDashboard = ({ id }: { id: string }) => {
   const [showinterviewModal, setShowInterviewModal] = useState(false);
   const [interviews, setInterviews] = useState<InterviewItem[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>("All Status");
+  const [statusViewFilter, setStatusViewFilter] = useState<InternshipStatusFilter>("All");
   const [internshipFilter, setInternshipFilter] = useState<string>("All Category");
   const [applicants, setApplicants] = useState<Application[]>([]);
   
@@ -236,7 +241,7 @@ const RecruiterDashboard = ({ id }: { id: string }) => {
     fetchStats();
   }, []);
 
-  // 5. Fetch Internships List
+  // 5. Fetch Active Internships List
   useEffect(() => {
     if (!recruiterId) return;
 
@@ -272,6 +277,28 @@ const RecruiterDashboard = ({ id }: { id: string }) => {
       }
     };
     fetchApplicants();
+  }, [recruiterId]);
+
+  // 7. Fetch All Internships List
+  useEffect(() => {
+    if (!recruiterId) return;
+
+    const loadInternships = async () => {
+      try {
+        const response = await fetch(
+          `/api/auth/recruiter/myAllInternship?recruiterId=${recruiterId}`
+        );
+        if (!response.ok) {
+          console.error("Fetch error:", await response.text());
+          return;
+        }
+        const internshipsData: InternshipSummary[] = await response.json();
+        setAllInternships(internshipsData);
+      } catch (error) {
+        console.error("Network error:", error);
+      }
+    };
+    loadInternships();
   }, [recruiterId]);
 
   if (loading) return <p>Loading dashboard...</p>;
@@ -343,6 +370,29 @@ const RecruiterDashboard = ({ id }: { id: string }) => {
       console.log("Delete error:", err);
     }
   };
+
+  const currentDate = new Date(); 
+
+  const isInternshipActive = (internship: InternshipSummary) => {
+    const deadline = new Date(internship.applicationDeadline); 
+  return deadline >= currentDate; 
+  };
+
+  const filteredInternshipsByStatus = allInternships.filter((internship) => {
+      const categoryMatch =
+      internshipFilter === "All Category" ||
+      internship.category === internshipFilter;
+    const isActive = isInternshipActive(internship);
+    let statusMatch = true;
+
+    if (statusViewFilter === "Active") {
+      statusMatch = isActive;
+    } else if (statusViewFilter === "Closed") {
+      statusMatch = !isActive;
+    }
+
+    return categoryMatch && statusMatch;
+  });
 
   // --- Export Logic ---
 
@@ -838,6 +888,19 @@ const RecruiterDashboard = ({ id }: { id: string }) => {
           </h2>
 
           <div className="flex items-center space-x-2">
+            {/* 💡 NEW STATUS FILTER: All, Active, Closed (uses statusViewFilter state) */}
+            <select
+              value={statusViewFilter}
+              // Cast the value to the defined type for TypeScript
+              onChange={(e) => setStatusViewFilter(e.target.value as InternshipStatusFilter)}
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+            >
+              <option value={"All"}>All Internship</option>
+              <option value={"Active"}>Active Internship</option>
+              <option value={"Closed"}>Closed Internship</option>
+            </select>
+            
+            {/* Existing Category Filter */}
             <select
               value={internshipFilter}
               onChange={(e) => setInternshipFilter(e.target.value)}
@@ -889,14 +952,15 @@ const RecruiterDashboard = ({ id }: { id: string }) => {
             </thead>
 
             <tbody className="divide-y divide-gray-200">
-              {internships
-                .filter((internship) => {
-                  if (internshipFilter === "All Category") {
-                    return true;
-                  }
-                  return internship.category === internshipFilter;
-                })
-                .map((internship) => (
+              {/* 💡 Use the new filtered array */}
+              {filteredInternshipsByStatus.map((internship) => {
+                const isActive = isInternshipActive(internship);
+                const statusLabel = isActive ? "ACTIVE" : "CLOSED";
+                const statusColorClass = isActive 
+                  ? "bg-green-100 text-green-700" 
+                  : "bg-yellow-100 text-yellow-700"; 
+                
+                return (
                   <tr
                     key={internship.id}
                     className="hover:bg-gray-50 cursor-pointer"
@@ -937,16 +1001,8 @@ const RecruiterDashboard = ({ id }: { id: string }) => {
                     </td>
 
                     <td className="px-4 py-3">
-                      <span
-                        className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          internship.status === "PUBLISHED"
-                            ? "bg-green-100 text-green-700"
-                            : internship.status === "CLOSED"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : "bg-gray-100 text-gray-700"
-                        }`}
-                      >
-                        {internship.status}
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusColorClass}`}>
+                        {statusLabel}
                       </span>
                     </td>
 
@@ -977,13 +1033,14 @@ const RecruiterDashboard = ({ id }: { id: string }) => {
                       </div>
                     </td>
                   </tr>
-                ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* RIGHT SIDE — APPLICANTS */}
+      {/* RIGHT SIDE — APPLICANTS (Unchanged) */}
       <div className="col-span-1 bg-white border border-gray-200 rounded-lg p-4 h-full overflow-y-auto">
         {selectedInternship ? (
           <>
