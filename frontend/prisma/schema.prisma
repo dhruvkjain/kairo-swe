@@ -79,7 +79,7 @@ model CompanyAuth {
 
 
 model Internship {
-  id                  String                  @id
+  id                  String                  @id @default(uuid())
   category            InternshipCategory?
   title               String
   slug                String                  @unique
@@ -116,7 +116,7 @@ model Internship {
 }
 
 model InternshipApplication {
-  id                String            @id
+  id                String            @id @default(uuid())
   internshipId      String
   applicantId       String
   coverLetter       String?

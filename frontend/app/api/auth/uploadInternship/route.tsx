@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient, InternshipType, InternshipMode, Stipendtype, UserType, InternshipStatus } from "@prisma/client";
+import {
+  PrismaClient,
+  InternshipType,
+  InternshipMode,
+  Stipendtype,
+  UserType,
+  InternshipStatus,
+} from "@prisma/client";
 import slugify from "slugify";
 
 const prisma = new PrismaClient();
@@ -36,7 +43,7 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const internshipId = searchParams.get("internshipId");
-    
+
     // Validate internshipId
     if (!internshipId) {
       return NextResponse.json(
@@ -61,7 +68,6 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json(internship, { status: 200 });
-
   } catch (error) {
     console.error("GET internship (single) error:", error);
     return NextResponse.json(
@@ -71,7 +77,6 @@ export async function GET(req: NextRequest) {
   }
 }
 
-
 /**
  * POST /api/internships
  * Create a new internship (auto-handles duplicate slug)
@@ -80,17 +85,36 @@ export async function POST(req: Request) {
   try {
     const body: InternshipPayload = await req.json();
 
-    if (!body.title || !body.companyId || !body.recruiterId) {
+    if (!body.title || !body.recruiterId) {
       return NextResponse.json(
         { error: "Missing required fields: title, companyId, recruiterId" },
         { status: 400 }
       );
     }
 
-    const recruiter = await prisma.recruiter.findUnique({ where: { userId : body.recruiterId } })
+    const company = await prisma.recruiter.findUnique({
+      where: { userId: body.recruiterId },
+      select: { companyId: true },
+    });
+
+    if (!company || !company.companyId) {
+      return NextResponse.json(
+        { error: "Recruiter not found or missing associated companyId." },
+        { status: 404 }
+      );
+    }
+
+    const companyId = company.companyId;
+
+    const recruiter = await prisma.recruiter.findUnique({
+      where: { userId: body.recruiterId },
+    });
 
     // --- Auto-generate slug if not provided ---
-    const baseSlug = slugify(body.slug || body.title, { lower: true, strict: true });
+    const baseSlug = slugify(body.slug || body.title, {
+      lower: true,
+      strict: true,
+    });
 
     // --- Ensure slug is unique ---
     let slug = baseSlug;
@@ -119,8 +143,10 @@ export async function POST(req: Request) {
         eligibility: body.requirements ?? null,
         userType: body.userType ?? null,
         startDate: body.startDate ? new Date(body.startDate) : null,
-        applicationDeadline: body.applicationDeadline ? new Date(body.applicationDeadline) : null,
-        companyId: body.companyId,
+        applicationDeadline: body.applicationDeadline
+          ? new Date(body.applicationDeadline)
+          : null,
+        companyId: companyId,
         recruiterId: recruiter?.id,
         status: body.status ?? "DRAFT",
       },
@@ -137,7 +163,10 @@ export async function POST(req: Request) {
       );
     }
 
-    return NextResponse.json({ error: "Failed to create internship" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to create internship" },
+      { status: 500 }
+    );
   }
 }
 
@@ -149,7 +178,7 @@ export async function PUT(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const internshipId = searchParams.get("internshipId");
-    
+
     // Validate internshipId
     if (!internshipId) {
       return NextResponse.json(
@@ -179,7 +208,9 @@ export async function PUT(req: Request) {
         eligibility: body.requirements ?? undefined,
         userType: body.userType ?? undefined,
         startDate: body.startDate ? new Date(body.startDate) : undefined,
-        applicationDeadline: body.applicationDeadline ? new Date(body.applicationDeadline) : undefined,
+        applicationDeadline: body.applicationDeadline
+          ? new Date(body.applicationDeadline)
+          : undefined,
         status: body.status ?? undefined,
       },
     });
@@ -187,7 +218,10 @@ export async function PUT(req: Request) {
     return NextResponse.json(internship, { status: 200 });
   } catch (error) {
     console.error("PUT internship error:", error);
-    return NextResponse.json({ error: "Failed to update internship" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to update internship" },
+      { status: 500 }
+    );
   }
 }
 
@@ -233,7 +267,6 @@ export async function DELETE(req: Request) {
       { message: "Internship deleted successfully" },
       { status: 200 }
     );
-
   } catch (error) {
     console.error("DELETE internship error:", error);
     return NextResponse.json(
