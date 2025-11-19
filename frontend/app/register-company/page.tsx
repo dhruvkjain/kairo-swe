@@ -112,7 +112,7 @@ export default function RegisterCompanyPage() {
         </h2>
         <p className="mt-2 text-center text-sm text-slate-600">
           {successData 
-            ? "Your account has been created" 
+            ? "Your account has been created." 
             : "Create an account to start hiring top talent."}
         </p>
       </div>
