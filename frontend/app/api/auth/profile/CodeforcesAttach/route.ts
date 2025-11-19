@@ -22,21 +22,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Link is required" }, { status: 400 });
     }
 
-    // Clean username. Handles: https://codeforces.com/profile/username or just username
     const cleanUsername = codeforcesLink
       .trim()
       .replace(/^https?:\/\/(www\.)?codeforces\.com\/profile\//, "") 
       .split("/")[0];
 
-    // Verify user exists on Codeforces
     const cfUser = await fetchCodeforcesStats(cleanUsername);
 
-    // Save to DB
     const updatedApplicant = await prisma.applicant.upsert({
       where: { userId },
       update: { codeforcesLink },
       create: { 
-        id: crypto.randomUUID(), // Key fix we learned from LeetCode!
+        id: crypto.randomUUID(),
         userId, 
         codeforcesLink 
       },

@@ -1,7 +1,7 @@
 import { getCurrentUser } from "@/lib/auth"
 import { getGitHubUser } from "@/lib/github_api"
 import { fetchLeetCodeStats } from "@/lib/leetcode_api" 
-import { fetchCodeforcesStats } from "@/lib/codeforces_api" // ✅ NEW: Import API
+import { fetchCodeforcesStats } from "@/lib/codeforces_api" 
 import prisma from "@/lib/prisma"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import ProfileHeader from "@/components/profile/ProfileHeader"
@@ -11,7 +11,7 @@ import ExperienceSection from "@/components/profile/ExperienceSection"
 import ContactSection from "@/components/profile/ContactSection"
 import GitHubSection from "@/components/profile/GitHubSection"
 import LeetCodeSection from "@/components/profile/LeetCodeSection" 
-import CodeforcesSection from "@/components/profile/CodeforcesSection" // ✅ NEW: Import Component
+import CodeforcesSection from "@/components/profile/CodeforcesSection" 
 import LinkedInSection from "@/components/profile/LinkedInSection"
 import ResumeSection from "@/components/profile/ResumeSection"
 import RecruiterDashboard from "@/components/RecruiterDashboard"
@@ -47,10 +47,10 @@ export default async function ProfilePage({ params }: { params: { Id: string } }
     const hasResume = !!applicant?.resumeLink
     const hasGitHub = !!applicant?.githubLink
     const hasLeetCode = !!applicant?.leetcodeLink
-    const hasCF = !!applicant?.codeforcesLink // ✅ NEW: Check Existence
+    const hasCF = !!applicant?.codeforcesLink 
     const hasLinkedIn = !!applicant?.linkedInLink
 
-    // --- GitHub Fetching ---
+    
     let githubData = null
     if (hasGitHub && applicant?.githubLink) {
       try {
@@ -61,7 +61,6 @@ export default async function ProfilePage({ params }: { params: { Id: string } }
       }
     }
 
-    // --- LeetCode Fetching ---
     let leetCodeData = null
     if (hasLeetCode && applicant?.leetcodeLink) {
       try {
@@ -75,11 +74,10 @@ export default async function ProfilePage({ params }: { params: { Id: string } }
       }
     }
 
-    // --- ✅ NEW: Codeforces Fetching ---
+    
     let cfData = null
     if (hasCF && applicant?.codeforcesLink) {
       try {
-        // Extract username handles: "codeforces.com/profile/tourist" or just "tourist"
         const parts = applicant.codeforcesLink.split("/")
         const handle = parts[parts.length - 1] || parts[parts.length - 2]
         
@@ -109,7 +107,7 @@ export default async function ProfilePage({ params }: { params: { Id: string } }
     return (
       <div className="min-h-screen bg-background">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-          {/* Profile Header */}
+          
           <ProfileHeader
             profileUser={profileUser}
             isOwner={isOwner}
@@ -120,7 +118,7 @@ export default async function ProfilePage({ params }: { params: { Id: string } }
             hasLinkedIn={hasLinkedIn}
           />
 
-          {/* Main Content */}
+          
           <div className="mt-12">
             <Tabs defaultValue="projects" className="w-full">
               <TabsList className="grid w-full grid-cols-3 lg:grid-cols-3 bg-muted/50 border border-border rounded-lg p-1">
@@ -135,7 +133,7 @@ export default async function ProfilePage({ params }: { params: { Id: string } }
                 </TabsTrigger>
               </TabsList>
 
-              {/* Projects & Skills Tab */}
+              
               <TabsContent value="projects" className="space-y-6 mt-8">
                 <ProjectsSection
                   isApplicant={isApplicant}
@@ -152,7 +150,7 @@ export default async function ProfilePage({ params }: { params: { Id: string } }
                 />
               </TabsContent>
 
-              {/* Experience & Contact Tab */}
+              
               <TabsContent value="experience" className="space-y-6 mt-8">
                 <ExperienceSection isApplicant={isApplicant} applicant={applicant} />
                 <ContactSection
@@ -163,7 +161,7 @@ export default async function ProfilePage({ params }: { params: { Id: string } }
                 />
               </TabsContent>
 
-              {/* Integrations Tab */}
+              
               <TabsContent value="integrations" className="space-y-6 mt-8">
                 <GitHubSection hasGitHub={hasGitHub} githubData={githubData} applicant={applicant} isOwner={isOwner} />
                 
@@ -174,7 +172,6 @@ export default async function ProfilePage({ params }: { params: { Id: string } }
                   isOwner={isOwner} 
                 />
 
-                {/* ✅ NEW: Add Codeforces Section Here */}
                 <CodeforcesSection
                   hasCF={hasCF}
                   cfData={cfData}

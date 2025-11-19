@@ -51,7 +51,6 @@ export default function CodeforcesSection({ hasCF, cfData, applicant, isOwner }:
             </div>
             
             <div className="flex items-center justify-center bg-muted p-4 rounded-lg">
-                 {/* Display Avatar if available */}
                  {cfData.avatar && (
                     <img src={cfData.avatar} alt="Avatar" className="w-16 h-16 rounded-full border-2 border-blue-500" />
                  )}

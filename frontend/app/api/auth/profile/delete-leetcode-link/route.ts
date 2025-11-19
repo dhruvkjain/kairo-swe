@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-// import { requireAuth } from "@/lib/auth"; // Uncomment if you use this helper
 
 export async function DELETE(req: Request) {
   try {
-    // const currentUser = await requireAuth(); // Uncomment if needed
     const { userId, field } = await req.json();
 
     if (field !== "leetcodeLink") {

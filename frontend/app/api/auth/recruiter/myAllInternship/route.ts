@@ -29,12 +29,6 @@ export async function GET(req: NextRequest) {
     const internships = await prisma.internship.findMany({
       where: {
         recruiterId: recruiter.id,
-        startDate : {
-          lte: new Date()
-        },
-        applicationDeadline:{
-          gte: new Date()
-        },
       },
       orderBy: { createdAt: "desc" },
     });

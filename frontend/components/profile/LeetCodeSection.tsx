@@ -1,7 +1,7 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-// Ensure these paths match where you created the buttons earlier
+
 import LeetCodeButton from "@/components/LeetCodeButton" 
 import LeetCodeDeleteButton from "@/components/LeetCodeDeleteButton"
 
@@ -19,7 +19,6 @@ export default function LeetCodeSection({
   isOwner 
 }: LeetCodeSectionProps) {
   
-  // If no link and not owner, show nothing
   if (!hasLeetCode && !isOwner) return null
 
   return (
@@ -28,7 +27,7 @@ export default function LeetCodeSection({
         <CardTitle className="text-xl font-bold flex items-center gap-2">
           <span className="text-yellow-600">⚡</span> LeetCode
         </CardTitle>
-        {/* Show Add/Edit Button if Owner */}
+      
         {isOwner && (
           <div className="flex gap-2">
             <LeetCodeButton 
@@ -48,7 +47,7 @@ export default function LeetCodeSection({
         {!hasLeetCode ? (
           <p className="text-muted-foreground">Link your LeetCode profile to showcase your problem-solving stats.</p>
         ) : leetCodeData ? (
-          // Display Stats if data exists
+          
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
             <div className="bg-muted p-3 rounded-lg text-center">
               <div className="text-xs text-muted-foreground uppercase">Total Solved</div>

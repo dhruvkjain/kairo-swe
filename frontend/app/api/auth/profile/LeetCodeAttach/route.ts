@@ -22,21 +22,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Link is required" }, { status: 400 });
     }
 
-    // Clean username. LeetCode urls are usually leetcode.com/u/username or leetcode.com/username
+    
     const cleanUsername = leetcodeLink
       .trim()
-      .replace(/^https?:\/\/(www\.)?leetcode\.com\/(u\/)?/, "") // removes https://leetcode.com/u/
+      .replace(/^https?:\/\/(www\.)?leetcode\.com\/(u\/)?/, "")
       .split("/")[0];
 
-    // Verify user exists on LeetCode
+    
     const leetCodeUser = await fetchLeetCodeStats(cleanUsername);
 
-    // Save to DB
+    
     const updatedApplicant = await prisma.applicant.upsert({
       where: { userId },
       update: { leetcodeLink },
       create: {
-        id: crypto.randomUUID(), // ✅ ADD THIS LINE
+        id: crypto.randomUUID(), 
         userId,
         leetcodeLink,
       },
