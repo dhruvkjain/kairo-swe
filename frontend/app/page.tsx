@@ -124,7 +124,63 @@ const LandingPage: React.FC = () => {
           </div>
         ))}
       </div>
-   
+        <section className="w-full py-20 bg-white">
+  <div className="max-w-5xl mx-auto px-6 space-y-20">
+
+    {/* Row 1: image left, text right */}
+    <div className="grid md:grid-cols-2 gap-12 items-center">
+      <img
+        src="/homepage/1.png"
+        alt="Student Opportunities"
+        className="rounded-2xl shadow-lg w-full object-cover"
+      />
+      <div className="space-y-4">
+        <h2 className="text-2xl font-semibold">Enhance Your Resume</h2>
+        <ul className="list-disc list-inside text-gray-600 space-y-2">
+          <li>Upload your details and generate a resume instantly.</li>
+        <li>Professional formatting applied automatically.</li>
+          <li>Perfect for internship and placement applications.</li>
+        </ul>
+      </div>
+    </div>
+
+    {/* Row 2: text left, image right */}
+    <div className="grid md:grid-cols-2 gap-12 items-center">
+      <div className="space-y-4 order-2 md:order-1">
+        <h2 className="text-2xl font-semibold">Stand Out to Recruiters</h2>
+        <ul className="list-disc list-inside text-gray-600 space-y-2">
+          <li>ATS-ready phrases improve readability.</li>
+          <li>Stronger professional impact.</li>
+          <li>Attract more recruiter attention.</li>
+        </ul>
+      </div>
+      <img
+        src="/homepage/2.jpg"
+        alt="Student Success"
+        className="rounded-2xl shadow-lg w-full object-cover order-1 md:order-2"
+      />
+    </div>
+
+    {/* Row 3: image left, text right */}
+    <div className="grid md:grid-cols-2 gap-12 items-center">
+      <img
+        src="/homepage/3.jpg"
+        alt="ATS Friendly"
+        className="rounded-2xl shadow-lg w-full object-cover"
+      />
+      <div className="space-y-4">
+        <h2 className="text-2xl font-semibold">Fully ATS-Friendly Output</h2>
+        <ul className="list-disc list-inside text-gray-600 space-y-2">
+          <li>Optimized to pass Applicant Tracking Systems.</li>
+          <li>Improves shortlist chances automatically.</li>
+          <li>Ensures correct structure and keyword alignment.</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</section>
+
 
       <section className="py-24 px-4 bg-white/60 backdrop-blur-md mt-28 w-full">
         <div className="max-w-6xl mx-auto">
