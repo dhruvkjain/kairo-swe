@@ -9,24 +9,27 @@ datasource db {
 }
 
 model User {
-  id            String                  @id @default(uuid())
+  id            String    @id @default(uuid())
   name          String?
-  email         String?                 @unique
+  email         String?   @unique
   password      String?
   emailVerified DateTime?
   image         String?
-  role          Role                    @default(APPLICANT)
-  gender        Gender                  @default(OTHER)
+  role          Role      @default(APPLICANT)
+  gender        Gender    @default(OTHER)
+  
   accounts      Account[]
-  applicant     Applicant?
-  applications  InternshipApplication[]
-  recruiter     Recruiter?
   sessions      Session[]
+  
+  // Relations
+  applicant     Applicant?
+  recruiter     Recruiter?
+  applications  InternshipApplication[]
 }
 
 model Applicant {
-  id                String          @id @default(uuid())
-  userId            String          @unique
+  id                String   @id @default(uuid())
+  userId            String   @unique
   linkedInLink      String?
   resumeLink        String?
   githubLink        String?
@@ -35,15 +38,18 @@ model Applicant {
   portfolioLink     String?
   about             String?
   skills            String[]
-  projects          String[]
+  projects          String[] // Stores simple string list
   education         Json?
   rawResumeText     String?
   resumeProjectText String?
   experience        Json?
   phoneNumber       String[]
-  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  Project           Project[]
-  VerifiedSkill     VerifiedSkill[]
+  
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Relation Fields (Renamed to camelCase for better client usage)
+  projectModels     Project[] 
+  verifiedSkills    VerifiedSkill[]
 }
 
 model Recruiter {
@@ -54,42 +60,49 @@ model Recruiter {
   website      String?
   contactEmail String?
   about        String?
-  internships  Internship[]
-  company      Company?     @relation(fields: [companyId], references: [id])
+  
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company      Company?     @relation(fields: [companyId], references: [id])
+  internships  Internship[]
 }
+
 model Company {
-  id          String       @id @default(uuid())
-  name        String
-  industry    String?
-  website     String?
-  description String?
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  internships Internship[]
-  recruiters  Recruiter[]
-  companyAuth CompanyAuth?
+  id              String   @id @default(uuid())
+  name            String
+  industry        String?
+  website         String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  companySize     String?
+  establishedYear Int?
+  location        String?
+  overview        String?
+
+  internships     Internship[]
+  recruiters      Recruiter[]
+  companyAuth     CompanyAuth?
 }
 
 model CompanyAuth {
-  id        String   @id @default(uuid())
-  companyId String   @unique
-  loginId   String   @unique
+  id        String  @id @default(uuid())
+  companyId String  @unique
+  loginId   String  @unique
   password  String
-  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 }
 
-
 model Internship {
-  id                  String                  @id @default(uuid())
+  id                  String              @id @default(uuid())
   category            InternshipCategory?
   title               String
-  slug                String                  @unique
+  slug                String              @unique
   description         String
   location            String
-  type                InternshipType          @default(ONSITE)
-  mode                InternshipMode          @default(FULL_TIME)
+  type                InternshipType      @default(ONSITE)
+  mode                InternshipMode      @default(FULL_TIME)
   stipend             Int?
+  stipendType         StipendType?
   durationWeeks       Int?
   openings            Int?
   skillsRequired      String[]
@@ -98,18 +111,20 @@ model Internship {
   userType            UserType?
   startDate           DateTime?
   applicationDeadline DateTime?
-  isActive            Boolean                 @default(true)
-  status              InternshipStatus        @default(DRAFT)
-  viewsCount          Int                     @default(0)
-  applicationsCount   Int                     @default(0)
-  createdAt           DateTime                @default(now())
-  updatedAt           DateTime                @updatedAt
+  isActive            Boolean             @default(true)
+  status              InternshipStatus    @default(DRAFT)
+  viewsCount          Int                 @default(0)
+  applicationsCount   Int                 @default(0)
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  
   companyId           String
   recruiterId         String
   question            String[]
-  stipendType         Stipendtype?
-  company             Company                 @relation(fields: [companyId], references: [id])
-  recruiter           Recruiter               @relation(fields: [recruiterId], references: [id])
+
+  // Relations (Added onDelete Cascade to prevent orphans)
+  company             Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  recruiter           Recruiter           @relation(fields: [recruiterId], references: [id], onDelete: Cascade)
   applications        InternshipApplication[]
 
   @@index([companyId])
@@ -121,23 +136,29 @@ model InternshipApplication {
   id                String            @id @default(uuid())
   internshipId      String
   applicantId       String
+  
   coverLetter       String?
   resumeUrl         String?
   status            ApplicationStatus @default(Applied)
   createdAt         DateTime          @default(now())
+  
   interviewDate     String?
   interviewLocation String?
   interviewMode     InterviewMode?    @default(online)
   interviewTime     String?
+  
   isApplied         Boolean?          @default(true)
   isHire            Boolean?
   isReject          Boolean?
   isShortlisted     Boolean?
   resumeData        Json?
   selectInterview   Boolean?
-  gender            Gender            @default(OTHER)
-  applicant         User              @relation(fields: [applicantId], references: [id])
-  internship        Internship        @relation(fields: [internshipId], references: [id])
+  
+  gender            Gender            @default(OTHER) 
+
+  // Relations
+  applicant         User              @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  internship        Internship        @relation(fields: [internshipId], references: [id], onDelete: Cascade)
 
   @@unique([internshipId, applicantId])
 }
@@ -155,6 +176,7 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
+  
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
@@ -165,6 +187,7 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
+  
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
@@ -183,7 +206,9 @@ model Project {
   analysis         String?
   codeQualityScore Float?
   applicantId      String
-  Applicant        Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  
+  // Renamed field to 'applicant' (lowercase) for convention
+  applicant        Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
 }
 
 model VerifiedSkill {
@@ -192,10 +217,14 @@ model VerifiedSkill {
   skillNameNormalized String
   masteryLevel        Float
   applicantId         String
-  Applicant           Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  
+  // Renamed field to 'applicant' (lowercase) for convention
+  applicant           Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
 
   @@unique([applicantId, skillNameNormalized])
 }
+
+// Enums
 
 enum Gender {
   MALE
@@ -220,7 +249,7 @@ enum InternshipCategory {
   PRODUCT_MANAGEMENT
   DATA_SCIENCE
   OTHER
-  SOFTWARE_DEVLOPMENT
+  SOFTWARE_DEVLOPMENT 
 }
 
 enum InternshipType {
@@ -257,7 +286,7 @@ enum ApplicationStatus {
   Reject
 }
 
-enum Stipendtype {
+enum StipendType { // Fixed casing
   PAID
   UNPAID
   PB
