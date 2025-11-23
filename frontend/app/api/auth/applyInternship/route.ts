@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
     // Call FastAPI resume parser (if available)
     try {
       const response = await fetch(
-        "http://127.0.0.1:8000/api/v1/parse-resume",
+        `${process.env.RESUME_PARSER_URL}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

@@ -54,6 +54,7 @@ import {
   Bar,
   Legend,
 } from "recharts";
+import { useRouter } from "next/navigation";
 
 // --- LOCAL TYPE DEFINITIONS (Replaces @prisma/client to avoid client-side build errors) ---
 
@@ -354,37 +355,43 @@ const TopBar = ({
   searchQuery,
   setSearchQuery,
   onPostClick,
+  id,
 }: {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   onPostClick: () => void;
-}) => (
-  <div className="bg-white border-b border-gray-200 px-6 py-3 ml-64 sticky top-0 z-40">
-    <div className="flex items-center justify-between">
-      <div className="flex-1 max-w-2xl">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search internships, applicants..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
-          />
+  id: string; 
+}) => {
+  const router = useRouter(); 
+
+  return (
+    <div className="bg-white border-b border-gray-200 px-6 py-3 ml-64 sticky top-0 z-40">
+      <div className="flex items-center justify-between">
+        <div className="flex-1 max-w-2xl">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search internships, applicants..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+            />
+          </div>
+        </div>
+        <div className="flex items-center space-x-3 ml-4">  
+          <button
+            onClick={onPostClick}
+            className="flex items-center space-x-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            <span className="text-sm font-medium">Post Internship</span>
+          </button>
         </div>
       </div>
-      <div className="flex items-center space-x-3 ml-4">
-        <button
-          onClick={onPostClick}
-          className="flex items-center space-x-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          <span className="text-sm font-medium">Post Internship</span>
-        </button>
-      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const AnalyticsView = ({
   genderPieData = [],
@@ -1049,17 +1056,21 @@ const RecruiterDashboard = ({ id }: { id: string }) => {
     return deadline >= currentDate;
   };
 
-  const filteredInternshipsByStatus = allInternships.filter((internship) => {
+const filteredInternshipsByStatus = useMemo(() => {
+  return allInternships.filter((internship) => {
     const categoryMatch =
       internshipFilter === "All Category" ||
       internship.category === internshipFilter;
-    const isActive = isInternshipActive(internship);
+ 
+    const deadline = new Date(internship.applicationDeadline);
+    const isInternshipActive = deadline >= new Date();
+    
     const statusMatch =
       statusViewFilter === "All"
         ? true
         : statusViewFilter === "Active"
-        ? isActive
-        : !isActive;
+        ? isInternshipActive
+        : !isInternshipActive;
 
     const searchMatch = internship.title
       .toLowerCase()
@@ -1067,6 +1078,7 @@ const RecruiterDashboard = ({ id }: { id: string }) => {
 
     return categoryMatch && statusMatch && searchMatch;
   });
+}, [allInternships, internshipFilter, statusViewFilter, searchQuery]);
 
   const exportData = filteredInternshipsByStatus.map((i) => ({
     Internship: i.title,
@@ -1601,6 +1613,7 @@ const RecruiterDashboard = ({ id }: { id: string }) => {
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           onPostClick={() => setShowPostModal(true)}
+          id={id}
         />
         <main className="p-6">
           {activeTab === "dashboard" && <DashboardView />}
