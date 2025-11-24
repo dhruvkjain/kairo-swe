@@ -28,7 +28,7 @@ interface RegistrationFormData {
   email: string;
   password: string;
   confirmPassword: string;
-  role: "applicant" | "recruiter";
+  role: "APPLICANT" | "RECRUITER";
   gender: "MALE" | "FEMALE" | "OTHER";
   companyId?: string; // Added companyId
   termsAccepted: boolean;
@@ -42,7 +42,7 @@ const Registration: React.FC = () => {
     email: "",
     password: "",
     confirmPassword: "",
-    role: "applicant",
+    role: "APPLICANT",
     gender: "MALE",
     companyId: "", // Initialize companyId
     termsAccepted: false,
@@ -69,7 +69,7 @@ const Registration: React.FC = () => {
       return toast.error("Passwords do not match.");
 
     // Validation for recruiter
-    if (formData.role === "recruiter" && !formData.companyId) {
+    if (formData.role === "RECRUITER" && !formData.companyId) {
       return toast.error("Company ID is required for recruiters.");
     }
 
@@ -85,7 +85,7 @@ const Registration: React.FC = () => {
           password: formData.password,
           role: formData.role,
           gender: formData.gender,
-          companyId: formData.role === "recruiter" ? formData.companyId : undefined, // Send ID only if recruiter
+          companyId: formData.role === "RECRUITER" ? formData.companyId : undefined, // Send ID only if recruiter
         }),
       });
 
@@ -176,7 +176,7 @@ const Registration: React.FC = () => {
               <Label htmlFor="role">I am a *</Label>
               <Select
                 value={formData.role}
-                onValueChange={(value: "applicant" | "recruiter") =>
+                onValueChange={(value: "APPLICANT" | "RECRUITER") =>
                   handleInputChange("role", value)
                 }
               >
@@ -184,14 +184,14 @@ const Registration: React.FC = () => {
                   <SelectValue placeholder="Select your role" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="applicant">Applicant</SelectItem>
-                  <SelectItem value="recruiter">Recruiter</SelectItem>
+                  <SelectItem value="APPLICANT">Applicant</SelectItem>
+                  <SelectItem value="RECRUITER">Recruiter</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {/* Company ID - Conditionally Rendered */}
-            {formData.role === "recruiter" && (
+            {formData.role === "RECRUITER" && (
               <div className="space-y-2 slide-in-from-top-2 animate-in duration-300">
                 <Label htmlFor="companyId">Company ID *</Label>
                 <div className="relative">
@@ -200,7 +200,7 @@ const Registration: React.FC = () => {
                     id="companyId"
                     type="text"
                     placeholder="Enter your Company ID"
-                    required={formData.role === "recruiter"}
+                    required={formData.role === "RECRUITER"}
                     value={formData.companyId}
                     onChange={(e) => handleInputChange("companyId", e.target.value)}
                     className="pl-10"

@@ -15,11 +15,16 @@ interface Experience {
 }
 
 interface ExperienceSectionProps {
-  isApplicant: boolean
   applicant: any
+  isApplicant: boolean
+  isOwner?: boolean // allow page to pass ownership flag
 }
 
-export default function ExperienceSection({ isApplicant, applicant }: ExperienceSectionProps) {
+export default function ExperienceSection({
+  applicant,
+  isApplicant,
+  isOwner,
+}: ExperienceSectionProps) {
   const [expanded, setExpanded] = useState<number | null>(null)
 
   const parsedExperiences: Experience[] =
@@ -42,7 +47,7 @@ export default function ExperienceSection({ isApplicant, applicant }: Experience
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-foreground">Experience</h2>
 
-        {isApplicant && applicant && (
+        {isOwner && isApplicant && applicant && (
           <AddExperienceButton
             userId={applicant.userId}
             initialExperiences={experiences}
@@ -60,13 +65,15 @@ export default function ExperienceSection({ isApplicant, applicant }: Experience
                   key={exp.id || idx}
                   className="group border border-border p-4 rounded-lg bg-background/50 relative hover:shadow-md transition-shadow"
                 >
-                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <DeleteExperienceButton
-                      userId={applicant.userId}
-                      experienceId={exp.id}
-                      onDelete={() => handleDelete(exp.id)}
-                    />
-                  </div>
+                  {isOwner && (
+                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <DeleteExperienceButton
+                        userId={applicant.userId}
+                        experienceId={exp.id}
+                        onDelete={() => handleDelete(exp.id)}
+                      />
+                    </div>
+                  )}
 
                   <p className="font-semibold text-foreground">
                     {exp.role} @ {exp.company}

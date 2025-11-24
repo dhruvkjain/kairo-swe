@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
+// Ensure these components exist in your project structure
 import Recruiter_PostInternshipModel from "./Recruiter_PostInternshipModel";
 import UpdateInternshipModal from "./UpdateInternship";
 import InterviewSchedule from "./interview";
 import * as XLSX from "xlsx";
+import Link from "next/link";
 
 import {
   LayoutDashboard,
@@ -12,7 +14,6 @@ import {
   Users,
   Calendar,
   BarChart3,
-  Settings,
   Search,
   Plus,
   Download,
@@ -20,7 +21,6 @@ import {
   Trash2,
   TrendingUp,
   TrendingDown,
-  Clock,
   MapPin,
   DollarSign,
   X,
@@ -33,6 +33,10 @@ import {
   Building2,
   GraduationCap,
   Award,
+  Globe,
+  Info,
+  CalendarDays,
+  Hash,
 } from "lucide-react";
 
 import {
@@ -50,15 +54,13 @@ import {
   Bar,
   Legend,
 } from "recharts";
-import {
-  InternshipApplication,
-  ApplicationStatus,
-  InterviewMode,
-  Gender,
-} from "@prisma/client";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 
-// --- INTERFACES ---
+// --- LOCAL TYPE DEFINITIONS (Replaces @prisma/client to avoid client-side build errors) ---
+
+type ApplicationStatus = "Applied" | "Shortlisted" | "Interview" | "Hire" | "Reject";
+type Gender = "Male" | "Female" | "Other";
+type InterviewMode = "Online" | "Offline";
 
 interface ApplicantResumeData {
   name: string;
@@ -78,15 +80,15 @@ interface ApplicantResumeData {
   [key: string]: any;
 }
 
-type ApplicationBase = Omit<
-  InternshipApplication,
-  "resumeData" | "gender" | "status"
->;
-
-interface Application extends ApplicationBase {
+interface Application {
+  id: string;
+  internshipId: string;
+  applicantId: string;
   resumeData: ApplicantResumeData;
   gender: Gender;
   status: ApplicationStatus;
+  appliedDate: string;
+  // Add other fields from your database schema if necessary
 }
 
 interface InterviewItem extends Application {
@@ -94,6 +96,18 @@ interface InterviewItem extends Application {
   interviewLocation: string | null;
   interviewDate: string | null;
   interviewTime: string | null;
+}
+
+interface CompanyData {
+  id: string;
+  name: string;
+  industry: string | null;
+  website: string | null;
+  overview: string | null;
+  companySize: string | null;
+  location: string | null;
+  establishedYear: number | null;
+  contactEmail?: string;
 }
 
 interface DashboardStat {
@@ -141,18 +155,25 @@ interface StageData {
 interface ApplicantModalProps {
   applicant: Application;
   onClose: () => void;
+  onUpdateStatus: (id: string, status: string) => void;
+  onSchedule: (id: string) => void;
 }
 
-// --- SUB-COMPONENTS (Moved Outside) ---
+// --- SUB-COMPONENTS ---
 
+// 1. Updated Sidebar
 const Sidebar = ({
   activeTab,
   setActiveTab,
+  onCompanyClick,
+  companyName,
 }: {
   activeTab: string;
   setActiveTab: (tab: string) => void;
+  onCompanyClick: () => void;
+  companyName: string;
 }) => (
-  <div className="w-64 bg-white border-r border-gray-200 h-screen fixed left-0 top-0 flex flex-col">
+  <div className="w-64 bg-white border-r border-gray-200 h-screen fixed left-0 top-0 flex flex-col z-50">
     <div className="p-4 border-b border-gray-200">
       <div className="flex items-center space-x-2">
         <div className="w-10 h-10 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg flex items-center justify-center">
@@ -170,7 +191,6 @@ const Sidebar = ({
         { id: "internships", label: "Internships", icon: Briefcase },
         { id: "interviews", label: "Interviews", icon: Calendar },
         { id: "analytics", label: "Analytics", icon: BarChart3 },
-        { id: "settings", label: "Settings", icon: Settings },
       ].map((item) => (
         <button
           key={item.id}
@@ -187,58 +207,191 @@ const Sidebar = ({
       ))}
     </nav>
     <div className="p-4 border-t border-gray-200">
-      <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-        <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+      <button
+        onClick={onCompanyClick}
+        className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg w-full hover:bg-gray-100 transition-colors text-left"
+      >
+        <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center shrink-0">
           <Building2 className="w-5 h-5 text-gray-600" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-gray-900 truncate">
-            Tech Corp Inc.
+            {companyName || "Company Profile"}
           </p>
-          <p className="text-xs text-gray-500 truncate">
-            recruiter@techcorp.com
-          </p>
+          <p className="text-xs text-gray-500 truncate">View Company Info</p>
         </div>
-      </div>
+      </button>
     </div>
   </div>
 );
+
+// 2. Company Profile Modal
+const CompanyProfileModal = ({
+  data,
+  onClose,
+}: {
+  data: CompanyData | null;
+  onClose: () => void;
+}) => {
+  if (!data) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+      <div className="bg-white rounded-xl w-full max-w-md shadow-xl overflow-hidden">
+        {/* Header */}
+        <div className="bg-gray-900 p-6 text-white flex justify-between items-start">
+          <div className="flex items-center space-x-4">
+            <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/10">
+              <Building2 className="w-8 h-8 text-white" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold">{data.name}</h2>
+              <p className="text-gray-300 text-sm">
+                {data.industry || "Industry Not Set"}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1 hover:bg-white/20 rounded-full transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="p-6 space-y-6">
+          {/* Key Details Grid */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center space-x-2 mb-1">
+                <MapPin className="w-4 h-4 text-gray-500" />
+                <span className="text-xs text-gray-500 font-medium">
+                  Location
+                </span>
+              </div>
+              <p className="text-sm font-semibold text-gray-900 truncate">
+                {data.location || "Remote/Unspecified"}
+              </p>
+            </div>
+            <div className="p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center space-x-2 mb-1">
+                <Users className="w-4 h-4 text-gray-500" />
+                <span className="text-xs text-gray-500 font-medium">Size</span>
+              </div>
+              <p className="text-sm font-semibold text-gray-900 truncate">
+                {data.companySize || "N/A"}
+              </p>
+            </div>
+            <div className="p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center space-x-2 mb-1">
+                <CalendarDays className="w-4 h-4 text-gray-500" />
+                <span className="text-xs text-gray-500 font-medium">
+                  Est. Year
+                </span>
+              </div>
+              <p className="text-sm font-semibold text-gray-900 truncate">
+                {data.establishedYear || "N/A"}
+              </p>
+            </div>
+            <div className="p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center space-x-2 mb-1">
+                <Hash className="w-4 h-4 text-gray-500" />
+                <span className="text-xs text-gray-500 font-medium">ID</span>
+              </div>
+              <p className="text-sm font-semibold text-gray-900 truncate">
+                #{data.id.slice(0, 6)}
+              </p>
+            </div>
+          </div>
+
+          {/* Contact Links */}
+          <div className="space-y-3">
+            {data.website && (
+              <div className="flex items-center space-x-3 p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
+                <Globe className="w-5 h-5 text-blue-600" />
+                <div className="overflow-hidden">
+                  <p className="text-xs text-gray-500">Website</p>
+                  <a
+                    href={data.website}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-sm font-medium text-blue-600 hover:underline truncate block"
+                  >
+                    {data.website}
+                  </a>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* About Section */}
+          <div>
+            <div className="flex items-center space-x-2 mb-2">
+              <Info className="w-4 h-4 text-gray-500" />
+              <h3 className="text-sm font-semibold text-gray-900">Overview</h3>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg max-h-40 overflow-y-auto">
+              <p className="text-sm text-gray-600 leading-relaxed">
+                {data.overview ||
+                  "No overview provided for this company."}
+              </p>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="pt-2 text-center">
+            <p className="text-xs text-gray-400">
+              To update these details, please contact your admin.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const TopBar = ({
   searchQuery,
   setSearchQuery,
   onPostClick,
+  id,
 }: {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   onPostClick: () => void;
-}) => (
-  <div className="bg-white border-b border-gray-200 px-6 py-3 ml-64 sticky top-0 z-40">
-    <div className="flex items-center justify-between">
-      <div className="flex-1 max-w-2xl">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search internships, applicants..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
-          />
+  id: string; 
+}) => {
+  const router = useRouter(); 
+
+  return (
+    <div className="bg-white border-b border-gray-200 px-6 py-3 ml-64 sticky top-0 z-40">
+      <div className="flex items-center justify-between">
+        <div className="flex-1 max-w-2xl">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search internships, applicants..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+            />
+          </div>
+        </div>
+        <div className="flex items-center space-x-3 ml-4">  
+          <button
+            onClick={onPostClick}
+            className="flex items-center space-x-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            <span className="text-sm font-medium">Post Internship</span>
+          </button>
         </div>
       </div>
-      <div className="flex items-center space-x-3 ml-4">
-        <button
-          onClick={onPostClick}
-          className="flex items-center space-x-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          <span className="text-sm font-medium">Post Internship</span>
-        </button>
-      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const AnalyticsView = ({
   genderPieData = [],
@@ -338,7 +491,7 @@ const AnalyticsView = ({
                 Applicant Skills
               </h3>
               <p className="text-xs text-gray-500">
-                Most common skills found in resumes (Top 10 Skill + Others)
+                Most common skills found in resumes
               </p>
             </div>
             <div className="h-[300px] w-full">
@@ -458,6 +611,167 @@ const AnalyticsView = ({
   );
 };
 
+const ApplicantModal = ({
+  applicant,
+  onClose,
+  onUpdateStatus,
+  onSchedule,
+}: ApplicantModalProps) => {
+  if (!applicant) return null;
+  const data = applicant.resumeData || {};
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+        <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between">
+          <h2 className="text-xl font-bold text-gray-900">Applicant Details</h2>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-lg"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <div className="p-6 space-y-6">
+          <div className="flex items-start space-x-4">
+            <div className="w-20 h-20 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
+              <User className="w-10 h-10 text-gray-600" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-2xl font-bold text-gray-900 mb-1">
+                {data.name}
+              </h3>
+              <p className="text-gray-600 mb-2">
+                {data.course} • {data.year}
+              </p>
+              <div className="flex flex-wrap gap-2 mb-3">
+                <span className="flex items-center space-x-1 text-sm text-gray-600">
+                  <GraduationCap className="w-4 h-4" />
+                  <span>{data.college}</span>
+                </span>
+                <span className="flex items-center space-x-1 text-sm text-gray-600">
+                  <Award className="w-4 h-4" />
+                  <span>CGPA: {data.cgpa}</span>
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-3 text-sm">
+                {data.email && (
+                  <a
+                    href={`mailto:${data.email}`}
+                    className="flex items-center space-x-1 text-blue-600 hover:underline"
+                  >
+                    <Mail className="w-4 h-4" />
+                    <span>{data.email}</span>
+                  </a>
+                )}
+                {data.phone && (
+                  <a
+                    href={`tel:${data.phone}`}
+                    className="flex items-center space-x-1 text-blue-600 hover:underline"
+                  >
+                    <Phone className="w-4 h-4" />
+                    <span>{data.phone}</span>
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h4 className="font-semibold text-gray-900 mb-2">Applied For</h4>
+              <p className="text-gray-700">{data.appliedFor}</p>
+              <p className="text-sm text-gray-500 mt-1">
+                Applied on {data.appliedDate || "Not Provided"}
+              </p>
+            </div>
+            <div>
+              <h4 className="font-semibold text-gray-900 mb-2">
+                Current Status
+              </h4>
+              <span
+                className={`inline-block px-3 py-1 text-sm font-medium rounded-full ${
+                  applicant.status === "Shortlisted"
+                    ? "bg-blue-100 text-blue-700"
+                    : applicant.status === "Interview"
+                    ? "bg-purple-100 text-purple-700"
+                    : applicant.status === "Applied"
+                    ? "bg-gray-100 text-gray-700"
+                    : "bg-red-100 text-red-700"
+                }`}
+              >
+                {applicant.status}
+              </span>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="font-semibold text-gray-900 mb-2">Skills</h4>
+            <div className="flex flex-wrap gap-2">
+              {data.skills?.map((skill: string, i: number) => (
+                <span
+                  key={i}
+                  className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full"
+                >
+                  {skill}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div>
+            <h4 className="font-semibold text-gray-900 mb-2">Experience</h4>
+            <p className="text-gray-700">{data.experience}</p>
+          </div>
+          <div className="flex items-center space-x-2 pt-4 border-t border-gray-200">
+            <button
+              onClick={(e) => {
+                onUpdateStatus(applicant.id, "Shortlisted");
+              }}
+              className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center justify-center space-x-2"
+            >
+              <CheckCircle className="w-4 h-4" />
+              <span>Shortlist</span>
+            </button>
+            <button
+              onClick={() => {
+                onSchedule(applicant.id);
+              }}
+              className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center justify-center space-x-2"
+            >
+              <Calendar className="w-4 h-4" />
+              <span>Schedule Interview</span>
+            </button>
+            <button
+              onClick={(e) => {
+                onUpdateStatus(applicant.id, "Hire");
+              }}
+              className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center justify-center space-x-2"
+            >
+              <CheckCircle className="w-4 h-4" />
+              <span>Hire</span>
+            </button>
+            <button
+              onClick={(e) => {
+                onUpdateStatus(applicant.id, "Reject");
+              }}
+              className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center justify-center space-x-2"
+            >
+              <XCircle className="w-4 h-4" />
+              <span>Reject</span>
+            </button>
+          </div>
+          <button
+            onClick={() => window.open(data.resumeUrl, "_blank")}
+            className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 flex items-center justify-center space-x-2"
+          >
+            <FileText className="w-4 h-4" />
+            <span>Download Resume</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // --- MAIN COMPONENT ---
 
 type InternshipStatusFilter = "All" | "Active" | "Closed";
@@ -490,150 +804,211 @@ const RecruiterDashboard = ({ id }: { id: string }) => {
   const [internshipFilter, setInternshipFilter] =
     useState<string>("All Category");
   const [applicants, setApplicants] = useState<Application[]>([]);
-  
-  // Search State
   const [searchQuery, setSearchQuery] = useState("");
+  const [companyData, setCompanyData] = useState<CompanyData | null>(null);
+  const [showCompanyProfile, setShowCompanyProfile] = useState(false);
 
   const recruiterId: string = id;
 
-  // --- Data Fetching Effects ---
+  // --- FETCH FUNCTIONS ---
 
-  useEffect(() => {
-    const loadStats = async () => {
-      try {
-        const res1 = await fetch(
-          `/api/auth/recruiter/internshipData?recruiterId=${recruiterId}`
-        );
+  const refreshStats = useCallback(async () => {
+    if (!recruiterId) return;
+    try {
+      const res1 = await fetch(
+        `/api/auth/recruiter/internshipData?recruiterId=${recruiterId}`
+      );
+      if (res1.ok) {
         const data1: DashboardStats = await res1.json();
         setStats(data1);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
       }
-    };
-    loadStats();
+
+      const res2 = await fetch(`/api/auth/recruiter/analytics`);
+      if (res2.ok) setMonthlyStats(await res2.json());
+
+      const res3 = await fetch(`/api/auth/recruiter/hiringFunnel`);
+      if (res3.ok) setStagesData(await res3.json());
+    } catch (e) {
+      console.error("Error refreshing stats", e);
+    }
   }, [recruiterId]);
 
-  useEffect(() => {
+  const refreshCompanyData = useCallback(async () => {
     if (!recruiterId) return;
-    const fetchData = async () => {
-      try {
-        const response = await fetch(
-          `/api/auth/recruiter/interviewSchedule?recruiterId=${recruiterId}`
-        );
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || "Failed to fetch");
-        }
-        const result: { data: InterviewItem[] } = await response.json();
-        setInterviews(result.data);
-      } catch (err) {
-        console.log(err);
-      }
-    };
-    fetchData();
-  }, [recruiterId]);
-
-  useEffect(() => {
-    const fetchStats = async () => {
-      const res = await fetch(`/api/auth/recruiter/analytics`);
+    try {
+      const res = await fetch(`/api/auth/recruiter/company?id=${recruiterId}`);
       if (res.ok) {
-        const data: MonthlyStat[] = await res.json();
-        setMonthlyStats(data);
+        const data = await res.json();
+        setCompanyData(data);
       }
-    };
-    fetchStats();
-  }, []);
+    } catch (error) {
+      console.error("Error fetching company data:", error);
+    }
+  }, [recruiterId]);
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      const res = await fetch(`/api/auth/recruiter/hiringFunnel`);
+  const refreshInternships = useCallback(async () => {
+    if (!recruiterId) return;
+    try {
+      const res1 = await fetch(
+        `/api/auth/recruiter/myInternship?recruiterId=${recruiterId}`
+      );
+      if (res1.ok) setInternships(await res1.json());
+
+      const res2 = await fetch(
+        `/api/auth/recruiter/companyInternship?recruiterId=${recruiterId}`
+      );
+      if (res2.ok) setSearchInternships(await res2.json());
+
+      const res3 = await fetch(
+        `/api/auth/recruiter/myAllInternship?recruiterId=${recruiterId}`
+      );
+      if (res3.ok) setAllInternships(await res3.json());
+    } catch (error) {
+      console.error("Error refreshing internships:", error);
+    }
+  }, [recruiterId]);
+
+  const refreshApplicants = useCallback(async () => {
+    if (!recruiterId) return;
+    try {
+      const res = await fetch(
+        `/api/auth/recruiter/recentApplicant?recruiterId=${recruiterId}`
+      );
       if (res.ok) {
-        const data: StageData[] = await res.json();
-        setStagesData(data);
-      }
-    };
-    fetchStats();
-  }, []);
-
-  useEffect(() => {
-    if (!recruiterId) return;
-    const loadInternships = async () => {
-      try {
-        const response = await fetch(
-          `/api/auth/recruiter/myInternship?recruiterId=${recruiterId}`
-        );
-        if (!response.ok) return;
-        const internshipsData: InternshipSummary[] = await response.json();
-        setInternships(internshipsData);
-      } catch (error) {
-        console.error("Network error:", error);
-      }
-    };
-    loadInternships();
-  }, [recruiterId]);
-
-  useEffect(() => {
-    if (!recruiterId) return;
-    const loadInternships = async () => {
-      try {
-        const response = await fetch(
-          `/api/auth/recruiter/companyInternship?recruiterId=${recruiterId}`
-        );
-        if (!response.ok) return;
-        const internshipsData: InternshipSummary[] = await response.json();
-        setSearchInternships(internshipsData);
-      } catch (error) {
-        console.error("Network error:", error);
-      }
-    };
-    loadInternships();
-  }, [recruiterId]);
-
-  useEffect(() => {
-    const fetchApplicants = async () => {
-      try {
-        const res = await fetch(
-          `/api/auth/recruiter/recentApplicant?recruiterId=${recruiterId}`
-        );
         const data: Application[] = await res.json();
         setApplicants(data);
-      } catch (error) {
-        console.error("Error fetching applicants:", error);
       }
-    };
-    fetchApplicants();
+    } catch (error) {
+      console.error("Error fetching applicants:", error);
+    }
   }, [recruiterId]);
 
-  useEffect(() => {
+  const refreshInterviews = useCallback(async () => {
     if (!recruiterId) return;
-    const loadInternships = async () => {
-      try {
-        const response = await fetch(
-          `/api/auth/recruiter/myAllInternship?recruiterId=${recruiterId}`
-        );
-        if (!response.ok) return;
-        const internshipsData: InternshipSummary[] = await response.json();
-        setAllInternships(internshipsData);
-      } catch (error) {
-        console.error("Network error:", error);
+    try {
+      const response = await fetch(
+        `/api/auth/recruiter/interviewSchedule?recruiterId=${recruiterId}`
+      );
+      if (response.ok) {
+        const result = await response.json();
+        setInterviews(result.data);
       }
-    };
-    loadInternships();
+    } catch (err) {
+      console.log(err);
+    }
   }, [recruiterId]);
+
+  // --- INITIAL DATA LOADING ---
+
+  useEffect(() => {
+    const loadAll = async () => {
+      setLoading(true);
+      await Promise.all([
+        refreshCompanyData(),
+        refreshStats(),
+        refreshInternships(),
+        refreshApplicants(),
+        refreshInterviews(),
+      ]);
+      setLoading(false);
+    };
+    loadAll();
+  }, [
+    refreshStats,
+    refreshInternships,
+    refreshApplicants,
+    refreshInterviews,
+    refreshCompanyData,
+  ]);
+
+  // --- ACTION HANDLERS ---
+
+  const deleteHandle = async (id: string) => {
+    if (!id) return;
+    if (!confirm("Are you sure you want to delete this internship?")) return;
+    try {
+      const res = await fetch(`/api/auth/uploadInternship?internshipId=${id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error);
+        return;
+      }
+      alert("Deleted Successfully!");
+
+      // Optimistic Update
+      setInternships((prev) => prev.filter((i) => i.id !== id));
+      setAllInternships((prev) => prev.filter((i) => i.id !== id));
+      setSearchInternships((prev) => prev.filter((i) => i.id !== id));
+
+      if (selectedInternship === id) {
+        setSelectedInternship(null);
+      }
+      // Refresh stats in background
+      refreshStats();
+    } catch (err) {
+      console.log("Delete error:", err);
+    }
+  };
+
+  const updateStatus = async (id: string, status: string) => {
+    if (!id) return;
+    try {
+      // Optimistic Update
+      setApplicants((prevApplicants) =>
+        prevApplicants.map((app) =>
+          app.id === id ? { ...app, status: status as ApplicationStatus } : app
+        )
+      );
+
+      if (selectedApplicant && selectedApplicant.id === id) {
+        setSelectedApplicant((prev) =>
+          prev ? { ...prev, status: status as ApplicationStatus } : null
+        );
+      }
+
+      const res = await fetch(`/api/auth/recruiter/applicant`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ applicationId: id, status }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        refreshApplicants(); // Revert on failure
+        alert(data.error);
+        return;
+      }
+      alert(`${status} Successfully`);
+
+      refreshStats();
+      if (status === "Hire" || status === "Interview") {
+        refreshInterviews();
+      }
+    } catch (err) {
+      console.log("Update error:", err);
+      refreshApplicants();
+    }
+  };
 
   // --- DERIVED STATE & CALCULATION ---
 
   const skillDistributionData = useMemo(() => {
-    const allSkills = applicants.flatMap((app) => app.resumeData?.skills || []);
+    const allSkills = applicants?.flatMap(
+      (app) => app.resumeData?.skills || []
+    );
     const counts: Record<string, number> = {};
     allSkills.forEach((s) => {
       const key = s.trim();
       counts[key] = (counts[key] || 0) + 1;
     });
     const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-    const top10 = sorted.slice(0, 10).map(([name, value]) => ({ name, value }));
+    const top10 = sorted
+      .slice(0, 10)
+      .map(([name, value]) => ({ name, value }));
     const othersCount = sorted
       .slice(10)
       .reduce((acc, curr) => acc + curr[1], 0);
@@ -645,10 +1020,11 @@ const RecruiterDashboard = ({ id }: { id: string }) => {
   }, [applicants]);
 
   const genderCounts = applicants.reduce((acc, a) => {
-    const g = (a.gender || Gender.OTHER).toLowerCase();
+    const g = (a.gender || "Other").toLowerCase();
     acc[g] = (acc[g] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
+
   const totalApplicants = applicants.length;
   const genderPieData = [
     { name: "Male", value: genderCounts.male || 0 },
@@ -666,61 +1042,12 @@ const RecruiterDashboard = ({ id }: { id: string }) => {
         statusFilter === "All Status" || applicant.status === statusFilter
     );
 
-  const filteredInternships = internships.filter(
-    (internship) =>
-      internshipFilter === "All Category" ||
-      internship.category === internshipFilter
-  );
-
   const uniqueCategories = internships
     .filter(
       (internship, index, self) =>
         index === self.findIndex((i) => i.category === internship.category)
     )
     .map((i) => i.category);
-
-  if (loading) return <p>Loading dashboard...</p>;
-  if (!stats) return <p>No data found</p>;
-
-  const cards: DashboardStat[] = [
-    {
-      label: "Active Internships",
-      ...stats.activeInternships,
-      icon: Briefcase,
-    },
-    { label: "Total Applicants", ...stats.totalApplicants, icon: Users },
-    {
-      label: "Accepted Applicants",
-      ...stats.acceptedApplicants,
-      icon: CheckCircle,
-    },
-    {
-      label: "Rejected Applicants",
-      ...stats.rejectedApplicants,
-      icon: XCircle,
-    },
-  ];
-
-  const deleteHandle = async (id: string) => {
-    if (!id) return;
-    try {
-      const res = await fetch(`/api/auth/uploadInternship?internshipId=${id}`, {
-        method: "DELETE",
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        alert(data.error);
-        return;
-      }
-      alert("Deleted Successfully!");
-      setInternships((prev) => prev.filter((i) => i.id !== id));
-      if (selectedInternship === id) {
-        setSelectedInternship(null);
-      }
-    } catch (err) {
-      console.log("Delete error:", err);
-    }
-  };
 
   const currentDate = new Date();
 
@@ -729,17 +1056,21 @@ const RecruiterDashboard = ({ id }: { id: string }) => {
     return deadline >= currentDate;
   };
 
-  const filteredInternshipsByStatus = allInternships.filter((internship) => {
+const filteredInternshipsByStatus = useMemo(() => {
+  return allInternships.filter((internship) => {
     const categoryMatch =
       internshipFilter === "All Category" ||
       internship.category === internshipFilter;
-    const isActive = isInternshipActive(internship);
+ 
+    const deadline = new Date(internship.applicationDeadline);
+    const isInternshipActive = deadline >= new Date();
+    
     const statusMatch =
       statusViewFilter === "All"
         ? true
         : statusViewFilter === "Active"
-        ? isActive
-        : !isActive;
+        ? isInternshipActive
+        : !isInternshipActive;
 
     const searchMatch = internship.title
       .toLowerCase()
@@ -747,8 +1078,9 @@ const RecruiterDashboard = ({ id }: { id: string }) => {
 
     return categoryMatch && statusMatch && searchMatch;
   });
+}, [allInternships, internshipFilter, statusViewFilter, searchQuery]);
 
-  const exportData = filteredInternships.map((i) => ({
+  const exportData = filteredInternshipsByStatus.map((i) => ({
     Internship: i.title,
     Category: i.category,
     Location: i.location,
@@ -759,7 +1091,14 @@ const RecruiterDashboard = ({ id }: { id: string }) => {
 
   const handleExport = () => {
     const worksheetData = [
-      ["Internship", "Category", "Location", "Stipend", "Applicants", "Status"],
+      [
+        "Internship",
+        "Category",
+        "Location",
+        "Stipend",
+        "Applicants",
+        "Status",
+      ],
       ...exportData.map((item) => [
         item.Internship,
         item.Category,
@@ -785,12 +1124,12 @@ const RecruiterDashboard = ({ id }: { id: string }) => {
   };
 
   const exportApplicant = filteredApplicants.map((i) => ({
-    name: i.resumeData.name || "",
-    email: i.resumeData.email || "",
+    name: i.resumeData?.name || "",
+    email: i.resumeData?.email || "",
     status: i.status || "",
-    cgpa: i.resumeData.cgpa || "",
-    university: i.resumeData.university || "",
-    appliedDate: i.resumeData.appliedDate || "",
+    cgpa: i.resumeData?.cgpa || "",
+    university: i.resumeData?.university || "",
+    appliedDate: i.appliedDate || "",
   }));
 
   const handleApplicantExport = () => {
@@ -816,309 +1155,168 @@ const RecruiterDashboard = ({ id }: { id: string }) => {
     XLSX.writeFile(workbook, `${internshipName}_applicants.xlsx`);
   };
 
-  const updateStatus = async (id: string, status: string) => {
-    if (!id) return;
-    try {
-      const res = await fetch(`/api/auth/recruiter/applicant`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ applicationId: id, status }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        alert(data.error);
-        return;
-      }
-      alert(`${status} Successfully`);
-      setApplicants((prevApplicants) =>
-        prevApplicants.map((app) =>
-          app.id === id ? { ...app, status: status as ApplicationStatus } : app
-        )
-      );
-      setSelectedApplicant(null);
-    } catch (err) {
-      console.log("Update error:", err);
-    }
-  };
-
-  const ApplicantModal = ({ applicant, onClose }: ApplicantModalProps) => {
-    if (!applicant) return null;
-    const data = applicant.resumeData || {};
-
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-          <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-900">
-              Applicant Details
-            </h2>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-lg"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-          <div className="p-6 space-y-6">
-            <div className="flex items-start space-x-4">
-              <div className="w-20 h-20 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
-                <User className="w-10 h-10 text-gray-600" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-2xl font-bold text-gray-900 mb-1">
-                  {data.name}
-                </h3>
-                <p className="text-gray-600 mb-2">
-                  {data.course} • {data.year}
-                </p>
-                <div className="flex flex-wrap gap-2 mb-3">
-                  <span className="flex items-center space-x-1 text-sm text-gray-600">
-                    <GraduationCap className="w-4 h-4" />
-                    <span>{data.college}</span>
-                  </span>
-                  <span className="flex items-center space-x-1 text-sm text-gray-600">
-                    <Award className="w-4 h-4" />
-                    <span>CGPA: {data.cgpa}</span>
-                  </span>
-                </div>
-                <div className="flex flex-wrap gap-3 text-sm">
-                  {data.email && (
-                    <a
-                      href={`mailto:${data.email}`}
-                      className="flex items-center space-x-1 text-blue-600 hover:underline"
-                    >
-                      <Mail className="w-4 h-4" />
-                      <span>{data.email}</span>
-                    </a>
-                  )}
-                  {data.phone && (
-                    <a
-                      href={`tel:${data.phone}`}
-                      className="flex items-center space-x-1 text-blue-600 hover:underline"
-                    >
-                      <Phone className="w-4 h-4" />
-                      <span>{data.phone}</span>
-                    </a>
-                  )}
-                </div>
-              </div>
-            </div>
-            <div>
-              <h4 className="font-semibold text-gray-900 mb-2">Applied For</h4>
-              <p className="text-gray-700">{data.appliedFor}</p>
-              <p className="text-sm text-gray-500 mt-1">
-                Applied on {data.appliedDate || "Not Provided"}
-              </p>
-            </div>
-            <div>
-              <h4 className="font-semibold text-gray-900 mb-2">Skills</h4>
-              <div className="flex flex-wrap gap-2">
-                {data.skills?.map((skill, i) => (
-                  <span
-                    key={i}
-                    className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full"
-                  >
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            </div>
-            <div>
-              <h4 className="font-semibold text-gray-900 mb-2">Experience</h4>
-              <p className="text-gray-700">{data.experience}</p>
-            </div>
-            <div>
-              <h4 className="font-semibold text-gray-900 mb-2">
-                Current Status
-              </h4>
-              <span
-                className={`inline-block px-3 py-1 text-sm font-medium rounded-full ${
-                  applicant.status === "Shortlisted"
-                    ? "bg-blue-100 text-blue-700"
-                    : applicant.status === "Interview"
-                    ? "bg-purple-100 text-purple-700"
-                    : applicant.status === "Applied"
-                    ? "bg-gray-100 text-gray-700"
-                    : "bg-red-100 text-red-700"
-                }`}
-              >
-                {applicant.status}
-              </span>
-            </div>
-            <div className="flex items-center space-x-2 pt-4 border-t border-gray-200">
-              <button
-                onClick={(e) => {
-                  updateStatus(applicant.id, "Shortlisted");
-                }}
-                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center justify-center space-x-2"
-              >
-                <CheckCircle className="w-4 h-4" />
-                <span>Shortlist</span>
-              </button>
-              <button
-                onClick={() => {
-                  setShowInterviewModal(true);
-                  setSchedule(applicant.id);
-                }}
-                className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center justify-center space-x-2"
-              >
-                <Calendar className="w-4 h-4" />
-                <span>Schedule Interview</span>
-              </button>
-              <button
-                onClick={(e) => {
-                  updateStatus(applicant.id, "Hire");
-                }}
-                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center justify-center space-x-2"
-              >
-                <CheckCircle className="w-4 h-4" />
-                <span>Hire</span>
-              </button>
-              <button
-                onClick={(e) => {
-                  updateStatus(applicant.id, "Reject");
-                }}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center justify-center space-x-2"
-              >
-                <XCircle className="w-4 h-4" />
-                <span>Reject</span>
-              </button>
-            </div>
-            <button
-              onClick={() => window.open(data.resumeUrl, "_blank")}
-              className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 flex items-center justify-center space-x-2"
-            >
-              <FileText className="w-4 h-4" />
-              <span>Download Resume</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
+  // --- VIEW COMPONENTS ---
 
   const DashboardView = () => (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {cards.map((stat, index) => (
-          <div
-            key={index}
-            className="bg-white p-4 rounded-lg border border-gray-200"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <div
-                className={`p-2 rounded-lg ${
-                  stat.trend === "up" ? "bg-green-100" : "bg-red-100"
-                }`}
-              >
-                <stat.icon
-                  className={`w-5 h-5 ${
-                    stat.trend === "up" ? "text-green-600" : "text-red-600"
-                  }`}
-                />
-              </div>
-              <div
-                className={`flex items-center space-x-1 text-sm ${
-                  stat.trend === "up" ? "text-green-600" : "text-red-600"
-                }`}
-              >
-                {stat.trend === "up" ? (
-                  <TrendingUp className="w-4 h-4" />
-                ) : (
-                  <TrendingDown className="w-4 h-4" />
-                )}
-                <span className="font-medium">{stat.change}</span>
-              </div>
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900">{stat.value}</h3>
-            <p className="text-sm text-gray-600 mt-1">{stat.label}</p>
-          </div>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Recent Applicants
-          </h3>
-          <div className="space-y-3">
-            {applicants.slice(0, 3).map((applicant) => {
-              const resume = applicant.resumeData || {};
-              return (
+      {loading ? (
+        <p>Loading statistics...</p>
+      ) : (
+        <>
+          {stats && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[
+                {
+                  label: "Active Internships",
+                  ...stats.activeInternships,
+                  icon: Briefcase,
+                },
+                {
+                  label: "Total Applicants",
+                  ...stats.totalApplicants,
+                  icon: Users,
+                },
+                {
+                  label: "Accepted Applicants",
+                  ...stats.acceptedApplicants,
+                  icon: CheckCircle,
+                },
+                {
+                  label: "Rejected Applicants",
+                  ...stats.rejectedApplicants,
+                  icon: XCircle,
+                },
+              ].map((stat, index) => (
                 <div
-                  key={applicant.id}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer"
-                  onClick={() => setSelectedApplicant(applicant)}
+                  key={index}
+                  className="bg-white p-4 rounded-lg border border-gray-200"
                 >
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                      <User className="w-5 h-5 text-gray-600" />
+                  <div className="flex items-center justify-between mb-2">
+                    <div
+                      className={`p-2 rounded-lg ${
+                        stat.trend === "up" ? "bg-green-100" : "bg-red-100"
+                      }`}
+                    >
+                      <stat.icon
+                        className={`w-5 h-5 ${
+                          stat.trend === "up"
+                            ? "text-green-600"
+                            : "text-red-600"
+                        }`}
+                      />
                     </div>
-                    <div>
-                      <p className="font-medium text-gray-900 text-sm">
-                        {resume.name}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {resume.appliedFor}
-                      </p>
+                    <div
+                      className={`flex items-center space-x-1 text-sm ${
+                        stat.trend === "up"
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
+                    >
+                      {stat.trend === "up" ? (
+                        <TrendingUp className="w-4 h-4" />
+                      ) : (
+                        <TrendingDown className="w-4 h-4" />
+                      )}
+                      <span className="font-medium">{stat.change}</span>
                     </div>
                   </div>
-                  <span
-                    className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      applicant.status === "Shortlisted"
-                        ? "bg-blue-100 text-blue-700"
-                        : applicant.status === "Interview"
-                        ? "bg-purple-100 text-purple-700"
-                        : "bg-gray-100 text-gray-700"
-                    }`}
-                  >
-                    {applicant.status}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Active Internships
-          </h3>
-          <div className="space-y-3">
-            {/* --- MODIFIED: Using searchInternships for this list --- */}
-            {searchInternships
-              .filter((internship) =>
-                internship.title
-                  .toLowerCase()
-                  .includes(searchQuery.toLowerCase())
-              )
-              .map((internship) => (
-                <div
-                  key={internship.id}
-                  className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer"
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <h4 className="font-medium text-gray-900 text-sm">
-                      {internship.title}
-                    </h4>
-                    <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">
-                      {internship.status}
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-3 text-xs text-gray-500">
-                    <span className="flex items-center space-x-1">
-                      <Users className="w-3 h-3" />
-                      <span>{internship.applicationsCount} applicants</span>
-                    </span>
-                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900">
+                    {stat.value}
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1">{stat.label}</p>
                 </div>
               ))}
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Recent Applicants */}
+            <div className="bg-white p-4 rounded-lg border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Recent Applicants
+              </h3>
+              <div className="space-y-3">
+                {applicants.slice(0, 3).map((applicant) => {
+                  const resume = applicant.resumeData || {};
+                  return (
+                    <div
+                      key={applicant.id}
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer"
+                      onClick={() => setSelectedApplicant(applicant)}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+                          <User className="w-5 h-5 text-gray-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900 text-sm">
+                            {resume.name}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {resume.appliedFor}
+                          </p>
+                        </div>
+                      </div>
+                      <span
+                        className={`px-2 py-1 text-xs font-medium rounded-full ${
+                          applicant.status === "Shortlisted"
+                            ? "bg-blue-100 text-blue-700"
+                            : applicant.status === "Interview"
+                            ? "bg-purple-100 text-purple-700"
+                            : "bg-gray-100 text-gray-700"
+                        }`}
+                      >
+                        {applicant.status}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Active Internships */}
+            <div className="bg-white p-4 rounded-lg border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Active Internships
+              </h3>
+              <div className="space-y-3">
+                {(searchQuery
+                  ? searchInternships.filter((internship) =>
+                      internship.title
+                        .toLowerCase()
+                        .includes(searchQuery.toLowerCase())
+                    )
+                  : internships
+                )
+                  .slice(0, 5)
+                  .map((internship) => (
+                    <div
+                      key={internship.id}
+                      className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <h4 className="font-medium text-gray-900 text-sm">
+                          {internship.title}
+                        </h4>
+                        <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+                          {internship.status}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-3 text-xs text-gray-500">
+                        <span className="flex items-center space-x-1">
+                          <Users className="w-3 h-3" />
+                          <span>
+                            {internship.applicationsCount} applicants
+                          </span>
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 
@@ -1224,7 +1422,9 @@ const RecruiterDashboard = ({ id }: { id: string }) => {
                         <span className="font-medium text-gray-900">
                           {internship.applicationsCount}
                         </span>
-                        <span className="text-xs text-gray-500">(applied)</span>
+                        <span className="text-xs text-gray-500">
+                          (applied)
+                        </span>
                       </div>
                     </td>
                     <td className="px-4 py-3">
@@ -1347,24 +1547,18 @@ const RecruiterDashboard = ({ id }: { id: string }) => {
                                 <Award className="w-3.5 h-3.5" />
                                 <span>CGPA: {data.cgpa}</span>
                               </div>
-                              <div className="flex items-center space-x-1.5 text-xs text-gray-500">
-                                <Mail className="w-3.5 h-3.5" />
-                                <span className="truncate">{data.email}</span>
-                              </div>
-                              <div className="flex items-center space-x-1.5 text-xs text-gray-500">
-                                <Clock className="w-3.5 h-3.5" />
-                                <span>Applied {data.appliedDate || "N/A"}</span>
-                              </div>
                             </div>
                             <div className="flex flex-wrap gap-1.5">
-                              {data.skills?.slice(0, 4).map((skill, i) => (
-                                <span
-                                  key={i}
-                                  className="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded"
-                                >
-                                  {skill}
-                                </span>
-                              ))}
+                              {data.skills
+                                ?.slice(0, 4)
+                                .map((skill: string, i: number) => (
+                                  <span
+                                    key={i}
+                                    className="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded"
+                                  >
+                                    {skill}
+                                  </span>
+                                ))}
                               {data.skills && data.skills.length > 4 && (
                                 <span className="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded">
                                   +{data.skills.length - 4}
@@ -1376,7 +1570,7 @@ const RecruiterDashboard = ({ id }: { id: string }) => {
                         <div className="flex flex-col space-y-2 ml-4">
                           <Link
                             href={`/profile/${applicant.applicantId}`}
-                            className="px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded hover:bg-gray-800 inline-block transition-colors"
+                            className="px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded hover:bg-gray-800 inline-block transition-colors text-center"
                           >
                             View Profile
                           </Link>
@@ -1408,12 +1602,18 @@ const RecruiterDashboard = ({ id }: { id: string }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Sidebar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        onCompanyClick={() => setShowCompanyProfile(true)}
+        companyName={companyData?.name || "Company"}
+      />
       <div className="ml-64">
         <TopBar
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           onPostClick={() => setShowPostModal(true)}
+          id={id}
         />
         <main className="p-6">
           {activeTab === "dashboard" && <DashboardView />}
@@ -1497,88 +1697,36 @@ const RecruiterDashboard = ({ id }: { id: string }) => {
               skillData={skillDistributionData}
             />
           )}
-          {activeTab === "settings" && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-gray-900">Settings</h2>
-              <div className="bg-white p-6 rounded-lg border border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Company Profile
-                </h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Company Name
-                    </label>
-                    <input
-                      type="text"
-                      defaultValue="Tech Corp Inc."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
-                    />
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="email"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      Email
-                    </label>
-                    <input
-                      id="email"
-                      type="email"
-                      defaultValue="recruiter@techcorp.com"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
-                    />
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="url"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      Website
-                    </label>
-                    <input
-                      id="url"
-                      type="url"
-                      defaultValue="https://techcorp.com"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
-                    />
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="about"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      About Company
-                    </label>
-                    <textarea
-                      id="about"
-                      rows={4}
-                      defaultValue="Tech Corp Inc. is a leading technology company..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
-                    ></textarea>
-                  </div>
-                  <button className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors">
-                    Save Changes
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
         </main>
       </div>
 
-      {/* Modals */}
       {selectedApplicant && (
         <ApplicantModal
           applicant={selectedApplicant}
           onClose={() => setSelectedApplicant(null)}
+          onUpdateStatus={updateStatus}
+          onSchedule={(id) => {
+            setShowInterviewModal(true);
+            setSchedule(id);
+          }}
         />
       )}
 
-      {openUpdate && (
+      {/* Company Profile Modal */}
+      {showCompanyProfile && (
+        <CompanyProfileModal
+          data={companyData}
+          onClose={() => setShowCompanyProfile(false)}
+        />
+      )}
+
+      {openUpdate && selectedId && (
         <UpdateInternshipModal
           id={selectedId}
-          onClose={() => setOpenUpdate(false)}
+          onClose={() => {
+            setOpenUpdate(false);
+            refreshInternships();
+          }}
         />
       )}
 
@@ -1588,6 +1736,8 @@ const RecruiterDashboard = ({ id }: { id: string }) => {
           onClose={() => {
             setShowInterviewModal(false);
             setSchedule(null);
+            refreshInterviews();
+            refreshApplicants();
           }}
         />
       )}
@@ -1595,7 +1745,11 @@ const RecruiterDashboard = ({ id }: { id: string }) => {
       {showPostModal && (
         <Recruiter_PostInternshipModel
           id={id}
-          onClose={() => setShowPostModal(false)}
+          onClose={() => {
+            setShowPostModal(false);
+            refreshInternships();
+            refreshStats();
+          }}
         />
       )}
     </div>

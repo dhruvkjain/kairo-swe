@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
 import logoImage from "@/components/Kairo_logo.jpg";
-import { ArrowRight, Briefcase, Users, Zap, Star } from "lucide-react";
+// Added Building2 icon for the company button
+import { ArrowRight, Briefcase, Users, Zap, Star, Building2 } from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area, BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip } from "recharts";
 
 const growthData = [
@@ -30,8 +31,6 @@ const LandingPage: React.FC = () => {
       {/* Added Top Padding */}
       <div className="pt-10 sm:pt-16"></div>
 
-      {/* ---------------- ORIGINAL CODE ABOVE ---------------- */}
-
       {/* Hero Section */}
       <div className="max-w-3xl space-y-6 animate-fadeInUp">
 
@@ -55,21 +54,41 @@ const LandingPage: React.FC = () => {
           The smart platform connecting <strong>Applicants</strong> and <strong>Recruiters</strong> seamlessly.
         </p>
 
-        {/* Buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8 animate-fadeInUp">
-          <Link href="/signin">
-            <Button className="px-8 py-5 text-lg shadow-md hover:scale-110 transition-all duration-300">
-              Sign In
-            </Button>
-          </Link>
-          <Link href="/signup">
-            <Button
-              variant="outline"
-              className="px-8 py-5 text-lg border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white hover:scale-110 transition-all duration-300"
-            >
-              Sign Up
-            </Button>
-          </Link>
+        {/* Buttons Section */}
+        <div className="flex flex-col items-center justify-center mt-8 animate-fadeInUp space-y-4">
+          
+          {/* Primary Actions (Sign In / Sign Up) */}
+          <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
+            <Link href="/signin">
+              <Button className="px-8 py-5 text-lg shadow-md hover:scale-105 transition-all duration-300 w-full sm:w-auto">
+                Sign In
+              </Button>
+            </Link>
+            <Link href="/signup">
+              <Button
+                variant="outline"
+                className="px-8 py-5 text-lg border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white hover:scale-105 transition-all duration-300 w-full sm:w-auto"
+              >
+                Sign Up
+              </Button>
+            </Link>
+          </div>
+
+          {/* --- NEW: Register Company CTA --- */}
+          <div className="pt-2">
+            <Link href="/register-company">
+              <Button 
+                className="bg-slate-800 text-white px-8 py-5 text-lg shadow-lg hover:bg-slate-700 hover:scale-105 transition-all duration-300 flex items-center gap-2 w-full sm:w-auto"
+              >
+                <Building2 className="w-5 h-5" />
+                Register Company
+              </Button>
+            </Link>
+            <p className="text-xs text-gray-500 mt-2">
+                Hiring? Create a recruiter account instantly.
+            </p>
+          </div>
+
         </div>
       </div>
 
@@ -106,8 +125,6 @@ const LandingPage: React.FC = () => {
         ))}
       </div>
 
-      {/* -------------------- NEW SECTIONS ADDED BELOW -------------------- */}
-
       {/* Stats Section */}
       <div className="mt-28 grid grid-cols-1 sm:grid-cols-3 gap-10 w-full max-w-6xl px-4 animate-fadeInUp">
         {[
@@ -124,63 +141,63 @@ const LandingPage: React.FC = () => {
           </div>
         ))}
       </div>
-        <section className="w-full py-20 bg-white">
-  <div className="max-w-5xl mx-auto px-6 space-y-20">
 
-    {/* Row 1: image left, text right */}
-    <div className="grid md:grid-cols-2 gap-12 items-center">
-      <img
-        src="/homepage/1.png"
-        alt="Student Opportunities"
-        className="rounded-2xl shadow-lg w-full object-cover"
-      />
-      <div className="space-y-4">
-        <h2 className="text-2xl font-semibold">Enhance Your Resume</h2>
-        <ul className="list-disc list-inside text-gray-600 space-y-2">
-          <li>Upload your details and generate a resume instantly.</li>
-        <li>Professional formatting applied automatically.</li>
-          <li>Perfect for internship and placement applications.</li>
-        </ul>
-      </div>
-    </div>
+      <section className="w-full py-20 bg-white mt-20">
+        <div className="max-w-5xl mx-auto px-6 space-y-20">
 
-    {/* Row 2: text left, image right */}
-    <div className="grid md:grid-cols-2 gap-12 items-center">
-      <div className="space-y-4 order-2 md:order-1">
-        <h2 className="text-2xl font-semibold">Stand Out to Recruiters</h2>
-        <ul className="list-disc list-inside text-gray-600 space-y-2">
-          <li>ATS-ready phrases improve readability.</li>
-          <li>Stronger professional impact.</li>
-          <li>Attract more recruiter attention.</li>
-        </ul>
-      </div>
-      <img
-        src="/homepage/2.jpg"
-        alt="Student Success"
-        className="rounded-2xl shadow-lg w-full object-cover order-1 md:order-2"
-      />
-    </div>
+          {/* Row 1: image left, text right */}
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <img
+              src="/homepage/1.png"
+              alt="Student Opportunities"
+              className="rounded-2xl shadow-lg w-full object-cover"
+            />
+            <div className="space-y-4 text-left">
+              <h2 className="text-2xl font-semibold">Enhance Your Resume</h2>
+              <ul className="list-disc list-inside text-gray-600 space-y-2">
+                <li>Upload your details and generate a resume instantly.</li>
+                <li>Professional formatting applied automatically.</li>
+                <li>Perfect for internship and placement applications.</li>
+              </ul>
+            </div>
+          </div>
 
-    {/* Row 3: image left, text right */}
-    <div className="grid md:grid-cols-2 gap-12 items-center">
-      <img
-        src="/homepage/3.jpg"
-        alt="ATS Friendly"
-        className="rounded-2xl shadow-lg w-full object-cover"
-      />
-      <div className="space-y-4">
-        <h2 className="text-2xl font-semibold">Fully ATS-Friendly Output</h2>
-        <ul className="list-disc list-inside text-gray-600 space-y-2">
-          <li>Optimized to pass Applicant Tracking Systems.</li>
-          <li>Improves shortlist chances automatically.</li>
-          <li>Ensures correct structure and keyword alignment.</li>
-        </ul>
-      </div>
-    </div>
+          {/* Row 2: text left, image right */}
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div className="space-y-4 order-2 md:order-1 text-left">
+              <h2 className="text-2xl font-semibold">Stand Out to Recruiters</h2>
+              <ul className="list-disc list-inside text-gray-600 space-y-2">
+                <li>ATS-ready phrases improve readability.</li>
+                <li>Stronger professional impact.</li>
+                <li>Attract more recruiter attention.</li>
+              </ul>
+            </div>
+            <img
+              src="/homepage/2.jpg"
+              alt="Student Success"
+              className="rounded-2xl shadow-lg w-full object-cover order-1 md:order-2"
+            />
+          </div>
 
-  </div>
-</section>
+          {/* Row 3: image left, text right */}
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <img
+              src="/homepage/3.jpg"
+              alt="ATS Friendly"
+              className="rounded-2xl shadow-lg w-full object-cover"
+            />
+            <div className="space-y-4 text-left">
+              <h2 className="text-2xl font-semibold">Fully ATS-Friendly Output</h2>
+              <ul className="list-disc list-inside text-gray-600 space-y-2">
+                <li>Optimized to pass Applicant Tracking Systems.</li>
+                <li>Improves shortlist chances automatically.</li>
+                <li>Ensures correct structure and keyword alignment.</li>
+              </ul>
+            </div>
+          </div>
 
+        </div>
+      </section>
 
       <section className="py-24 px-4 bg-white/60 backdrop-blur-md mt-28 w-full">
         <div className="max-w-6xl mx-auto">
@@ -240,7 +257,8 @@ const LandingPage: React.FC = () => {
 
         </div>
       </section>
-       {/*  ADDED: GRAPH SECTION  */}
+
+      {/* GRAPH SECTION */}
       <div className="mt-32 w-full max-w-6xl px-4 animate-fadeInUp">
 
         <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center">
@@ -259,13 +277,13 @@ const LandingPage: React.FC = () => {
               <AreaChart data={growthData}>
                 <defs>
                   <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#0f172a" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#0f172a" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#0f172a" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#0f172a" stopOpacity={0} />
                   </linearGradient>
 
                   <linearGradient id="colorPlace" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#475569" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#475569" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#475569" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#475569" stopOpacity={0} />
                   </linearGradient>
                 </defs>
 
@@ -329,7 +347,7 @@ const LandingPage: React.FC = () => {
         </div>
       </div>
 
-      {/*  User Reviews */}
+      {/* User Reviews */}
       <div className="mt-32 w-full max-w-6xl px-4 animate-fadeInUp">
         <h2 className="text-3xl font-bold text-gray-800 mb-10">What Our Users Say</h2>
 
@@ -369,8 +387,7 @@ const LandingPage: React.FC = () => {
         </div>
       </div>
 
-      {/* -------------------- FOOTER -------------------- */}
-
+      {/* Footer */}
       <footer className="mt-20 w-full bg-slate-900 text-gray-300 py-10 px-6 animate-fadeInUp delay-300">
         <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-10">
 
@@ -389,6 +406,8 @@ const LandingPage: React.FC = () => {
             <ul className="space-y-2 text-sm">
               <li><Link href="/signin" className="hover:text-white">Sign In</Link></li>
               <li><Link href="/signup" className="hover:text-white">Sign Up</Link></li>
+              {/* Added Register Company to Footer */}
+              <li><Link href="/register-company" className="hover:text-white font-medium text-blue-400">Register Company</Link></li>
               <li><Link href="/contact" className="hover:text-white">Contact</Link></li>
             </ul>
           </div>
