@@ -4,9 +4,9 @@ from fastapi import APIRouter, HTTPException
 from fastapi.concurrency import run_in_threadpool
 import re # Import the regular expression module
 
-from app.config.config import OPEN_ROUTER_API_KEY
-from app.models.resume_parser_models import ResumeUrlRequest
-from app.utils.pdf_utils import load_and_extract
+from api.config.config import OPEN_ROUTER_API_KEY
+from api.models.resume_parser_models import ResumeUrlRequest
+from api.utils.pdf_utils import load_and_extract
 
 if not OPEN_ROUTER_API_KEY:
     raise EnvironmentError("OPEN_ROUTER_API_KEY not found")

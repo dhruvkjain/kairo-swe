@@ -7,8 +7,8 @@ from contextlib import contextmanager
 import asyncio 
 
 # Assuming these imports exist based on the provided context
-from app.utils.shortlister_utils import get_shortlist_logic_hybrid, ApplicantScore
-from app.models.shortlister_models import ProjectLevelAssessor
+from api.utils.shortlister_utils import get_shortlist_logic_hybrid, ApplicantScore
+from api.models.shortlister_models import ProjectLevelAssessor
 
 # Check for required API Key (only OpenRouter is mandatory)
 OPEN_ROUTER_API_KEY = os.getenv("OPEN_ROUTER_API_KEY")

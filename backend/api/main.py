@@ -2,9 +2,9 @@ from fastapi import FastAPI, Depends, HTTPException, Query
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers.resume_parser import router as resume_router
+from api.routers.resume_parser import router as resume_router
 # from app.routers.skill_verifier import router as verifier_router
-from app.routers.ai_shortlister import router as shortlist_router
+from api.routers.ai_shortlister import router as shortlist_router
 # from app.routers.ai_shortlister import router as shortlist_router
 # from app.routers.ai_shortlister import load_model
 

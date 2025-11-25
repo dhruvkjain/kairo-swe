@@ -5,9 +5,9 @@ import dspy
 from fastapi import APIRouter, HTTPException
 from fastapi.concurrency import run_in_threadpool
 from github import Github, GithubException
-from app.config.config import GITHUB_API_TOKEN, OPEN_ROUTER_API_KEY
-from app.models.skill_verifier_models import VerificationResponse, RepoUrlRequest
-from app.utils.github_url_parser import _parse_github_url
+from api.config.config import GITHUB_API_TOKEN, OPEN_ROUTER_API_KEY
+from api.models.skill_verifier_models import VerificationResponse, RepoUrlRequest
+from api.utils.github_url_parser import _parse_github_url
 
 router = APIRouter()
 
