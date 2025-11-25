@@ -27,12 +27,6 @@ export async function POST(req: NextRequest) {
     let body;
     try {
       body = await req.json();
-      console.log('Received request body:', {
-        hasFileBase64: !!body.fileBase64,
-        fileName: body.fileName,
-        contentLength: req.headers.get('content-length'),
-        bodyKeys: Object.keys(body)
-      });
     } catch (error) {
       console.error('Failed to parse request body:', error);
       return NextResponse.json({ error: "Invalid request body" }, { status: 400 });

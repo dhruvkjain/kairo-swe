@@ -161,6 +161,8 @@ model InternshipApplication {
   internship        Internship        @relation(fields: [internshipId], references: [id], onDelete: Cascade)
 
   @@unique([internshipId, applicantId])
+  @@index([internshipId])
+  @@index([applicantId])
 }
 
 model Account {
@@ -193,7 +195,7 @@ model Session {
 
 model VerificationToken {
   identifier String
-  token      String   @id
+  token      String   @id @default(uuid())
   expires    DateTime
 }
 
