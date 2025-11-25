@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import nodemailer from "nodemailer";
 
 export async function GET(req: NextRequest) {
   try {
@@ -62,9 +63,9 @@ export async function GET(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const applicantId = searchParams.get("applicantId");
+    const applicationId = searchParams.get("applicantId");
 
-    if (!applicantId) {
+    if (!applicationId) {
       return NextResponse.json({ error: "applicantId is required" }, { status: 400 });
     }
 
@@ -86,7 +87,7 @@ export async function PUT(req: NextRequest) {
     }
 
     const updateData: Record<string, any> = {
-      status: "Interview", // Assuming this means interview is selected now
+      status: "Interview",
     };
 
     if (interviewMode !== undefined) updateData.interviewMode = interviewMode;
@@ -96,19 +97,84 @@ export async function PUT(req: NextRequest) {
     if (interviewTime !== undefined)
       updateData.interviewTime = interviewTime || null;
 
-    // Use update because id is unique
-    await prisma.internshipApplication.update({
-      where: { id: applicantId },
+    // 1. Update the application and retrieve necessary data for the email
+    const updatedApplication = await prisma.internshipApplication.update({
+      where: { id: applicationId },
       data: updateData,
+      include: {
+        applicant: { 
+          select: {
+            email: true,
+            name: true,
+          }
+        },
+        internship: {
+          select: {
+            title: true,
+          }
+        }
+      }
     });
+    
+    // --- START: Local Email Sending Logic ---
+    
+    const applicantEmail = updatedApplication.applicant.email!;
+    const applicantName = updatedApplication.applicant.name || 'Applicant';
+    const internshipTitle = updatedApplication.internship.title;
+    const mode = updatedApplication.interviewMode || 'Unspecified';
+    const location = updatedApplication.interviewLocation;
+    const date = updatedApplication.interviewDate;
+    const time = updatedApplication.interviewTime;
+
+    // 2. Create the transporter locally
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASSWORD,
+      },
+    });
+
+    // 3. Send the email
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: applicantEmail,
+      subject: `Interview Scheduled for your ${internshipTitle} Internship Application`,
+      html: `
+        <html>
+        <body style="font-family: sans-serif; line-height: 1.6;">
+          <h2>Hello ${applicantName},</h2>
+          <p>We are pleased to inform you that your interview for the <b>${internshipTitle}</b> internship has been scheduled!</p>
+          
+          <div style="border: 1px solid #ddd; padding: 15px; margin: 20px 0; border-radius: 8px;">
+            <h3 style="margin-top: 0;">Interview Details</h3>
+            <p><strong>Internship:</strong> ${internshipTitle}</p>
+            <p><strong>Mode:</strong> ${mode.toUpperCase()}</p>
+            ${date ? `<p><strong>Date:</strong> ${date}</p>` : ''}
+            ${time ? `<p><strong>Time:</strong> ${time}</p>` : ''}
+            ${location ? `<p><strong>Location/Link:</strong> ${location}</p>` : ''}
+          </div>
+          
+          <p>Please be ready a few minutes before the scheduled time. If you have any questions, please reply to this email.</p>
+          <p>Best regards,</p>
+          <p>The Recruitment Team</p>
+        </body>
+        </html>
+      `,
+    });
+    
+    // --- END: Local Email Sending Logic ---
 
     return NextResponse.json({
       success: true,
-      message: "Interview schedule updated successfully"
+      message: "Interview schedule updated and email sent successfully"
     });
 
   } catch (error) {
-    console.error('Error updating interview:', error);
-    return NextResponse.json({ error: "Failed to update interview(s)" }, { status: 500 });
+    console.error('Error updating interview or sending email:', error);
+    return NextResponse.json(
+      { error: "Failed to update interview or send email" }, 
+      { status: 500 }
+    );
   }
 }
