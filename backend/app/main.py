@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Depends, HTTPException, Query
 from contextlib import asynccontextmanager
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.routers.resume_parser import router as resume_router
 # from app.routers.skill_verifier import router as verifier_router
@@ -16,6 +17,14 @@ async def lifespan(app: FastAPI):
     print("INFO:     Application shutting down.")
 
 app = FastAPI(lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],        
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(
     shortlist_router, 
